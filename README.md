@@ -11,7 +11,7 @@ Any help with the conversion is welcome.
 
 All credit for package goes to Rich Pawlowicz, he wrote T_Tide for Matlab. 
 It is available at http://www2.ocgy.ubc.ca/~rich/.
-This work is just a programming language conversion.
+This is just a programming language conversion.
 
 
 
