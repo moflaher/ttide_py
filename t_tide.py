@@ -238,6 +238,7 @@ def t_tide(xin):
         centraltime = np.array([])
     # -------Get the frequencies to use in the harmonic analysis-----------
     nameu, fu, ju, namei, fi, jinf, jref = constituents(ray / (np.dot(dt, nobsu)), constitnames, shallownames, infiname, infirefname, centraltime) # nargout=7
+    print nameu, fu, ju, namei, fi, jinf, jref
     mu = max(fu.shape)
     # # base frequencies
     mi = max(fi.shape)
@@ -368,7 +369,7 @@ def t_tide(xin):
     corrfac[corrfac > 100] = 1
     corrfac[corrfac < 0.01] = 1
     corrfac[np.isnan(corrfac)] = 1
-    ap = ap * corrfac
+    ap = ap * corrfac    
     am = am * np.conj(corrfac)
     #---------------Nodal Corrections-------------------------------------- 						   
     # Generate nodal corrections and calculate phase relative to Greenwich. 						   
@@ -401,6 +402,7 @@ def t_tide(xin):
     # Once again, the "right" way to do this would be to change the basis
     # functions.
     ii = np.flatnonzero(np.isfinite(jref))
+    print jref
     if ii:
         fprintf('   Do inference corrections\\n')
         snarg = np.dot(np.dot(np.dot(nobsu, pi), (fi[(ii -1)] - fu[(jref[(ii -1)] -1)])), dt)
@@ -447,6 +449,7 @@ def t_tide(xin):
     #         or so.
     #
     xr = fixgaps(xres)
+
     # Fill in "internal" NaNs with linearly interpolated
     # values so we can fft things.
     nreal = 1
@@ -458,13 +461,16 @@ def t_tide(xin):
         # 
         nreal = 300
         # Create noise matrices 
-        NP, NM = noise_realizations(xr[(np.isfinite(xr) -1)], fu, dt, nreal, errcalc) # nargout=2
+        NP, NM = noise_realizations(xr[(np.isfinite(xr))], fu, dt, nreal, errcalc) # nargout=2
         # All replicates are then transformed (nonlinearly) into ellipse 
         # parameters.  The computed error bars are then based on the std
         # dev of the replicates.
-        AP = ap[:, (np.ones(shape=(1, nreal), dtype='float64') -1)] + NP
+        filler=np.empty((ap.shape[0],nreal),dtype='complex128') 
+        #print filler[:,:]=ap[:]       
+
+        AP = ap[:, np.isfinite(np.ones(shape=(1, nreal), dtype='float64'))] + NP
         # Add to analysis (first column
-        AM = am[:, (np.ones(shape=(1, nreal), dtype='float64') -1)] + NM
+        AM = am[:, (np.ones(shape=(1, nreal), dtype='float64'))] + NM
         # of NM,NP=0 so first column of
         # AP/M holds ap/m).
         epsp = np.dot(angle(AP), 180) / pi
@@ -710,7 +716,7 @@ def constituents(minres, constit, shallow, infname, infref, centraltime):
 #               for ick in range(1, (max(jck.shape) +1)):
 #                    disp('     ' + const.name(ju[(jck[(ick -1)] -1)], :) + ' vs ' + const.name(ju[(jck[(ick -1)] + 1 -1)], :) + ' - not using ' + const.name(ju[(jrm[(ick -1)] -1)], :))
                 ju[(jrm -1)] = np.array([])
-    if not  (0 in constit.shape):
+    if constit.size !=0:
         # Selected if constituents are specified in input.
         ju = np.array([])
         for k in range(1, (constit.shape[0] +1)):
@@ -729,7 +735,7 @@ def constituents(minres, constit, shallow, infname, infref, centraltime):
         ju = ju[(II -1)]
     #cout
     #disp(['   number of standard constituents used: ',int2str(length(ju))])
-    if not  (0 in shallow.shape):
+    if shallow.size !=0:
         # Add explictly selected shallow water constituents.
         for k in range(1, (shallow.shape[0] +1)):
             j1 = strmatch(shallow[(k -1), :], const['name'])
@@ -756,7 +762,7 @@ def constituents(minres, constit, shallow, infname, infref, centraltime):
     namei = np.array([])
     jinf = np.array([])
     jref = np.array([])
-    if not  (0 in infname.shape):
+    if infname.size !=0:
         fi = np.zeros(shape=(infname.shape[0], 1), dtype='float64')
         namei = np.zeros(shape=(infname.shape[0], 4), dtype='float64')
         jinf = np.zeros(shape=(infname.shape[0], 1), dtype='float64') + NaN
@@ -841,22 +847,22 @@ def noise_realizations(xres, fu, dt, nreal, errcalc):
         p = (Pxrave[(k -1)] + Pxiave[(k -1)]) / 2
         d = (Pxrave[(k -1)] - Pxiave[(k -1)]) / 2
         sxy = Pxcave[(k -1)]
-        B = np.array([p, 0, d, sxy, 0, p, sxy, - d, d, sxy, p, 0, sxy, - d, 0, p]).reshape(1, -1)
+        B = np.hstack([p, 0, d, sxy, 0, p, sxy, - d, d, sxy, p, 0, sxy, - d, 0, p]).reshape(4,4)
         # Compute the transformation matrix that takes uncorrelated white 
         # noise and makes noise with the same statistical structure as the 
         # Fourier transformed noise.
-        print B
         V, D = np.linalg.eig(B) # nargout=2
-        Mat[:, :, (k -1)] = np.dot(V, diag(sqrt(diag(D))))
+        Mat[:, :, (k -1)] = np.dot(V, np.diag(np.sqrt(np.diag(D))))
     # Generate realizations for the different analyzed constituents.
     N = np.zeros(shape=(4, nreal), dtype='float64')
     NM = np.zeros(shape=(max(fu.shape), nreal), dtype='float64')
     NP = NM
-    for k in range(1, (max(fu.shape) +1)):
-        l = np.flatnonzero(fu[(k -1)] > fband[:, 0] & fu[(k -1)] < fband[:, 1])
-        N = np.array([np.zeros(shape=(4, 1), dtype='float64'), np.dot(Mat[:, :, (l -1)], randn(4, nreal - 1))]).reshape(1, -1)
-        NP[(k -1), :] = N[0, :] + np.dot(i, N[1, :])
-        NM[(k -1), :] = N[2, :] + np.dot(i, N[3, :])
+
+    for k in range(0, fu.shape[0]):
+        l = np.flatnonzero(np.all([fu[k] > fband[:, 0] , fu[k] < fband[:, 1]],axis=0))
+        N = np.hstack([np.zeros(shape=(4, 1), dtype='float64'), np.dot(np.squeeze(Mat[:, :, l]), np.random.randn(4, nreal-1))])
+        NP[(k), :] = N[0, :] + 1j*N[1, :]
+        NM[(k), :] = N[2, :] + 1j*N[3, :]
     return NP, NM
 def noise_stats(xres, fu, dt):
     """NOISE_STATS: Computes statistics of residual energy for all 
@@ -891,7 +897,7 @@ def residual_spectrum(xres, fu, dt):
      Version 1.0
      Define frequency bands for spectral averaging.
     """
-    fband = np.array([0.0001, 0.00417, 0.03192, 0.04859, 0.07218, 0.08884, 0.11243, 0.1291, 0.15269, 0.16936, 0.19295, 0.20961, 0.2332, 0.251, 0.26, 0.29, 0.3, 0.5]).reshape(1, -1)
+    fband = np.array([0.0001, 0.00417, 0.03192, 0.04859, 0.07218, 0.08884, 0.11243, 0.1291, 0.15269, 0.16936, 0.19295, 0.20961, 0.2332, 0.251, 0.26, 0.29, 0.3, 0.5]).reshape(9,2)
     # If we have a sampling interval> 1 hour, we might have to get
     # rid of some bins.
     #fband(fband(:,1)>1/(2*dt),:)=[];
@@ -936,18 +942,19 @@ def residual_spectrum(xres, fu, dt):
     # Divide by nx to get power per frequency bin, and multiply by 2
     # to account for positive and negative frequencies.
     #
-    for k in range(nfband, 2, - 1):
-        jband = np.flatnonzero(fx >= fband[(k -1), 0] & fx <= fband[(k -1), 1] & isfinite(Pxr))
+    for k in range(nfband-1, -1, - 1):
+        jband = np.flatnonzero(np.all(np.vstack([fx >= fband[(k), 0],fx <= fband[(k), 1] , np.isfinite(Pxr)]).T,axis=1))        
         if any(jband):
-            Pxrave[(k -1)] = np.dot(mean(Pxr[(jband -1)]), 2) / nx
-            Pxiave[(k -1)] = np.dot(mean(Pxi[(jband -1)]), 2) / nx
-            Pxcave[(k -1)] = np.dot(mean(Pxc[(jband -1)]), 2) / nx
+            Pxrave[k] = np.dot(np.mean(Pxr[(jband)]), 2) / nx
+            print Pxrave[k]
+            Pxiave[k] = np.dot(np.mean(Pxi[(jband)]), 2) / nx
+            Pxcave[k] = np.dot(np.mean(Pxc[(jband)]), 2) / nx
         else:
             if k < nfband:
-                Pxrave[(k -1)] = Pxrave[(k + 1 -1)]
+                Pxrave[k] = Pxrave[(k + 1)]
                 # Low frequency bin might not have any points...
-                Pxiave[(k -1)] = Pxiave[(k + 1 -1)]
-                Pxcave[(k -1)] = Pxcave[(k + 1 -1)]
+                Pxiave[k] = Pxiave[(k + 1)]
+                Pxcave[k] = Pxcave[(k + 1)]
     return fband, Pxrave, Pxiave, Pxcave
 def errell(cxi, sxi, ercx, ersx, ercy, ersy):
     """[emaj,emin,einc,epha]=errell(cx,sx,cy,sy,ercx,ersx,ercy,ersy) computes
