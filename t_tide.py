@@ -803,11 +803,11 @@ def cluster(ain, clusang):
      column. CLUSANG is the allowable ambiguity (usually 360 degrees but
      sometimes 180).
     """
-
-    ii = (ain - np.repeat(ain[:,1],ain.shape[1]).reshape(ain.shape[0],ain.shape[1])) > clusang / 2
-    ain[(ii -1)] = ain[(ii -1)] - clusang
+    makearray=(ain - np.repeat(ain[:,1],ain.shape[1]).reshape(ain.shape[0],ain.shape[1]))
+    ii = makearray> clusang / 2
+    ain[(ii)] = ain[(ii)] - clusang
     ii = (ain - np.repeat(ain[:,1],ain.shape[1]).reshape(ain.shape[0],ain.shape[1])) < - clusang / 2
-    ain[(ii -1)] = ain[(ii -1)] + clusang
+    ain[(ii)] = ain[(ii)] + clusang
     return ain
 def noise_realizations(xres, fu, dt, nreal, errcalc):
     """NOISE_REALIZATIONS: Generates matrices of noise (with correct
