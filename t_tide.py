@@ -208,7 +208,7 @@ def t_tide(xin):
     pi=np.pi
 
 
-    inn= xin.shape # nargout=2
+    inn= xin.shape # nargout=2    
     if len(inn) != 1:
         error('Input time series is not a vector')
     xin = xin[:]
@@ -238,7 +238,6 @@ def t_tide(xin):
         centraltime = np.array([])
     # -------Get the frequencies to use in the harmonic analysis-----------
     nameu, fu, ju, namei, fi, jinf, jref = constituents(ray / (np.dot(dt, nobsu)), constitnames, shallownames, infiname, infirefname, centraltime) # nargout=7
-    print nameu, fu, ju, namei, fi, jinf, jref
     mu = max(fu.shape)
     # # base frequencies
     mi = max(fi.shape)
@@ -248,7 +247,7 @@ def t_tide(xin):
     gd = np.flatnonzero(np.isfinite(xin[0:nobsu]))
     ngood = max(gd.shape)
     #cout
-    #fprintf('   Points used: 
+    #print('   Points used: 
     #d of 
     #d\n',ngood,nobs)
     # Now solve for the secular trend plus the analysis. Instead of solving
@@ -270,7 +269,6 @@ def t_tide(xin):
         
 
         coef = np.linalg.lstsq(tc[gd, :], xin[gd])[0]        
-        print coef.shape
         coef=coef.T
         z0 = coef[0]
         ap = (coef[1:mu+1]+1j*coef[(1+mu):(mu*2)+1])/2   
@@ -344,7 +342,7 @@ def t_tide(xin):
         varxp = np.cov(xout[(gd)])
         varxr = np.cov(xres[(gd)])
         #cout
-        #fprintf('   percent of var residual after lsqfit/var original: 
+        #print('   percent of var residual after lsqfit/var original: 
         #5.2f 
         #\n',100*(varxr/varx));  
     else:
@@ -353,14 +351,14 @@ def t_tide(xin):
         varxp = np.cov(real(xout[(gd)]))
         varxr = np.cov(real(xres[(gd)]))
         #cout
-        #fprintf('   percent of X var residual after lsqfit/var original: 
+        #print('   percent of X var residual after lsqfit/var original: 
         #5.2f 
         #\n',100*(varxr/varx));
         vary = np.cov(imag(xin[(gd)]))
         varyp = np.cov(imag(xout[(gd)]))
         varyr = np.cov(imag(xres[(gd)]))
         #cout
-        #fprintf('   percent of Y var residual after lsqfit/var original: 
+        #print('   percent of Y var residual after lsqfit/var original: 
         #5.2f 
         #\n',100*(varyr/vary));
     #---------- Correct for prefiltering-----------------------------------
@@ -397,14 +395,13 @@ def t_tide(xin):
             f = np.ones(shape=(max(ju.shape) + max(jinf.shape), 1), dtype='float64')
             nodcor = 'Phases at central time'
     #cout									   
-    #fprintf(['   ',nodcor,'\n']);												   
+    #print(['   ',nodcor,'\n']);												   
     #---------------Inference Corrections----------------------------------
     # Once again, the "right" way to do this would be to change the basis
     # functions.
     ii = np.flatnonzero(np.isfinite(jref))
-    print jref
     if ii:
-        fprintf('   Do inference corrections\\n')
+        print('   Do inference corrections\\n')
         snarg = np.dot(np.dot(np.dot(nobsu, pi), (fi[(ii -1)] - fu[(jref[(ii -1)] -1)])), dt)
         scarg = sin(snarg) / snarg
         if infamprat.shape[1] == 1:
@@ -455,7 +452,7 @@ def t_tide(xin):
     nreal = 1
     if errcalc.endswith('boot'):
         #cout									   
-        #fprintf('   Using nonlinear bootstrapped error estimates\n');
+        #print('   Using nonlinear bootstrapped error estimates\n');
         # "noise" matrices are created with the right covariance structure
         # to add to the analyzed components to create 'nreal' REPLICATES. 
         # 
@@ -464,23 +461,21 @@ def t_tide(xin):
         NP, NM = noise_realizations(xr[(np.isfinite(xr))], fu, dt, nreal, errcalc) # nargout=2
         # All replicates are then transformed (nonlinearly) into ellipse 
         # parameters.  The computed error bars are then based on the std
-        # dev of the replicates.
-        filler=np.empty((ap.shape[0],nreal),dtype='complex128') 
-        #print filler[:,:]=ap[:]       
+        # dev of the replicates. 
 
-        AP = ap[:, np.isfinite(np.ones(shape=(1, nreal), dtype='float64'))] + NP
+        AP = np.repeat(ap,nreal).reshape(len(ap),nreal) + NP
         # Add to analysis (first column
-        AM = am[:, (np.ones(shape=(1, nreal), dtype='float64'))] + NM
+        AM = np.repeat(am,nreal).reshape(len(am),nreal) + NM
         # of NM,NP=0 so first column of
         # AP/M holds ap/m).
-        epsp = np.dot(angle(AP), 180) / pi
+        epsp = np.dot(np.angle(AP), 180) / pi
         # Angle/magnitude form:
-        epsm = np.dot(angle(AM), 180) / pi
+        epsm = np.dot(np.angle(AM), 180) / pi
         ap = abs(AP)
         am = abs(AM)
     else:
         if errcalc=='linear':
-            fprintf('   Using linearized error estimates\\n')
+            print('   Using linearized error estimates\\n')
             #
             # Uncertainties in analyzed amplitudes are computed in different
             # spectral bands. Real and imaginary parts of the residual time series
@@ -516,7 +511,7 @@ def t_tide(xin):
     gm = np.mod(vu[:] + epsm, 360)
     # neg. Greenwich phase in deg.
     finc = (epsp + epsm) / 2
-    finc[:, 0] = mod(finc[:, 0], 180)
+    finc[:, 0] = np.mod(finc[:, 0], 180)
     # Ellipse inclination in degrees
     # (mod 180 to prevent ambiguity, i.e., 
     # we always ref. against northern 
@@ -524,7 +519,7 @@ def t_tide(xin):
     finc = cluster(finc, 180)
     # Cluster angles around the 'true' 
     # angle to avoid 360 degree wraps.
-    pha = mod(gp + finc, 360)
+    pha = np.mod(gp + finc, 360)
     # Greenwich phase in degrees.
     pha = cluster(pha, 360)
     # Cluster angles around the 'true' angle
@@ -532,7 +527,7 @@ def t_tide(xin):
     #----------------Generate 95
     # CI---------------------------------------
     # For bootstrapped errors, we now compute limits of the distribution.
-    if errcalc=='boot':
+    if errcalc.endswith('boot'):
         # std dev-based estimates.
         # The 95
         # CI are computed from the sigmas
@@ -543,10 +538,11 @@ def t_tide(xin):
         # epha=1.96*std(pha ,0,2);
         # Median-absolute-deviation (MAD) based estimates.
         # (possibly more stable?)
-        emaj = np.dot(median(abs(fmaj - np.dot(median(fmaj, 2), np.ones(shape=(1, nreal), dtype='float64'))), 2) / 0.6375, 1.96)
-        emin = np.dot(median(abs(fmin - np.dot(median(fmin, 2), np.ones(shape=(1, nreal), dtype='float64'))), 2) / 0.6375, 1.96)
-        einc = np.dot(median(abs(finc - np.dot(median(finc, 2), np.ones(shape=(1, nreal), dtype='float64'))), 2) / 0.6375, 1.96)
-        epha = np.dot(median(abs(pha - np.dot(median(pha, 2), np.ones(shape=(1, nreal), dtype='float64'))), 2) / 0.6375, 1.96)
+
+        emaj = np.dot(np.median(abs(fmaj - np.dot(np.median(fmaj, 1).reshape(len(np.median(fmaj, 1)),1), np.ones(shape=(1, nreal), dtype='float64'))), 1) / 0.6375, 1.96)
+        emin = np.dot(np.median(abs(fmin - np.dot(np.median(fmin, 1).reshape(len(np.median(fmin, 1)),1), np.ones(shape=(1, nreal), dtype='float64'))), 1) / 0.6375, 1.96)
+        einc = np.dot(np.median(abs(finc - np.dot(np.median(finc, 1).reshape(len(np.median(finc, 1)),1), np.ones(shape=(1, nreal), dtype='float64'))), 1) / 0.6375, 1.96)
+        epha = np.dot(np.median(abs(pha - np.dot(np.median(pha, 1).reshape(len(np.median(pha, 1)),1), np.ones(shape=(1, nreal), dtype='float64'))), 1) / 0.6375, 1.96)
     else:
         # In the linear analysis, the 95
         # CI are computed from the sigmas
@@ -555,13 +551,13 @@ def t_tide(xin):
         emin = np.dot(1.96, emin)
         einc = np.dot(1.96, einc)
         epha = np.dot(1.96, epha)
-    if isreal(xin):
-        tidecon = np.array([fmaj[:, 0], emaj, pha[:, 0], epha]).reshape(1, -1)
+    if np.isreal(xin).all():
+        tidecon = np.array([fmaj[:, 0], emaj, pha[:, 0], epha]).T
     else:
-        tidecon = np.array([fmaj[:, 0], emaj, fmin[:, 0], emin, finc[:, 0], einc, pha[:, 0], epha]).reshape(1, -1)
+        tidecon = np.array([fmaj[:, 0], emaj, fmin[:, 0], emin, finc[:, 0], einc, pha[:, 0], epha]).T
     # Sort results by frequency (needed if anything has been inferred since 
     # these are stuck at the end of the list by code above).
-    if any(isfinite(jref)):
+    if any(np.isfinite(jref)):
         fu, I = sort(fu) # nargout=2
         nameu = nameu[(I -1), :]
         tidecon = tidecon[(I -1), :]
@@ -572,69 +568,72 @@ def t_tide(xin):
     if synth >= 0:
         if lat.size !=0 & stime.size !=0:
             #cout									   
-            #fprintf('   Generating prediction with nodal corrections, SNR is 
+            #print('   Generating prediction with nodal corrections, SNR is 
             #f\n',synth);
             xout = t_predic(stime + np.dot(np.array([range(0, (nobs - 1 +1))]).reshape(1, -1), dt) / 24.0, nameu, fu, tidecon, 'lat', lat, 'synth', synth, 'anal', ltype)
         else:
             if not  (0 in stime.shape):
                 #cout									   
-                #fprintf('   Generating prediction without nodal corrections, SNR is 
+                #print('   Generating prediction without nodal corrections, SNR is 
                 #f\n',synth);
                 xout = t_predic(stime + np.dot(np.array([range(0, (nobs - 1 +1))]).reshape(1, -1), dt) / 24.0, nameu, fu, tidecon, 'synth', synth, 'anal', ltype)
             else:
                 #cout									   
-                #fprintf('   Generating prediction without nodal corrections, SNR is 
+                #print('   Generating prediction without nodal corrections, SNR is 
                 #f\n',synth);
-                xout = t_predic(t / 24.0, nameu, fu, tidecon, 'synth', synth, 'anal', ltype)
+                print "This would be a t_predic call."
+                #haven't fixed t_predic yet commenting it out to to see if t_tide can be made to work.
+                #xout = t_predic(t / 24.0, nameu, fu, tidecon, 'synth', synth, 'anal', ltype)
     else:
-        fprintf('   Returning fitted prediction\\n')
+        print('   Returning fitted prediction\\n')
     # Check variance explained (but now do this with the synthesized fit).
     xres = xin[:] - xout[:]
     # and the residuals!
     #error;
-    if isreal(xin):
+    if np.isreal(xin).all():
         # Real time series
-        varx = cov(xin[(gd -1)])
-        varxp = cov(xout[(gd -1)])
-        varxr = cov(xres[(gd -1)])
+        varx = np.cov(xin[(gd)])
+        varxp = np.cov(xout[(gd)])
+        varxr = np.cov(xres[(gd)])
         #cout									   
-        #fprintf('   percent of var residual after synthesis/var original: 
+        #print('   percent of var residual after synthesis/var original: 
         #5.2f 
         #\n',100*(varxr/varx));  
     else:
         # Complex time series
-        varx = cov(real(xin[(gd -1)]))
-        varxp = cov(real(xout[(gd -1)]))
-        varxr = cov(real(xres[(gd -1)]))
+        varx = cov(real(xin[(gd)]))
+        varxp = cov(real(xout[(gd)]))
+        varxr = cov(real(xres[(gd)]))
         #cout									   
-        #fprintf('   percent of X var residual after synthesis/var original: 
+        #print('   percent of X var residual after synthesis/var original: 
         #5.2f 
         #\n',100*(varxr/varx));
-        vary = cov(imag(xin[(gd -1)]))
-        varyp = cov(imag(xout[(gd -1)]))
-        varyr = cov(imag(xres[(gd -1)]))
+        vary = cov(imag(xin[(gd)]))
+        varyp = cov(imag(xout[(gd)]))
+        varyr = cov(imag(xres[(gd)]))
         #cout									   
-        #fprintf('   percent of Y var residual after synthesis/var original: 
+        #print('   percent of Y var residual after synthesis/var original: 
         #5.2f 
         #\n',100*(varyr/vary));
     #-----------------Output results---------------------------------------
     if fid > 1:
-        fprintf(fid, '\\n\n %s\\n', 'file name: ' + filen)
+        print  '\\n\n %s\\n', 'file name: ' + filen
     else:
         if fid == 1:
-            fprintf(fid, '-----------------------------------\\n')
+            print  '-----------------------------------'
     if fid > 0:
-        fprintf(fid, 'date: \n %s\\n', date)
-        fprintf(fid, 'nobs = \n %d,  ngood = \n %d,  record length (days) = \n %.2f\\n', nobs, ngood, np.dot(max(xin.shape), dt) / 24)
-        if not  (0 in stime.shape):
-            fprintf(fid, '\n %s\\n', 'start time: ' + datestr(stime))
-        fprintf(fid, 'rayleigh criterion = \n %.1f\\n', ray)
-        fprintf(fid, '\n %s\\n', nodcor)
-        #  fprintf(fid,'\n     coefficients from least squares fit of x\n');
-        #  fprintf(fid,'\n tide    freq        |a+|       err_a+      |a-|       err_a-\n');
+        date='Placeholder'
+        print  'date: %s' % date
+        print  'nobs = %d \nngood = %d \nrecord length (days) = %.2f' % (nobs, ngood, np.dot(max(xin.shape), dt) / 24)
+        if stime.size != 0:
+            print  '\n %s\\n', 'start time: ' + datestr(stime)
+        print  'rayleigh criterion = %.1f\n' % ray
+        print  '%s\n' % nodcor
+        #  print '\n     coefficients from least squares fit of x\n');
+        #  print '\n tide    freq        |a+|       err_a+      |a-|       err_a-\n');
         #  for k=1:length(fu);
-        #    if ap(k)>eap(k) | am(k)>eam(k), fprintf('*'); else fprintf(' '); end;
-        #    fprintf(fid,'
+        #    if ap(k)>eap(k) | am(k)>eam(k), print('*'); else print(' '); end;
+        #    print '
         #s  
         #8.5f  
         #9.4f  
@@ -642,44 +641,45 @@ def t_tide(xin):
         #9.4f  
         #9.4f\n',nameu(k,:),fu(k),ap(k),eap(k),am(k),eam(k));
         #  end
-        fprintf(fid, '\\nx0= \n %.3g, x trend= \n %.3g\\n', real(z0), real(dz0))
-        fprintf(fid, '\\nvar(x)= ' + num2str(varx) + '   var(xp)= ' + num2str(varxp) + '   var(xres)= ' + num2str(varxr) + '\\n')
-        fprintf(fid, 'percent var predicted/var original= \n %.1f \n %\\n', np.dot(100, varxp) / varx)
-        if isreal(xin):
-            fprintf(fid, '\\n     tidal amplitude and phase with 95\n % CI estimates\\n')
-            fprintf(fid, '\\ntide   freq       amp     amp_err    pha    pha_err     snr\\n')
-            for k in range(1, (max(fu.shape) +1)):
-                if snr[(k -1)] > synth:
-                    fprintf(fid, '*')
+        print  'x0= %.3g, x trend= %.3g' % ( np.real(z0), np.real(dz0))
+        print  'var(x)= ' , varx , '   var(xp)= ' , varxp , '   var(xres)= ' , varxr , ''
+        print ''
+        print  'percent var predicted/var original= %.1f ' % (np.dot(100, varxp) / varx)
+        print ''
+        if np.isreal(xin).all():
+            print  '     tidal amplitude and phase with 95 % CI estimates'
+            print  '   tide      freq         amp     amp_err     pha     pha_err    snr'
+            for k in range(0, max(fu.shape) ):
+                if snr[(k)] > synth:
+                    print  '* %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), 360-tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), snr[(k)].astype(float))
                 else:
-                    fprintf(fid, ' ')
-                fprintf(fid, '\n %s \n %9.7f \n %9.4f \n %8.3f \n %8.2f \n %8.2f \n %8.2g\\n', nameu[(k -1), :], fu[(k -1)], tidecon[(k -1), :], snr[(k -1)])
+                   print  '  %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), snr[(k)].astype(float))                
         else:
-            fprintf(fid, '\\ny0= \n %.3g, x trend= \n %.3g\\n', imag(z0), imag(dz0))
-            fprintf(fid, '\\nvar(y)= ' + num2str(vary) + '    var(yp)= ' + num2str(varyp) + '  var(yres)= ' + num2str(varyr) + '\\n')
-            fprintf(fid, 'percent var predicted/var original= \n %.1f \n %\\n', np.dot(100, varyp) / vary)
-            fprintf(fid, '\\n\n %s\\n', 'ellipse parameters with 95\n % CI estimates')
-            fprintf(fid, '\\n\n %s\\n', 'tide   freq      major  emaj    minor   emin     inc    einc     pha    epha      snr')
+            print  '\\ny0= \n %.3g, x trend= \n %.3g\\n', imag(z0), imag(dz0)
+            print  '\\nvar(y)= ' + num2str(vary) + '    var(yp)= ' + num2str(varyp) + '  var(yres)= ' + num2str(varyr) + '\\n'
+            print  'percent var predicted/var original= \n %.1f \n %\\n', np.dot(100, varyp) / vary
+            print  '\\n\n %s\\n', 'ellipse parameters with 95\n % CI estimates'
+            print  '\\n\n %s\\n', 'tide   freq      major  emaj    minor   emin     inc    einc     pha    epha      snr'
             for k in range(1, (max(fu.shape) +1)):
                 if snr[(k -1)] > synth:
-                    fprintf(fid, '*')
+                    print  '*'
                 else:
-                    fprintf(fid, ' ')
-                fprintf(fid, '\n %s \n %9.7f \n %6.3f \n %7.3f \n %7.3f \n %6.2f \n %8.2f \n %6.2f \n %8.2f \n %6.2f \n %6.2g\\n', nameu[(k -1), :], fu[(k -1)], tidecon[(k -1), :], snr[(k -1)])
-            fprintf(fid, '\\ntotal var= ' + num2str(varx + vary) + '   pred var= ' + num2str(varxp + varyp) + '\\n')
-            fprintf(fid, 'percent total var predicted/var original= \n %.1f \n %\\n\\n', np.dot(100, (varxp + varyp)) / (varx + vary))
+                    print  ' '
+                print  '\n %s \n %9.7f \n %6.3f \n %7.3f \n %7.3f \n %6.2f \n %8.2f \n %6.2f \n %8.2f \n %6.2f \n %6.2g\\n', nameu[(k -1), :], fu[(k -1)], tidecon[(k -1), :], snr[(k -1)]
+            print  '\\ntotal var= ' + num2str(varx + vary) + '   pred var= ' + num2str(varxp + varyp) + '\\n'
+            print  'percent total var predicted/var original= \n %.1f \n %\\n\\n', np.dot(100, (varxp + varyp)) / (varx + vary)
         if fid != 1:
             st = fid.close()
-    xout = reshape(xout, inn, inm)
-    if [0, 3, 4] == nargout:
-        pass
-    else:
-        if [1] == nargout:
-            nameu = type('struct', (), {})()
-        else:
-            if [2] == nargout:
-                nameu = type('struct', (), {})()
-                fu = xout
+    xout = xout.reshape(inn[0], 1)
+    #if [0, 3, 4] == nargout:
+    #    pass
+    #else:
+    #    if [1] == nargout:
+    #        nameu = type('struct', (), {})()
+    #    else:
+    #        if [2] == nargout:
+    #            nameu = type('struct', (), {})()
+    #            fu = xout
     return nameu, fu, tidecon, xout
 def constituents(minres, constit, shallow, infname, infref, centraltime):
     """[name,freq,kmpr]=constituents(minres,infname) loads tidal constituent
@@ -780,7 +780,7 @@ def constituents(minres, constit, shallow, infname, infref, centraltime):
                     disp("Can't recognize name " + infref[(k -1), :] + ' for as a reference for inference')
                 else:
                     jref[(k -1)] = j1
-                    fprintf('   Inference of ' + namei[(k -1), :] + ' using ' + nameu[(j1 -1), :] + '\\n')
+                    print('   Inference of ' + namei[(k -1), :] + ' using ' + nameu[(j1 -1), :] + '\\n')
         jinf[(isnan(jref) -1)] = NaN
     return nameu, fu, ju, namei, fi, jinf, jref
 def fixgaps(x):
@@ -804,9 +804,10 @@ def cluster(ain, clusang):
      column. CLUSANG is the allowable ambiguity (usually 360 degrees but
      sometimes 180).
     """
-    ii = (ain - ain[:, (np.ones(shape=(1, ain.shape[1]), dtype='float64') -1)]) > clusang / 2
+
+    ii = (ain - np.repeat(ain[:,1],ain.shape[1]).reshape(ain.shape[0],ain.shape[1])) > clusang / 2
     ain[(ii -1)] = ain[(ii -1)] - clusang
-    ii = (ain - ain[:, (np.ones(shape=(1, ain.shape[1]), dtype='float64') -1)]) < - clusang / 2
+    ii = (ain - np.repeat(ain[:,1],ain.shape[1]).reshape(ain.shape[0],ain.shape[1])) < - clusang / 2
     ain[(ii -1)] = ain[(ii -1)] + clusang
     return ain
 def noise_realizations(xres, fu, dt, nreal, errcalc):
@@ -821,7 +822,7 @@ def noise_realizations(xres, fu, dt, nreal, errcalc):
         aaa,bbb=Pxcave.shape
         Pxcave = np.zeros((aaa, bbb), dtype='float64')
         # For comparison with other technique!
-        #fprintf('**** Assuming no covariance between u and v errors!*******\n');
+        #print('**** Assuming no covariance between u and v errors!*******\n');
     else:
         if errcalc=='wboot':
             fband = np.array([0, 0.5]).reshape(1, -1)
@@ -946,7 +947,6 @@ def residual_spectrum(xres, fu, dt):
         jband = np.flatnonzero(np.all(np.vstack([fx >= fband[(k), 0],fx <= fband[(k), 1] , np.isfinite(Pxr)]).T,axis=1))        
         if any(jband):
             Pxrave[k] = np.dot(np.mean(Pxr[(jband)]), 2) / nx
-            print Pxrave[k]
             Pxiave[k] = np.dot(np.mean(Pxi[(jband)]), 2) / nx
             Pxcave[k] = np.dot(np.mean(Pxc[(jband)]), 2) / nx
         else:
