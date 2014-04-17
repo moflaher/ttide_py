@@ -9,7 +9,7 @@ import scipy.interpolate as spi
 import scipy.signal as sps
 import sys
 import matplotlib.mlab as mplm
-
+np.set_printoptions(precision=8,suppress=True)
 
 
 def t_tide(xin):
@@ -267,13 +267,12 @@ def t_tide(xin):
         else:     
             tc = np.hstack((np.ones(shape=(max(t.shape), 1), dtype='float64'), np.cos(2*pi*t*fu.T), np.sin(2*pi*t*fu.T)))
         
-
         coef = np.linalg.lstsq(tc[gd, :], xin[gd])[0]        
         coef=coef.T
         z0 = coef[0]
-        ap = (coef[1:mu+1]+1j*coef[(1+mu):(mu*2)+1])/2   
+        ap = (coef[1:mu+1]-1j*coef[(1+mu):(mu*2)+1])/2   
         # a+ amplitudes
-        am = (coef[1:mu+1]-1j*coef[(1+mu):(mu*2)+1])/2
+        am = (coef[1:mu+1]+1j*coef[(1+mu):(mu*2)+1])/2
         # a- amplitudes
         if secular[0:3] == 'lin':
             dz0 = coef[-1]
@@ -367,7 +366,7 @@ def t_tide(xin):
     corrfac[corrfac > 100] = 1
     corrfac[corrfac < 0.01] = 1
     corrfac[np.isnan(corrfac)] = 1
-    ap = ap * corrfac    
+    ap = ap * corrfac     
     am = am * np.conj(corrfac)
     #---------------Nodal Corrections-------------------------------------- 						   
     # Generate nodal corrections and calculate phase relative to Greenwich. 						   
@@ -462,15 +461,14 @@ def t_tide(xin):
         # All replicates are then transformed (nonlinearly) into ellipse 
         # parameters.  The computed error bars are then based on the std
         # dev of the replicates. 
-
         AP = np.repeat(ap,nreal).reshape(len(ap),nreal) + NP
         # Add to analysis (first column
         AM = np.repeat(am,nreal).reshape(len(am),nreal) + NM
         # of NM,NP=0 so first column of
         # AP/M holds ap/m).
-        epsp = np.dot(np.angle(AP), 180) / pi
+        epsp = (np.dot(np.angle(AP), 180) / pi)
         # Angle/magnitude form:
-        epsm = np.dot(np.angle(AM), 180) / pi
+        epsm = (np.dot(np.angle(AM), 180) / pi)
         ap = abs(AP)
         am = abs(AM)
     else:
@@ -491,6 +489,7 @@ def t_tide(xin):
             # It seems like there should be a factor of 2 here somewhere but it 
             # only works this way! <shrug>
             emaj, emin, einc, epha = errell(ap + am, np.dot(i, (ap - am)), ercx, ercx, eicx, eicx) # nargout=4
+
             epsp = np.dot(angle(ap), 180) / pi
             epsm = np.dot(angle(am), 180) / pi
             ap = abs(ap)
@@ -651,7 +650,7 @@ def t_tide(xin):
             print  '   tide      freq         amp     amp_err     pha     pha_err    snr'
             for k in range(0, max(fu.shape) ):
                 if snr[(k)] > synth:
-                    print  '* %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), 360-tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), snr[(k)].astype(float))
+                    print  '* %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), snr[(k)].astype(float))
                 else:
                    print  '  %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), snr[(k)].astype(float))                
         else:
