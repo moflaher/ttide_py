@@ -9,7 +9,6 @@ import scipy.interpolate as spi
 import scipy.signal as sps
 import sys
 import matplotlib.mlab as mplm
-np.set_printoptions(precision=8,suppress=True)
 
 
 def t_tide(xin):

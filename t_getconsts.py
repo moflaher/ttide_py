@@ -27,10 +27,10 @@ def t_getconsts(*varargin):
     #    const=np.genfromtxt('t_tide_py/t_constituents_const.csv', dtype=None, delimiter=',', names=True)
     #    sat=np.genfromtxt('t_tide_py/t_constituents_sat.csv', dtype=None, delimiter=',', names=True)
     #    shallow=np.genfromtxt('t_tide_py/t_constituents_shallow.csv', dtype=None, delimiter=',', names=True)
-    if os.path.exists('t_tide_py/t_constituents_const.npy') & os.path.exists('t_tide_py/t_constituents_sat.npy') & os.path.exists('t_tide_py/t_constituents_shallow.npy'):
-        const=np.load('t_tide_py/t_constituents_const.npy')
-        sat=np.load('t_tide_py/t_constituents_sat.npy')
-        shallow=np.load('t_tide_py/t_constituents_shallow.npy')
+    if os.path.exists('ttide_py/t_constituents_const.npy') & os.path.exists('ttide_py/t_constituents_sat.npy') & os.path.exists('ttide_py/t_constituents_shallow.npy'):
+        const=np.load('ttide_py/t_constituents_const.npy')
+        sat=np.load('ttide_py/t_constituents_sat.npy')
+        shallow=np.load('ttide_py/t_constituents_shallow.npy')
     else:
         print "You do not have t_constituents_*.csv saved from t_constituents.mat, to much work to convert code get them."
         const=[]
