@@ -4,7 +4,7 @@ from __future__ import division
 import numpy as np
 from scipy.io import loadmat,savemat
 import os
-import t_getconsts as tgets
+import t_getconsts as t_getconsts
 import scipy.interpolate as spi
 import scipy.signal as sps
 import sys
@@ -696,7 +696,7 @@ def constituents(minres, constit, shallow, infname, infref, centraltime):
     """
     if minres > 1 / (np.dot(np.dot(18.6, 365.25), 24)):
         # Choose only resolveable pairs for short
-        const, sat, cshallow = tgets.t_getconsts(centraltime) # nargout=3
+        const, sat, cshallow = t_getconsts(centraltime) # nargout=3
         # Time series  
         ju = np.flatnonzero(const['df'] >= minres)
     else:
