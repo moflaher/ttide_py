@@ -23,16 +23,21 @@ def t_getconsts(*varargin):
     nargin = len(varargin)
     if nargin > 0:
         ctime = varargin[0]
+    print os.getcwd()
+
     #if os.path.exists('t_tide_py/t_constituents_const.csv') & os.path.exists('t_tide_py/t_constituents_sat.csv') & os.path.exists('t_tide_py/t_constituents_shallow.csv'):
     #    const=np.genfromtxt('t_tide_py/t_constituents_const.csv', dtype=None, delimiter=',', names=True)
     #    sat=np.genfromtxt('t_tide_py/t_constituents_sat.csv', dtype=None, delimiter=',', names=True)
     #    shallow=np.genfromtxt('t_tide_py/t_constituents_shallow.csv', dtype=None, delimiter=',', names=True)
-    if os.path.exists('ttide_py/t_constituents_const.npy') & os.path.exists('ttide_py/t_constituents_sat.npy') & os.path.exists('ttide_py/t_constituents_shallow.npy'):
-        const=np.load('ttide_py/t_constituents_const.npy')
-        sat=np.load('ttide_py/t_constituents_sat.npy')
-        shallow=np.load('ttide_py/t_constituents_shallow.npy')
+    if os.path.exists('ttide_py/ttide/t_constituents_const.npy') & os.path.exists('ttide_py/ttide/t_constituents_sat.npy') & os.path.exists('ttide_py/ttide/t_constituents_shallow.npy'):
+        const=np.load('ttide_py/ttide/t_constituents_const.npy')
+        const=const[()]
+        sat=np.load('ttide_py/ttide/t_constituents_sat.npy')
+        sat=sat[()]
+        shallow=np.load('ttide_py/ttide/t_constituents_shallow.npy')
+        shallow=[()]
     else:
-        print "You do not have t_constituents_*.csv saved from t_constituents.mat, to much work to convert code get them."
+        print "You do not have t_constituents_*.npy saved from t_constituents.mat, to much work to convert code get them for now."
         const=[]
         sat=[]
         shallow=[]

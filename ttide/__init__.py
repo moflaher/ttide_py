@@ -1,3 +1,3 @@
-from t_tide import t_tide
+from ttide import t_tide
 
-__version__ = '1.0'
+__version__ = '0.1_exp'

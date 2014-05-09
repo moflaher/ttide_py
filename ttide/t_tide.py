@@ -4,11 +4,13 @@ from __future__ import division
 import numpy as np
 from scipy.io import loadmat,savemat
 import os
-import t_getconsts as t_getconsts
 import scipy.interpolate as spi
 import scipy.signal as sps
 import sys
 import matplotlib.mlab as mplm
+from t_getconsts import t_getconsts
+np.set_printoptions(precision=8,suppress=True)
+
 
 
 def t_tide(xin):
@@ -228,7 +230,9 @@ def t_tide(xin):
         ltype = 'nodal'
     nobsu = nobs - np.remainder(nobs - 1, 2)
     # makes series odd to give a center point
-    t = np.dot(dt, (np.array([range(1, (nobs +1))]).reshape(1, -1).T - np.ceil(nobsu / 2)))
+    t = np.dot(dt, (np.hstack([range(1, (nobs +1))]).reshape(1, -1).T - np.ceil(nobsu / 2)))
+
+    #t = np.dot(dt, (np.arange(nobs).T+1 - np.ceil(nobsu / 2)))
     # Time vector for entire time series,
     # centered at series midpoint. 
     if not  (0 in stime.shape):
@@ -262,11 +266,11 @@ def t_tide(xin):
     # give identical results (up to roundoff error)
     if lsq[0:3] == 'dir':
         if secular[0:3] == 'lin':
-            tc = np.hstack((np.ones(shape=(max(t.shape), 1), dtype='float64'), np.cos(2*pi*t*fu.T), np.sin(2*pi*t*fu.T),t*(2 / dt / nobsu)))
-        else:     
-            tc = np.hstack((np.ones(shape=(max(t.shape), 1), dtype='float64'), np.cos(2*pi*t*fu.T), np.sin(2*pi*t*fu.T)))
-        
+            tc = np.hstack((np.ones(shape=(max(t.shape), 1), dtype='float64'), np.cos(2*pi*np.dot(t,fu.T)), np.sin(2*pi*np.dot(t,fu.T)),t*(2 / dt / nobsu)))
+        else: 
+            tc = np.hstack((np.ones(shape=(max(t.shape), 1), dtype='float64'), np.cos(2*pi*np.dot(t,fu.reshape(-1,1).T)), np.sin(2*pi*np.dot(t,fu.reshape(-1,1).T)) ))
         coef = np.linalg.lstsq(tc[gd, :], xin[gd])[0]        
+
         coef=coef.T
         z0 = coef[0]
         ap = (coef[1:mu+1]-1j*coef[(1+mu):(mu*2)+1])/2   
@@ -332,7 +336,7 @@ def t_tide(xin):
                 xout[(j1 -1):j2] = np.dot(E, coef)
     # Check variance explained (but do this with the original fit).
  
-    xres = xin #- xout
+    xres = xin-xout
     # and the residuals!
     if np.isreal(xin).any():
         # Real time series
@@ -365,8 +369,8 @@ def t_tide(xin):
     corrfac[corrfac > 100] = 1
     corrfac[corrfac < 0.01] = 1
     corrfac[np.isnan(corrfac)] = 1
-    ap = ap * corrfac     
-    am = am * np.conj(corrfac)
+    ap = ap*np.squeeze(corrfac)
+    am = am * np.squeeze(np.conj(corrfac))
     #---------------Nodal Corrections-------------------------------------- 						   
     # Generate nodal corrections and calculate phase relative to Greenwich. 						   
     # Note that this is a slightly weird way to do the nodal corrections,							   
@@ -444,7 +448,6 @@ def t_tide(xin):
     #         or so.
     #
     xr = fixgaps(xres)
-
     # Fill in "internal" NaNs with linearly interpolated
     # values so we can fft things.
     nreal = 1
@@ -457,6 +460,7 @@ def t_tide(xin):
         nreal = 300
         # Create noise matrices 
         NP, NM = noise_realizations(xr[(np.isfinite(xr))], fu, dt, nreal, errcalc) # nargout=2
+
         # All replicates are then transformed (nonlinearly) into ellipse 
         # parameters.  The computed error bars are then based on the std
         # dev of the replicates. 
@@ -465,6 +469,7 @@ def t_tide(xin):
         AM = np.repeat(am,nreal).reshape(len(am),nreal) + NM
         # of NM,NP=0 so first column of
         # AP/M holds ap/m).
+
         epsp = (np.dot(np.angle(AP), 180) / pi)
         # Angle/magnitude form:
         epsm = (np.dot(np.angle(AM), 180) / pi)
@@ -504,6 +509,7 @@ def t_tide(xin):
     # major axis
     fmin = aap - aam
     # minor axis
+
     gp = np.mod(vu[:] - epsp, 360)
     # pos. Greenwich phase in deg.
     gm = np.mod(vu[:] + epsm, 360)
@@ -520,6 +526,7 @@ def t_tide(xin):
     pha = np.mod(gp + finc, 360)
     # Greenwich phase in degrees.
     pha = cluster(pha, 360)
+
     # Cluster angles around the 'true' angle
     # to avoid 360 degree wraps.
     #----------------Generate 95
