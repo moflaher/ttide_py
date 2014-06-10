@@ -4,8 +4,10 @@ from __future__ import division
 import numpy as np
 from scipy.io import loadmat,savemat
 import os
+from t_astron import t_astron
 
-def t_getconsts(*varargin):
+
+def t_getconsts(ctime):
     """T_GETCONSTS Gets constituent data structures
      [CONST,SAT,SHALLOW]=T_GETCONSTS returns data structures holding
      information for tidal analyses.
@@ -20,10 +22,7 @@ def t_getconsts(*varargin):
      R. Pawlowicz 11/8/99
      Version 1.0
     """
-    nargin = len(varargin)
-    if nargin > 0:
-        ctime = varargin[0]
-    print os.getcwd()
+
 
     #if os.path.exists('t_tide_py/t_constituents_const.csv') & os.path.exists('t_tide_py/t_constituents_sat.csv') & os.path.exists('t_tide_py/t_constituents_shallow.csv'):
     #    const=np.genfromtxt('t_tide_py/t_constituents_const.csv', dtype=None, delimiter=',', names=True)
@@ -35,7 +34,7 @@ def t_getconsts(*varargin):
         sat=np.load('ttide_py/ttide/t_constituents_sat.npy')
         sat=sat[()]
         shallow=np.load('ttide_py/ttide/t_constituents_shallow.npy')
-        shallow=[()]
+        shallow=shallow[()]
     else:
         print "You do not have t_constituents_*.npy saved from t_constituents.mat, to much work to convert code get them for now."
         const=[]
@@ -154,15 +153,15 @@ def t_getconsts(*varargin):
             l = fgetl(fid)
 
         savemat('t_constituents', 'const', 'sat', 'shallow')"""
-    if nargin == 1 & ctime.size!=0:
+    if ctime.size!=0:
         # If no time, just take the "standard" frequencies,
         # otherwise compute them from derivatives of astro
         astro, ader = t_astron(ctime) # nargout=2
         # parameters. This is probably a real overkill - the
-        ii=~np.isfinite(const['ishallow'])
+        ii=np.isfinite(const['ishallow']).flatten()
         # diffs are in the 10th decimal place (9th sig fig).
-        const['freq'][~ii] = (np.dot(const['doodson'][ii, :], ader)) / (24)
-        for k in np.flatnonzero(ii).T:
-            ik = const['ishallow'][k] + np.array([range(0, (const['nshallow'][k] - 1 +1))]).reshape(1, -1)
-            const['freq'][k] = np.sum(const['freq'][shallow['iname'][ik]] * shallow['coef'][ik])
+        const['freq'][~ii] = (np.dot(const['doodson'][~ii, :], ader)) / (24)
+        for k in np.flatnonzero(ii): 
+            ik = (const['ishallow'][k] + np.array([ range(0, (const['nshallow'][k]) ) ])-1).astype(int)            
+            const['freq'][k] = np.sum(np.multiply(np.squeeze(const['freq'][shallow['iname'][ik]-1]), np.squeeze(shallow['coef'][ik])))
     return const, sat, shallow

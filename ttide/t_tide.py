@@ -9,11 +9,14 @@ import scipy.signal as sps
 import sys
 import matplotlib.mlab as mplm
 from t_getconsts import t_getconsts
+from t_vuf import t_vuf
+from datetime import datetime,timedelta
+
 np.set_printoptions(precision=8,suppress=True)
 
 
 
-def t_tide(xin):
+def t_tide(xin,stime=np.array([])):
     """T_TIDE Harmonic analysis of a time series
      [NAME,FREQ,TIDECON,XOUT]=T_TIDE(XIN) computes the tidal analysis 
      of the (possibly complex) time series XIN.
@@ -193,7 +196,6 @@ def t_tide(xin):
     ray = 1
     dt = 1
     fid = 1
-    stime = np.array([])
     lat = np.array([])
     corr_fs = np.array([0, 1000000.0])
     corr_fac = np.array([1, 1])
@@ -208,35 +210,36 @@ def t_tide(xin):
     k = 1  
     pi=np.pi
 
-
-    inn= xin.shape # nargout=2    
+#Check to make sure that incoming data is a vector.
+    inn= xin.shape 
     if len(inn) != 1:
         error('Input time series is not a vector')
-    xin = xin[:]
-    # makes xin a column vector
+
+#Check size of incoming data.
     nobs = max(xin.shape)
+
+#Set matrix method if auto-choice.
     if lsq[0:3] == 'bes':
-        # Set matrix method if auto-choice.
         if nobs > 10000:
             lsq = 'normal'
         else:
             lsq = 'direct'
-    if np.dot(nobs, dt) > np.dot(np.dot(18.6, 365.25), 24):
-        # Long time series
+
+#Check to see if timeseries spans 18.6 years.
+    if nobs*dt > 18.6*365.25*24:
         longseries = 1
         ltype = 'full'
     else:
         longseries = 0
         ltype = 'nodal'
     nobsu = nobs - np.remainder(nobs - 1, 2)
-    # makes series odd to give a center point
-    t = np.dot(dt, (np.hstack([range(1, (nobs +1))]).reshape(1, -1).T - np.ceil(nobsu / 2)))
 
-    #t = np.dot(dt, (np.arange(nobs).T+1 - np.ceil(nobsu / 2)))
-    # Time vector for entire time series,
-    # centered at series midpoint. 
+#Make series odd to give a center point
+# Time vector for entire time series centered at series midpoint. 
+    t = (dt*(np.arange(nobs)+1-np.ceil(nobsu/2))).reshape(-1,1)
+     
     if not  (0 in stime.shape):
-        centraltime = stime + np.dot(floor(nobsu / 2) / 24.0, dt)
+        centraltime = stime + np.dot(np.floor(nobsu / 2) / 24.0, dt)
     else:
         centraltime = np.array([])
     # -------Get the frequencies to use in the harmonic analysis-----------
@@ -387,7 +390,7 @@ def t_tide(xin):
         if not  (0 in stime.shape):
             # Time only  										   
             # Get nodal corrections at midpoint time										   
-            v, u, f = t_vuf(ltype, centraltime, np.array([ju, jinf]).reshape(1, -1)) # nargout=3
+            v, u, f = t_vuf(ltype, centraltime, np.hstack([ju, jinf]).reshape(1, -1).astype(int)) # nargout=3
             vu = np.dot((v + u), 360)
             # total phase correction (degrees)	
             nodcor = 'Greenwich phase computed, no nodal corrections'
@@ -460,7 +463,6 @@ def t_tide(xin):
         nreal = 300
         # Create noise matrices 
         NP, NM = noise_realizations(xr[(np.isfinite(xr))], fu, dt, nreal, errcalc) # nargout=2
-
         # All replicates are then transformed (nonlinearly) into ellipse 
         # parameters.  The computed error bars are then based on the std
         # dev of the replicates. 
@@ -501,18 +503,19 @@ def t_tide(xin):
         else:
             print "Unrecognized type of error analysis: " + errcalc + " specified!"
     #-----Convert complex amplitudes to standard ellipse parameters--------
-    aap = ap / f[:]
+
+    aap = ap / np.repeat(f,nreal).reshape(len(f),nreal)
     # Apply nodal corrections and
-    aam = am / f[:]
+    aam = am / np.repeat(f,nreal).reshape(len(f),nreal)
     # compute ellipse parameters.
     fmaj = aap + aam
     # major axis
     fmin = aap - aam
     # minor axis
 
-    gp = np.mod(vu[:] - epsp, 360)
+    gp = np.mod(np.repeat(vu,nreal).reshape(len(vu),nreal) - epsp, 360)
     # pos. Greenwich phase in deg.
-    gm = np.mod(vu[:] + epsm, 360)
+    gm = np.mod(np.repeat(vu,nreal).reshape(len(vu),nreal) + epsm, 360)
     # neg. Greenwich phase in deg.
     finc = (epsp + epsm) / 2
     finc[:, 0] = np.mod(finc[:, 0], 180)
@@ -581,7 +584,8 @@ def t_tide(xin):
                 #cout									   
                 #print('   Generating prediction without nodal corrections, SNR is 
                 #f\n',synth);
-                xout = t_predic(stime + np.dot(np.array([range(0, (nobs - 1 +1))]).reshape(1, -1), dt) / 24.0, nameu, fu, tidecon, 'synth', synth, 'anal', ltype)
+                print "This would be a t_predic call."
+                #xout = t_predic(stime + np.dot(np.array([range(0, (nobs - 1 +1))]).reshape(1, -1), dt) / 24.0, nameu, fu, tidecon, 'synth', synth, 'anal', ltype)
             else:
                 #cout									   
                 #print('   Generating prediction without nodal corrections, SNR is 
@@ -631,7 +635,7 @@ def t_tide(xin):
         print  'date: %s' % date
         print  'nobs = %d \nngood = %d \nrecord length (days) = %.2f' % (nobs, ngood, np.dot(max(xin.shape), dt) / 24)
         if stime.size != 0:
-            print  '\n %s\\n', 'start time: ' + datestr(stime)
+            print  'start time: %s' % (stime)
         print  'rayleigh criterion = %.1f\n' % ray
         print  '%s\n' % nodcor
         #  print '\n     coefficients from least squares fit of x\n');
@@ -701,14 +705,15 @@ def constituents(minres, constit, shallow, infname, infref, centraltime):
         19/1/02 - typo fixed (thanks to  Zhigang Xu)
      Compute frequencies from astronomical considerations.
     """
-    if minres > 1 / (np.dot(np.dot(18.6, 365.25), 24)):
+    if minres > 1 / (18.6*365.25*24):
         # Choose only resolveable pairs for short
         const, sat, cshallow = t_getconsts(centraltime) # nargout=3
         # Time series  
         ju = np.flatnonzero(const['df'] >= minres)
     else:
-        # Choose them all if > 18.6 years.
+        #Choose them all if > 18.6 years.
         const, sat, cshallow = t_get18consts(centraltime) # nargout=3
+
         ju = np.array([range(2, (max(const['freq'].shape) +1))]).reshape(1, -1).T
         # Skip Z0
         for ff in range(1, 3):
@@ -751,8 +756,11 @@ def constituents(minres, constit, shallow, infname, infref, centraltime):
                     disp(shallow[(k -1), :] + ' Not a shallow-water constituent')
                 disp('   Forced fit to ' + shallow[(k -1), :])
                 ju = np.array([ju, j1]).reshape(1, -1)
+
     nameu = const['name'][ju]
     fu = const['freq'][ju]
+
+
     # Check if neighboring chosen constituents violate Rayleigh criteria.
     jck = np.flatnonzero(np.diff(fu) < minres)
     #cout
@@ -853,20 +861,22 @@ def noise_realizations(xres, fu, dt, nreal, errcalc):
         p = (Pxrave[(k -1)] + Pxiave[(k -1)]) / 2
         d = (Pxrave[(k -1)] - Pxiave[(k -1)]) / 2
         sxy = Pxcave[(k -1)]
-        B = np.hstack([p, 0, d, sxy, 0, p, sxy, - d, d, sxy, p, 0, sxy, - d, 0, p]).reshape(4,4)
+        B = np.hstack([p, 0, d, sxy,0, p, sxy, - d,d, sxy, p, 0,sxy, - d, 0, p]).reshape(4,4)
         # Compute the transformation matrix that takes uncorrelated white 
         # noise and makes noise with the same statistical structure as the 
         # Fourier transformed noise.
-        V, D = np.linalg.eig(B) # nargout=2
+        D,V = np.linalg.eig(B) # nargout=2 
+        print D
         Mat[:, :, (k -1)] = np.dot(V, np.diag(np.sqrt(np.diag(D))))
+        #print Mat
     # Generate realizations for the different analyzed constituents.
     N = np.zeros(shape=(4, nreal), dtype='float64')
     NM = np.zeros(shape=(max(fu.shape), nreal), dtype='float64')
     NP = NM
 
     for k in range(0, fu.shape[0]):
-        l = np.flatnonzero(np.all([fu[k] > fband[:, 0] , fu[k] < fband[:, 1]],axis=0))
-        N = np.hstack([np.zeros(shape=(4, 1), dtype='float64'), np.dot(np.squeeze(Mat[:, :, l]), np.random.randn(4, nreal-1))])
+        l = np.squeeze(np.flatnonzero(np.all([fu[k] > fband[:, 0] , fu[k] < fband[:, 1]],axis=0)))
+        N = np.hstack([np.zeros(4,).reshape(-1,1), np.dot(np.squeeze(Mat[:, :, l]), np.random.randn(4, nreal-1))])
         NP[(k), :] = N[0, :] + 1j*N[1, :]
         NM[(k), :] = N[2, :] + 1j*N[3, :]
     return NP, NM
@@ -904,11 +914,13 @@ def residual_spectrum(xres, fu, dt):
      Define frequency bands for spectral averaging.
     """
     fband = np.array([0.0001, 0.00417, 0.03192, 0.04859, 0.07218, 0.08884, 0.11243, 0.1291, 0.15269, 0.16936, 0.19295, 0.20961, 0.2332, 0.251, 0.26, 0.29, 0.3, 0.5]).reshape(9,2)
+
     # If we have a sampling interval> 1 hour, we might have to get
     # rid of some bins.
     #fband(fband(:,1)>1/(2*dt),:)=[];
     nfband = fband.shape[0]
     nx = max(xres.shape)
+ 
     # Spectral estimate (takes real time series only).
     # Matlab has changed their spectral estimator functions
     # To match the old code, I have to divide by 2*dt. This is because
@@ -924,16 +936,17 @@ def residual_spectrum(xres, fu, dt):
     # Call to SIGNAL PROCESSING TOOLBOX - see note in t_readme.
     #[Pxc,fx]=csd(real(xres),imag(xres),nx,1/dt); 
     # Call to SIGNAL PROCESSING TOOLBOX - see note in t_readme.
-    Pxr, fx = sps.welch(np.real(xres), window=np.hanning(nx), noverlap=np.ceil(nx / 2),nfft=nx,fs=1/dt) # nargout=2
+    fx, Pxr = sps.welch(np.real(xres), window=np.hanning(nx), noverlap=np.ceil(nx / 2),nfft=nx,fs=1/dt) # nargout=2
     # Call to SIGNAL PROCESSING TOOLBOX - see note in t_readme. If you have an error here you are probably missing this toolbox
     Pxr = Pxr / 2 / dt
-    Pxi, fx = sps.welch(np.imag(xres), window=np.hanning(nx), noverlap=np.ceil(nx / 2),nfft=nx,fs=1/dt) # nargout=2
+    fx, Pxi = sps.welch(np.imag(xres), window=np.hanning(nx), noverlap=np.ceil(nx / 2),nfft=nx,fs=1/dt) # nargout=2
     # Call to SIGNAL PROCESSING TOOLBOX - see note in t_readme.
     Pxi = Pxi / 2 / dt
-    Pxc, fx = mplm.csd(np.real(xres), np.imag(xres),nx,1 / dt) # nargout=2
+    Pxc,fx = mplm.csd(np.real(xres), np.imag(xres),nx,1 / dt) # nargout=2
     # Call to SIGNAL PROCESSING TOOLBOX - see note in t_readme.
     Pxc = Pxc / 2 / dt
     df = fx[2] - fx[1]
+
     Pxr[np.around(fu / df).astype(int) ] = np.nan
     # Sets Px=NaN in bins close to analyzed frequencies
     Pxi[np.around(fu / df).astype(int)] = np.nan

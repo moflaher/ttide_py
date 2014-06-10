@@ -4,6 +4,8 @@ from __future__ import division
 import numpy as np
 from scipy.io import loadmat,savemat
 import os
+from t_astron import t_astron
+from t_getconsts import t_getconsts
 
 def t_vuf(*varargin):
     """T_VUF Computes nodal modulation corrections.
@@ -59,7 +61,7 @@ def t_vuf(*varargin):
         # Phase relative to Greenwich (in units of cycles).
         # (This only returns values when we have doodson#s, i.e., not for the 
         # shallow water components, but these will be computed later.)
-        v = rem(np.dot(const.doodson, astro) + const.semi, 1)
+        v = np.remainder(np.dot(const['doodson'], astro.T) + const['semi'], 1)
         if nargin == 4:
             # If we have a latitude, get nodal corrections.
             # Apparently the second-order terms in the tidal potential go to zero
@@ -109,10 +111,11 @@ def t_vuf(*varargin):
         else:
             # Astronomical arguments only, so nodal corrections.
             # Compute phases for shallow water constituents.
-            for k in np.flatnonzero(isfinite(const.ishallow)).T:
-                ik = const.ishallow(k) + np.array([range(0, (const.nshallow(k) - 1 +1))]).reshape(1, -1)
-                v[(k -1)] = np.sum(v[(shallow.iname(ik) -1)] * shallow.coef(ik))
-            v = v[(ju -1)]
-            f = np.ones(shape=(v.shape, v.shape), dtype='float64')
-            u = np.zeros(shape=(v.shape, v.shape), dtype='float64')
+            for k in np.flatnonzero(np.isfinite(const['ishallow'])):
+                ik = (const['ishallow'][k] + np.array([ range(0, (const['nshallow'][k]-1) ) ])).astype(int)
+                v[(k -1)] = np.sum(v[(shallow['iname'][ik] -1)] * shallow['coef'][ik])
+            v = np.squeeze(v[(ju -1)])
+            print len(v)
+            f = np.ones(len(v))
+            u = np.zeros(len(v))
     return v, u, f

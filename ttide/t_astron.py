@@ -4,7 +4,8 @@ from __future__ import division
 import numpy as np
 from scipy.io import loadmat,savemat
 import os
-
+from datetime import datetime,timedelta
+    
 def t_astron(jd):
     """T_ASTRON Computes astronomical Variables
      [A,ADER] = ASTRON(JD) computes the astronomical variables 
@@ -73,27 +74,36 @@ def t_astron(jd):
      Compute number of days from epoch of 12:00 UT Dec 31, 1899.
      (January 0.5 1900 ET)
     """
-    d = jd[:].T - datenum(1899, 12, 31, 12, 0, 0)
+
+
+    d = jd.reshape(-1,1) - datetime.toordinal(datetime(1899, 12, 31, 12, 0, 0))
     D = d / 10000
-    # Compute astronomical constants at time d1.
-    args = np.array([np.ones(shape=(jd.shape, jd.shape), dtype='float64'), d, D * D, D ** 3]).reshape(1, -1)
-    # These are the coefficients of the formulas in the Explan. Suppl.
-    sc = np.array([270.434164, 13.1763965268, - 8.5e-05, 3.9e-08]).reshape(1, -1)
-    hc = np.array([279.696678, 0.9856473354, 2.267e-05, 0.0]).reshape(1, -1)
-    pc = np.array([334.329556, 0.1114040803, - 0.0007739, - 2.6e-07]).reshape(1, -1)
-    npc = np.array([- 259.183275, 0.0529539222, - 0.0001557, - 5e-08]).reshape(1, -1)
-    #  first coeff was 281.220833 in Foreman but Expl. Suppl. has 44.
-    ppc = np.array([281.220844, 4.70684e-05, 3.39e-05, 7e-08]).reshape(1, -1)
-    # Compute the parameters; we only need the factional part of the cycle.
-    astro = rem(np.dot(np.array([sc, hc, pc, npc, ppc]).reshape(1, -1), args) / 360.0, 1)
-    # Compute lunar time tau, based on fractional part of solar day.
-    # We add the hour angle to the longitude of the sun and subtract the
-    # longitude of the moon.
-    tau = rem(jd[:].T, 1) + astro[1, :] - astro[0, :]
-    astro = np.array([tau, astro]).reshape(1, -1)
-    # Compute rates of change.
-    dargs = np.array([np.zeros(shape=(jd.shape, jd.shape), dtype='float64'), np.ones(shape=(jd.shape, jd.shape), dtype='float64'), 0.0002 * D, 0.0003 * D * D]).reshape(1, -1)
-    ader = np.dot(np.array([sc, hc, pc, npc, ppc]).reshape(1, -1), dargs) / 360.0
-    dtau = 1.0 + ader[1, :] - ader[0, :]
-    ader = np.array([dtau, ader]).reshape(1, -1)
+
+# Compute astronomical constants at time d1.
+    args = np.hstack( (np.ones(shape=(jd.shape), dtype='float64').reshape(-1,1), d, D*D, D**3)).T
+
+# These are the coefficients of the formulas in the Explan. Suppl.
+    sc = np.array([270.434164, 13.1763965268, - 8.5e-05, 3.9e-08]).reshape(-1,1)
+    hc = np.array([279.696678, 0.9856473354, 2.267e-05, 0.0]).reshape(-1,1)
+    pc = np.array([334.329556, 0.1114040803, - 0.0007739, - 2.6e-07]).reshape(-1,1)
+    npc = np.array([- 259.183275, 0.0529539222, - 0.0001557, - 5e-08]).reshape(-1,1)
+
+#  first coeff was 281.220833 in Foreman but Expl. Suppl. has 44.
+    ppc = np.array([281.220844, 4.70684e-05, 3.39e-05, 7e-08]).reshape(-1,1)
+
+# Compute the parameters; we only need the factional part of the cycle.
+    astro = np.remainder(np.dot( np.squeeze(np.array([sc, hc, pc, npc, ppc])), args) / 360.0, 1)
+
+# Compute lunar time tau, based on fractional part of solar day.
+# We add the hour angle to the longitude of the sun and subtract the
+# longitude of the moon.
+    tau = (np.remainder(jd.T, 1) + astro[1, :] - astro[0, :]).reshape(-1,1)
+    astro = np.vstack([tau, astro]).reshape(1, -1)
+
+# Compute rates of change.
+    dargs = np.array([np.zeros(shape=(jd.shape), dtype='float64'), np.ones(shape=(jd.shape), dtype='float64'), 0.0002 * D, 0.0003 * D * D]).reshape(1, -1)
+
+    ader = np.dot(np.hstack([sc, hc, pc, npc, ppc]).T, dargs.T) / 360.0
+    dtau = (1.0 + ader[1, :] - ader[0, :]).reshape(-1,1)
+    ader = np.vstack([dtau, ader]).reshape(-1,1)
     return astro, ader
