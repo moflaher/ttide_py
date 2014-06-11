@@ -4,7 +4,7 @@ from __future__ import division
 import numpy as np
 from scipy.io import loadmat,savemat
 import os
-from datetime import datetime,timedelta
+import matplotlib as mpl
     
 def t_astron(jd):
     """T_ASTRON Computes astronomical Variables
@@ -76,7 +76,7 @@ def t_astron(jd):
     """
 
 
-    d = jd.reshape(-1,1) - datetime.toordinal(datetime(1899, 12, 31, 12, 0, 0))
+    d = jd.reshape(-1,1) - mpl.dates.datestr2num('Dec 31 1899, 12:0:0')
     D = d / 10000
 
 # Compute astronomical constants at time d1.

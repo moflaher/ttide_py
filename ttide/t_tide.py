@@ -10,7 +10,7 @@ import sys
 import matplotlib.mlab as mplm
 from t_getconsts import t_getconsts
 from t_vuf import t_vuf
-from datetime import datetime,timedelta
+import matplotlib as mpl
 
 np.set_printoptions(precision=8,suppress=True)
 
@@ -635,7 +635,7 @@ def t_tide(xin,stime=np.array([])):
         print  'date: %s' % date
         print  'nobs = %d \nngood = %d \nrecord length (days) = %.2f' % (nobs, ngood, np.dot(max(xin.shape), dt) / 24)
         if stime.size != 0:
-            print  'start time: %s' % (stime)
+            print  'start time: %s' % mpl.dates.num2date(stime).strftime('%Y-%m-%d %H:%M:%S')
         print  'rayleigh criterion = %.1f\n' % ray
         print  '%s\n' % nodcor
         #  print '\n     coefficients from least squares fit of x\n');
@@ -861,13 +861,15 @@ def noise_realizations(xres, fu, dt, nreal, errcalc):
         p = (Pxrave[(k -1)] + Pxiave[(k -1)]) / 2
         d = (Pxrave[(k -1)] - Pxiave[(k -1)]) / 2
         sxy = Pxcave[(k -1)]
-        B = np.hstack([p, 0, d, sxy,0, p, sxy, - d,d, sxy, p, 0,sxy, - d, 0, p]).reshape(4,4)
+        B = np.hstack([p, 0, d, sxy,0, p, sxy, - d,d, sxy, p, 0,sxy, - d, 0, p]).reshape(4,4)        
         # Compute the transformation matrix that takes uncorrelated white 
         # noise and makes noise with the same statistical structure as the 
         # Fourier transformed noise.
-        D,V = np.linalg.eig(B) # nargout=2 
-        print D
-        Mat[:, :, (k -1)] = np.dot(V, np.diag(np.sqrt(np.diag(D))))
+        D,V = np.linalg.eigh(B) # nargout=2 
+        #total cludge to deal with bad zeroing in eigh
+        D[ ((D<0) & (D>-0.00000000001))]=0
+    
+        Mat[:, :, (k -1)] = np.dot(V, np.diag(np.sqrt(D)))
         #print Mat
     # Generate realizations for the different analyzed constituents.
     N = np.zeros(shape=(4, nreal), dtype='float64')
