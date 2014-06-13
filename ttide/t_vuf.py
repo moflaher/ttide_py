@@ -49,6 +49,7 @@ def t_vuf(*varargin):
     if nargin > 3:
         lat = varargin[3]
     astro, ader = t_astron(ctime) # nargout=2
+
     if ltype == 'full':
         const = t_get18consts(ctime)
         # Phase relative to Greenwich (in units of cycles).
@@ -109,11 +110,13 @@ def t_vuf(*varargin):
             u = u[(ju -1)]
             v = v[(ju -1)]
         else:
-            # Astronomical arguments only, so nodal corrections.
+            # Astronomical arguments only, no nodal corrections.
             # Compute phases for shallow water constituents.
-            for k in np.flatnonzero(np.isfinite(const['ishallow'])):
-                ik = (const['ishallow'][k] + np.array([ range(0, (const['nshallow'][k]-1) ) ])).astype(int)
-                v[(k -1)] = np.sum(v[(shallow['iname'][ik] -1)] * shallow['coef'][ik])
+            for k in np.flatnonzero(np.isfinite(const['ishallow']).flatten()):
+                ik = (const['ishallow'][k] + np.array([ range(0, (const['nshallow'][k]) ) ])-1).astype(int)  
+                print np.squeeze(v[shallow['iname'][ik]-1])
+                print np.squeeze(shallow['coef'][ik])
+                v[(k -1)] = np.sum(np.multiply(np.squeeze(v[shallow['iname'][ik]-1]), np.squeeze(shallow['coef'][ik])))
             v = np.squeeze(v[(ju -1)])
             print len(v)
             f = np.ones(len(v))
