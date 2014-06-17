@@ -512,7 +512,7 @@ def t_tide(xin,stime=np.array([])):
     # major axis
     fmin = aap - aam
     # minor axis
-
+  
     gp = np.mod(np.repeat(vu,nreal).reshape(len(vu),nreal) - epsp, 360)
     # pos. Greenwich phase in deg.
     gm = np.mod(np.repeat(vu,nreal).reshape(len(vu),nreal) + epsm, 360)
@@ -529,7 +529,6 @@ def t_tide(xin,stime=np.array([])):
     pha = np.mod(gp + finc, 360)
     # Greenwich phase in degrees.
     pha = cluster(pha, 360)
-
     # Cluster angles around the 'true' angle
     # to avoid 360 degree wraps.
     #----------------Generate 95
@@ -550,7 +549,9 @@ def t_tide(xin,stime=np.array([])):
         emaj = np.dot(np.median(abs(fmaj - np.dot(np.median(fmaj, 1).reshape(len(np.median(fmaj, 1)),1), np.ones(shape=(1, nreal), dtype='float64'))), 1) / 0.6375, 1.96)
         emin = np.dot(np.median(abs(fmin - np.dot(np.median(fmin, 1).reshape(len(np.median(fmin, 1)),1), np.ones(shape=(1, nreal), dtype='float64'))), 1) / 0.6375, 1.96)
         einc = np.dot(np.median(abs(finc - np.dot(np.median(finc, 1).reshape(len(np.median(finc, 1)),1), np.ones(shape=(1, nreal), dtype='float64'))), 1) / 0.6375, 1.96)
-        epha = np.dot(np.median(abs(pha - np.dot(np.median(pha, 1).reshape(len(np.median(pha, 1)),1), np.ones(shape=(1, nreal), dtype='float64'))), 1) / 0.6375, 1.96)
+        epha = np.multiply(np.median(np.absolute(pha- (np.median(pha,1).reshape(-1,1)*np.ones([1,nreal])) ),1)/0.6375, 1.96)
+        #change emaj,emin,einc to same as epha should be faster and its shorter. gives same answer
+
     else:
         # In the linear analysis, the 95
         # CI are computed from the sigmas
@@ -817,10 +818,11 @@ def cluster(ain, clusang):
      column. CLUSANG is the allowable ambiguity (usually 360 degrees but
      sometimes 180).
     """
-    makearray=(ain - np.repeat(ain[:,1],ain.shape[1]).reshape(ain.shape[0],ain.shape[1]))
+
+    makearray=(ain - np.repeat(ain[:,0],ain.shape[1]).reshape(ain.shape[0],ain.shape[1]))
     ii = makearray> clusang / 2
     ain[(ii)] = ain[(ii)] - clusang
-    ii = (ain - np.repeat(ain[:,1],ain.shape[1]).reshape(ain.shape[0],ain.shape[1])) < - clusang / 2
+    ii = (ain - np.repeat(ain[:,0],ain.shape[1]).reshape(ain.shape[0],ain.shape[1])) < - clusang / 2
     ain[(ii)] = ain[(ii)] + clusang
     return ain
 def noise_realizations(xres, fu, dt, nreal, errcalc):
@@ -865,15 +867,22 @@ def noise_realizations(xres, fu, dt, nreal, errcalc):
         # Compute the transformation matrix that takes uncorrelated white 
         # noise and makes noise with the same statistical structure as the 
         # Fourier transformed noise.
+     
         D,V = np.linalg.eigh(B) # nargout=2 
+
+#next five lines are horrible coding/math someone should check it over
+    #swap so the vectors match matlab, should check if this always holds
+        V[[1,0],[1,3]]=V[[0,1],[3,1]]
+        V[[3,2],[1,3]]=V[[2,3],[3,1]]
         #total cludge to deal with bad zeroing in eigh
         D[ ((D<0) & (D>-0.00000000001))]=0
-    
+
+
         Mat[:, :, (k -1)] = np.dot(V, np.diag(np.sqrt(D)))
         #print Mat
     # Generate realizations for the different analyzed constituents.
     N = np.zeros(shape=(4, nreal), dtype='float64')
-    NM = np.zeros(shape=(max(fu.shape), nreal), dtype='float64')
+    NM = np.zeros(shape=(max(fu.shape), nreal), dtype='float64')+1j*np.zeros(shape=(max(fu.shape), nreal), dtype='float64')
     NP = NM
 
     for k in range(0, fu.shape[0]):
