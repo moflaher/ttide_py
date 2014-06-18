@@ -351,16 +351,16 @@ def t_tide(xin,stime=np.array([]),dt = 1):
         #\n',100*(varxr/varx));  
     else:
         # Complex time series
-        varx = np.cov(real(xin[(gd)]))
-        varxp = np.cov(real(xout[(gd)]))
-        varxr = np.cov(real(xres[(gd)]))
+        varx = np.cov(np.real(xin[(gd)]))
+        varxp = np.cov(np.real(xout[(gd)]))
+        varxr = np.cov(np.real(xres[(gd)]))
         #cout
         #print('   percent of X var residual after lsqfit/var original: 
         #5.2f 
         #\n',100*(varxr/varx));
-        vary = np.cov(imag(xin[(gd)]))
-        varyp = np.cov(imag(xout[(gd)]))
-        varyr = np.cov(imag(xres[(gd)]))
+        vary = np.cov(np.imag(xin[(gd)]))
+        varyp = np.cov(np.imag(xout[(gd)]))
+        varyr = np.cov(np.imag(xres[(gd)]))
         #cout
         #print('   percent of Y var residual after lsqfit/var original: 
         #5.2f 
@@ -570,7 +570,7 @@ def t_tide(xin,stime=np.array([]),dt = 1):
     if np.isreal(xin).all():
         tidecon = np.array([fmaj[:, 0], emaj, pha[:, 0], epha]).T
     else:
-        tidecon = np.array([fmaj[:, 0], emaj, fmin[:, 0], emin, finc[:, 0], einc, pha[:, 0], epha]).T
+        tidecon = np.array([fmaj[:, 0], emaj, fmin[:, 0], emin, finc[:, 0], einc, pha[:, 0], epha]).T        
     # Sort results by frequency (needed if anything has been inferred since 
     # these are stuck at the end of the list by code above).
     if any(np.isfinite(jref)):
@@ -618,16 +618,16 @@ def t_tide(xin,stime=np.array([]),dt = 1):
         #\n',100*(varxr/varx));  
     else:
         # Complex time series
-        varx = cov(real(xin[(gd)]))
-        varxp = cov(real(xout[(gd)]))
-        varxr = cov(real(xres[(gd)]))
+        varx = np.cov(np.real(xin[(gd)]))
+        varxp = np.cov(np.real(xout[(gd)]))
+        varxr = np.cov(np.real(xres[(gd)]))
         #cout									   
         #print('   percent of X var residual after synthesis/var original: 
         #5.2f 
         #\n',100*(varxr/varx));
-        vary = cov(imag(xin[(gd)]))
-        varyp = cov(imag(xout[(gd)]))
-        varyr = cov(imag(xres[(gd)]))
+        vary = np.cov(np.imag(xin[(gd)]))
+        varyp = np.cov(np.imag(xout[(gd)]))
+        varyr = np.cov(np.imag(xres[(gd)]))
         #cout									   
         #print('   percent of Y var residual after synthesis/var original: 
         #5.2f 
@@ -672,19 +672,18 @@ def t_tide(xin,stime=np.array([]),dt = 1):
                 else:
                    print  '  %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), snr[(k)].astype(float))                
         else:
-            print  '\\ny0= \n %.3g, x trend= \n %.3g\\n', imag(z0), imag(dz0)
-            print  '\\nvar(y)= ' + num2str(vary) + '    var(yp)= ' + num2str(varyp) + '  var(yres)= ' + num2str(varyr) + '\\n'
-            print  'percent var predicted/var original= \n %.1f \n %\\n', np.dot(100, varyp) / vary
-            print  '\\n\n %s\\n', 'ellipse parameters with 95\n % CI estimates'
-            print  '\\n\n %s\\n', 'tide   freq      major  emaj    minor   emin     inc    einc     pha    epha      snr'
-            for k in range(1, (max(fu.shape) +1)):
-                if snr[(k -1)] > synth:
-                    print  '*'
+            print  'y0= %.3f, x trend= %.3f' % (np.imag(z0), np.imag(dz0))
+            print  'var(y)= %f    var(yp)= %f  var(yres)= %f ' % (vary,varyp,varyr)
+            print  'percent var predicted/var original=  %.1f  ' %( np.dot(100, varyp) / vary)
+            print  'ellipse parameters with 95 % CI estimates'
+            print  '  tide     freq       major      emaj      minor      emin     inc      einc      pha       epha       snr'            
+            for k in range(0, max(fu.shape) ):
+                if snr[(k)] > synth:
+                    print  '* %s  %9.7f  %9.4f  %8.3f %9.4f  %8.3f %8.2f  %8.2f  %8.2f  %8.2f %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), tidecon[(k), 4].astype(float), tidecon[(k), 5].astype(float), tidecon[(k), 6].astype(float), tidecon[(k), 7].astype(float), snr[(k)].astype(float))
                 else:
-                    print  ' '
-                print  '\n %s \n %9.7f \n %6.3f \n %7.3f \n %7.3f \n %6.2f \n %8.2f \n %6.2f \n %8.2f \n %6.2f \n %6.2g\\n', nameu[(k -1), :], fu[(k -1)], tidecon[(k -1), :], snr[(k -1)]
-            print  '\\ntotal var= ' + num2str(varx + vary) + '   pred var= ' + num2str(varxp + varyp) + '\\n'
-            print  'percent total var predicted/var original= \n %.1f \n %\\n\\n', np.dot(100, (varxp + varyp)) / (varx + vary)
+                   print  '  %s  %9.7f  %9.4f  %8.3f %9.4f  %8.3f %8.2f  %8.2f  %8.2f  %8.2f %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), tidecon[(k), 4].astype(float), tidecon[(k), 5].astype(float), tidecon[(k), 6].astype(float), tidecon[(k), 7].astype(float), snr[(k)].astype(float))
+            print  'total var= %f   pred var=  %f ' % (varx + vary,varxp + varyp )
+            print  'percent total var predicted/var original=  %.1f  ' % ( np.dot(100, (varxp + varyp)) / (varx + vary))
         if fid != 1:
             st = fid.close()
     xout = xout.reshape(inn[0], 1)
