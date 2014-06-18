@@ -16,7 +16,7 @@ np.set_printoptions(precision=8,suppress=True)
 
 
 
-def t_tide(xin,stime=np.array([])):
+def t_tide(xin,stime=np.array([]),dt = 1):
     """T_TIDE Harmonic analysis of a time series
      [NAME,FREQ,TIDECON,XOUT]=T_TIDE(XIN) computes the tidal analysis 
      of the (possibly complex) time series XIN.
@@ -193,8 +193,7 @@ def t_tide(xin,stime=np.array([])):
      Version 1.3
      ----------------------Parse inputs-----------------------------------
     """
-    ray = 1
-    dt = 1
+    ray = 1    
     fid = 1
     lat = np.array([])
     corr_fs = np.array([0, 1000000.0])
@@ -463,9 +462,6 @@ def t_tide(xin,stime=np.array([])):
         nreal = 300
         # Create noise matrices 
         NP, NM = noise_realizations(xr[(np.isfinite(xr))], fu, dt, nreal, errcalc) # nargout=2
-        print NP
-        print
-        print NM
         # All replicates are then transformed (nonlinearly) into ellipse 
         # parameters.  The computed error bars are then based on the std
         # dev of the replicates.
