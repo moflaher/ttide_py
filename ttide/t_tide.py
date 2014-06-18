@@ -463,9 +463,13 @@ def t_tide(xin,stime=np.array([])):
         nreal = 300
         # Create noise matrices 
         NP, NM = noise_realizations(xr[(np.isfinite(xr))], fu, dt, nreal, errcalc) # nargout=2
+        print NP
+        print
+        print NM
         # All replicates are then transformed (nonlinearly) into ellipse 
         # parameters.  The computed error bars are then based on the std
-        # dev of the replicates. 
+        # dev of the replicates.
+  
         AP = np.repeat(ap,nreal).reshape(len(ap),nreal) + NP
         # Add to analysis (first column
         AM = np.repeat(am,nreal).reshape(len(am),nreal) + NM
@@ -513,12 +517,19 @@ def t_tide(xin,stime=np.array([])):
     fmin = aap - aam
     # minor axis
   
+
+    
     gp = np.mod(np.repeat(vu,nreal).reshape(len(vu),nreal) - epsp, 360)
+
     # pos. Greenwich phase in deg.
     gm = np.mod(np.repeat(vu,nreal).reshape(len(vu),nreal) + epsm, 360)
+
     # neg. Greenwich phase in deg.
     finc = (epsp + epsm) / 2
     finc[:, 0] = np.mod(finc[:, 0], 180)
+    
+    
+
     # Ellipse inclination in degrees
     # (mod 180 to prevent ambiguity, i.e., 
     # we always ref. against northern 
@@ -882,14 +893,15 @@ def noise_realizations(xres, fu, dt, nreal, errcalc):
         #print Mat
     # Generate realizations for the different analyzed constituents.
     N = np.zeros(shape=(4, nreal), dtype='float64')
-    NM = np.zeros(shape=(max(fu.shape), nreal), dtype='float64')+1j*np.zeros(shape=(max(fu.shape), nreal), dtype='float64')
-    NP = NM
+    NM = np.zeros(shape=(max(fu.shape), nreal), dtype='complex128')
+    NP = np.zeros(shape=(max(fu.shape), nreal), dtype='complex128')
 
     for k in range(0, fu.shape[0]):
         l = np.squeeze(np.flatnonzero(np.all([fu[k] > fband[:, 0] , fu[k] < fband[:, 1]],axis=0)))
         N = np.hstack([np.zeros(4,).reshape(-1,1), np.dot(np.squeeze(Mat[:, :, l]), np.random.randn(4, nreal-1))])
-        NP[(k), :] = N[0, :] + 1j*N[1, :]
-        NM[(k), :] = N[2, :] + 1j*N[3, :]
+        NP[(k), :] = (N[0, :]+1j*N[1, :]) 
+        NM[(k), :] = (N[2, :]+1j*N[3, :])
+    
     return NP, NM
 def noise_stats(xres, fu, dt):
     """NOISE_STATS: Computes statistics of residual energy for all 
@@ -955,8 +967,11 @@ def residual_spectrum(xres, fu, dt):
     Pxi = Pxi / 2 / dt
     Pxc,fx = mplm.csd(np.real(xres), np.imag(xres),nx,1 / dt) # nargout=2
     # Call to SIGNAL PROCESSING TOOLBOX - see note in t_readme.
+    #matlab cpsd returns only reals when given a real xres have to test for complex and maybe change to ifstatement    
+    Pxc=np.real(Pxc)
     Pxc = Pxc / 2 / dt
     df = fx[2] - fx[1]
+    
 
     Pxr[np.around(fu / df).astype(int) ] = np.nan
     # Sets Px=NaN in bins close to analyzed frequencies
@@ -972,8 +987,9 @@ def residual_spectrum(xres, fu, dt):
     # Divide by nx to get power per frequency bin, and multiply by 2
     # to account for positive and negative frequencies.
     #
+ 
     for k in range(nfband-1, -1, - 1):
-        jband = np.flatnonzero(np.all(np.vstack([fx >= fband[(k), 0],fx <= fband[(k), 1] , np.isfinite(Pxr)]).T,axis=1))        
+        jband = np.flatnonzero(np.all(np.vstack([fx >= fband[(k), 0],fx <= fband[(k), 1] , np.isfinite(Pxr)]).T,axis=1))     
         if any(jband):
             Pxrave[k] = np.dot(np.mean(Pxr[(jband)]), 2) / nx
             Pxiave[k] = np.dot(np.mean(Pxi[(jband)]), 2) / nx
@@ -984,6 +1000,7 @@ def residual_spectrum(xres, fu, dt):
                 # Low frequency bin might not have any points...
                 Pxiave[k] = Pxiave[(k + 1)]
                 Pxcave[k] = Pxcave[(k + 1)]
+
     return fband, Pxrave, Pxiave, Pxcave
 def errell(cxi, sxi, ercx, ersx, ercy, ersy):
     """[emaj,emin,einc,epha]=errell(cx,sx,cy,sy,ercx,ersx,ercy,ersy) computes
