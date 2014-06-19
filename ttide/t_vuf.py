@@ -3,6 +3,7 @@
 from __future__ import division
 import numpy as np
 from scipy.io import loadmat,savemat
+import scipy as sp
 import os
 from t_astron import t_astron
 from t_getconsts import t_getconsts
@@ -65,33 +66,38 @@ def t_vuf(ltype,ctime,ju,lat=None):
             # OFF the equator, from about the 5 degree location. Latitudes are 
             # hence (somewhat arbitrarily) forced to be no closer than 5 deg to 
             # the equator, as per note in Foreman.
-            if isfinite(lat) & (abs(lat) < 5):
+            if ((np.isfinite(lat)) & (abs(lat) < 5)):
                 lat = sign(lat) * 5
-            slat = sin(pi * lat / 180)
+            slat = np.sin(np.pi * lat / 180)
             # Satellite amplitude ratio adjustment for latitude. 
-            rr = sat.amprat
+            rr = sat['amprat']
             # no amplitude correction
-            if isfinite(lat):
-                j = np.flatnonzero(sat.ilatfac == 1)
+            if np.isfinite(lat):
+                j = np.flatnonzero(sat['ilatfac'] == 1)
                 # latitude correction for diurnal constituents
-                rr[(j -1)] = rr[(j -1)] * 0.36309 * (1.0 - 5.0 * slat * slat) / slat
-                j = np.flatnonzero(sat.ilatfac == 2)
+                rr[(j)] = rr[(j)] * 0.36309 * (1.0 - 5.0 * slat * slat) / slat
+                j = np.flatnonzero(sat['ilatfac'] == 2)
                 # latitude correction for semi-diurnal constituents
-                rr[(j -1)] = rr[(j -1)] * 2.59808 * slat
+                rr[(j)] = rr[(j)] * 2.59808 * slat
             else:
-                rr[sat.ilatfac > 0] = 0
+                rr[sat['ilatfac'] > 0] = 0
             # Calculate nodal amplitude and phase corrections.
-            uu = rem(np.dot(sat.deldood, astro[3:6]) + sat.phcorr, 1)
+            uu = np.fmod(np.dot(sat['deldood'], astro.T[3:6]) + sat['phcorr'], 1)
             #uu=uudbl-round(uudbl);  <_ I think this was wrong. The original
             #                         FORTRAN code is:  IUU=UUDBL
             #                                           UU=UUDBL-IUU
             #                         which is truncation.        
             # Sum up all of the satellite factors for all satellites.
-            nsat = max(sat.iconst.shape)
-            nfreq = max(const.isat.shape)
-            fsum = 1 + np.sum(sparse(np.array([range(1, (nsat +1))]).reshape(1, -1), sat.iconst, double(rr * exp(np.dot(np.dot(np.dot(i, 2), pi), uu))), nsat, nfreq)).T
-            f = abs(fsum)
-            u = angle(fsum) / (np.dot(2.0, pi))
+            nsat = np.max(sat['iconst'].shape)
+            nfreq = np.max(const['isat'].shape)
+            print np.rank(np.arange(0,nsat))
+            print np.rank(sat['iconst'])
+            print np.rank(rr*np.exp(1j*2*np.pi*uu))
+            print sp.sparse.csr_matrix((rr*np.exp(1j*2*np.pi*uu),(np.arange(0,nsat)),sat['iconst']), shape=(nsat, nfreq))
+            #print sp.sparse.csr_matrix(np.arange(0,nsat),sat['iconst'],rr*np.exp(1j*2*np.pi*uu), nsat, nfreq)
+            #fsum = 1 + np.sum())).T
+            f = np.absolute(fsum)
+            u = np.angle(fsum) / (np.dot(2.0, pi))
             # Compute amplitude and phase corrections for shallow water constituents. 
             for k in np.flatnonzero(isfinite(const.ishallow)).T:
                 ik = const.ishallow(k) + np.array([range(0, (const.nshallow(k) - 1 +1))]).reshape(1, -1)

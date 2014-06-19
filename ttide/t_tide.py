@@ -394,7 +394,7 @@ def t_tide(xin,**kwargs):
     # Note that this is a slightly weird way to do the nodal corrections,							   
     # but is 'traditional'.  The "right" way would be to change the basis							   
     # functions used in the least-squares fit above.									   
-    if lat.size !=0 & stime.size !=0:
+    if ((lat.size !=0) & (stime.size !=0)):       
         # Time and latitude								   
         # Get nodal corrections at midpoint time.										   
         v, u, f = t_vuf(ltype, centraltime, np.array([ju, jinf]).reshape(1, -1), lat) # nargout=3
