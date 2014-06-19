@@ -16,7 +16,7 @@ np.set_printoptions(precision=8,suppress=True)
 
 
 
-def t_tide(xin,stime=np.array([]),dt = 1):
+def t_tide(xin,**kwargs):
     """T_TIDE Harmonic analysis of a time series
      [NAME,FREQ,TIDECON,XOUT]=T_TIDE(XIN) computes the tidal analysis 
      of the (possibly complex) time series XIN.
@@ -193,9 +193,15 @@ def t_tide(xin,stime=np.array([]),dt = 1):
      Version 1.3
      ----------------------Parse inputs-----------------------------------
     """
+
+
+
+    dt = 1
+    stime=np.array([])
+    lat = np.array([])
+
     ray = 1    
     fid = 1
-    lat = np.array([])
     corr_fs = np.array([0, 1000000.0])
     corr_fac = np.array([1, 1])
     secular = 'mean'
@@ -208,6 +214,16 @@ def t_tide(xin,stime=np.array([]),dt = 1):
     lsq = 'best'
     k = 1  
     pi=np.pi
+
+#use kargs to set values other then the defaults
+    if kwargs is not None:
+        for key, value in kwargs.iteritems():
+            if (key=='dt'):
+                dt=value
+            if (key=='stime'):
+                stime=value
+            if (key=='lat'):
+                lat=value
 
 #Check to make sure that incoming data is a vector.
     inn= xin.shape 
@@ -570,7 +586,8 @@ def t_tide(xin,stime=np.array([]),dt = 1):
     if np.isreal(xin).all():
         tidecon = np.array([fmaj[:, 0], emaj, pha[:, 0], epha]).T
     else:
-        tidecon = np.array([fmaj[:, 0], emaj, fmin[:, 0], emin, finc[:, 0], einc, pha[:, 0], epha]).T        
+        tidecon = np.array([fmaj[:, 0], emaj, fmin[:, 0], emin, finc[:, 0], einc, pha[:, 0], epha]).T   
+    tideconout=tidecon.copy()     
     # Sort results by frequency (needed if anything has been inferred since 
     # these are stuck at the end of the list by code above).
     if any(np.isfinite(jref)):
@@ -696,7 +713,7 @@ def t_tide(xin,stime=np.array([]),dt = 1):
     #        if [2] == nargout:
     #            nameu = type('struct', (), {})()
     #            fu = xout
-    return nameu, fu, tidecon, xout
+    return nameu, fu, tideconout, xout
 def constituents(minres, constit, shallow, infname, infref, centraltime):
     """[name,freq,kmpr]=constituents(minres,infname) loads tidal constituent
      table (containing 146 constituents), then picks out only the '

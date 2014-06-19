@@ -7,7 +7,7 @@ import os
 from t_astron import t_astron
 from t_getconsts import t_getconsts
 
-def t_vuf(*varargin):
+def t_vuf(ltype,ctime,ju,lat=None):
     """T_VUF Computes nodal modulation corrections.
      [V,U,F]=T_VUF(TYPE,DATE,JU,LAT) returns the astronomical phase V, the 
      nodal phase modulation U, and the nodal amplitude correction F at
@@ -39,15 +39,7 @@ def t_vuf(*varargin):
      Get all the info about constituents.
      Calculate astronomical arguments at mid-point of data time series.
     """
-    nargin = len(varargin)
-    if nargin > 0:
-        ltype = varargin[0]
-    if nargin > 1:
-        ctime = varargin[1]
-    if nargin > 2:
-        ju = varargin[2]
-    if nargin > 3:
-        lat = varargin[3]
+   
     astro, ader = t_astron(ctime) # nargout=2
 
     if ltype == 'full':
@@ -63,7 +55,7 @@ def t_vuf(*varargin):
         # (This only returns values when we have doodson#s, i.e., not for the 
         # shallow water components, but these will be computed later.)
         v = np.fmod(np.dot(const['doodson'], astro.T) + const['semi'], 1)
-        if nargin == 4:
+        if lat != None:
             # If we have a latitude, get nodal corrections.
             # Apparently the second-order terms in the tidal potential go to zero
             # at the equator, but the third-order terms do not. Hence when trying
