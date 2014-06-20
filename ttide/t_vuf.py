@@ -90,23 +90,26 @@ def t_vuf(ltype,ctime,ju,lat=None):
             # Sum up all of the satellite factors for all satellites.
             nsat = np.max(sat['iconst'].shape)
             nfreq = np.max(const['isat'].shape)
-            print np.rank(np.arange(0,nsat))
-            print np.rank(sat['iconst'])
-            print np.rank(rr*np.exp(1j*2*np.pi*uu))
-            print sp.sparse.csr_matrix((rr*np.exp(1j*2*np.pi*uu),(np.arange(0,nsat)),sat['iconst']), shape=(nsat, nfreq))
-            #print sp.sparse.csr_matrix(np.arange(0,nsat),sat['iconst'],rr*np.exp(1j*2*np.pi*uu), nsat, nfreq)
-            #fsum = 1 + np.sum())).T
+
+
+            #print sp.sparse.csr_matrix((np.squeeze(rr*np.exp(1j*2*np.pi*uu)),(np.arange(0,nsat),np.squeeze(sat['iconst']))), shape=(nsat, nfreq)).sum()
+            
+            fsum = np.asarray(1 + sp.sparse.csr_matrix((np.squeeze(rr*np.exp(1j*2*np.pi*uu)),(np.arange(0,nsat),np.squeeze(sat['iconst']))), shape=(nsat, nfreq)).sum(axis=0)).flatten()
             f = np.absolute(fsum)
-            u = np.angle(fsum) / (np.dot(2.0, pi))
+            u = np.angle(fsum)/(2*np.pi)
+
+
+
             # Compute amplitude and phase corrections for shallow water constituents. 
-            for k in np.flatnonzero(isfinite(const.ishallow)).T:
-                ik = const.ishallow(k) + np.array([range(0, (const.nshallow(k) - 1 +1))]).reshape(1, -1)
-                f[(k -1)] = prod(f[(shallow.iname(ik) -1)] ** abs(shallow.coef(ik)))
-                u[(k -1)] = np.sum(u[(shallow.iname(ik) -1)] * shallow.coef(ik))
-                v[(k -1)] = np.sum(v[(shallow.iname(ik) -1)] * shallow.coef(ik))
-            f = f[(ju -1)]
-            u = u[(ju -1)]
-            v = v[(ju -1)]
+            for k in np.flatnonzero(np.isfinite(const['ishallow']).flatten()):
+                ik = (const['ishallow'][k] + np.array([ range(0, (const['nshallow'][k]) ) ])-1).astype(int)
+                f[(k)] = np.prod(np.power(np.squeeze(f[shallow['iname'][ik]-1]), np.squeeze(shallow['coef'][ik])))
+                u[(k)] = np.sum(np.multiply(np.squeeze(u[shallow['iname'][ik]-1]), np.squeeze(shallow['coef'][ik])))
+                v[(k)] = np.sum(np.multiply(np.squeeze(v[shallow['iname'][ik]-1]), np.squeeze(shallow['coef'][ik])))
+            f = np.squeeze(f[(ju)])
+            u = np.squeeze(u[(ju)])
+            v = np.squeeze(v[(ju)])
+
         else:
             # Astronomical arguments only, no nodal corrections.
             # Compute phases for shallow water constituents.

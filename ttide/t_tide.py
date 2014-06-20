@@ -396,15 +396,15 @@ def t_tide(xin,**kwargs):
     # functions used in the least-squares fit above.									   
     if ((lat.size !=0) & (stime.size !=0)):       
         # Time and latitude								   
-        # Get nodal corrections at midpoint time.										   
-        v, u, f = t_vuf(ltype, centraltime, np.array([ju, jinf]).reshape(1, -1), lat) # nargout=3
+        # Get nodal corrections at midpoint time.	   
+        v, u, f = t_vuf(ltype, centraltime, np.hstack([ju, jinf]).reshape(1, -1).astype(int), lat) # nargout=3
         vu = np.dot((v + u), 360)
         # total phase correction (degrees)
         nodcor = 'Greenwich phase computed with nodal corrections applied to amplitude \\n and phase relative to center time'
     else:
         if not  (0 in stime.shape):
             # Time only  										   
-            # Get nodal corrections at midpoint time										   
+            # Get nodal corrections at midpoint time							   
             v, u, f = t_vuf(ltype, centraltime, np.hstack([ju, jinf]).reshape(1, -1).astype(int)) # nargout=3
             vu = np.dot((v + u), 360)
             # total phase correction (degrees)	
@@ -519,7 +519,6 @@ def t_tide(xin,**kwargs):
         else:
             print "Unrecognized type of error analysis: " + errcalc + " specified!"
     #-----Convert complex amplitudes to standard ellipse parameters--------
-
     aap = ap / np.repeat(f,nreal).reshape(len(f),nreal)
     # Apply nodal corrections and
     aam = am / np.repeat(f,nreal).reshape(len(f),nreal)
