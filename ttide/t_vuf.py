@@ -92,20 +92,19 @@ def t_vuf(ltype,ctime,ju,lat=None):
             nfreq = np.max(const['isat'].shape)
 
 
-            #print sp.sparse.csr_matrix((np.squeeze(rr*np.exp(1j*2*np.pi*uu)),(np.arange(0,nsat),np.squeeze(sat['iconst']))), shape=(nsat, nfreq)).sum()
+
+            fsum = np.array(1 + sp.sparse.csr_matrix((np.squeeze(rr*np.exp(1j*2*np.pi*uu)),(np.arange(0,nsat),np.squeeze(sat['iconst']-1))), shape=(nsat, nfreq)).sum(axis=0)).flatten()
             
-            fsum = np.asarray(1 + sp.sparse.csr_matrix((np.squeeze(rr*np.exp(1j*2*np.pi*uu)),(np.arange(0,nsat),np.squeeze(sat['iconst']))), shape=(nsat, nfreq)).sum(axis=0)).flatten()
             f = np.absolute(fsum)
             u = np.angle(fsum)/(2*np.pi)
-
-
 
             # Compute amplitude and phase corrections for shallow water constituents. 
             for k in np.flatnonzero(np.isfinite(const['ishallow']).flatten()):
                 ik = (const['ishallow'][k] + np.array([ range(0, (const['nshallow'][k]) ) ])-1).astype(int)
                 f[(k)] = np.prod(np.power(np.squeeze(f[shallow['iname'][ik]-1]), np.squeeze(shallow['coef'][ik])))
                 u[(k)] = np.sum(np.multiply(np.squeeze(u[shallow['iname'][ik]-1]), np.squeeze(shallow['coef'][ik])))
-                v[(k)] = np.sum(np.multiply(np.squeeze(v[shallow['iname'][ik]-1]), np.squeeze(shallow['coef'][ik])))
+                v[(k)] = np.sum(np.multiply(np.squeeze(v[shallow['iname'][ik]-1]), np.squeeze(shallow['coef'][ik])))           
+                       
             f = np.squeeze(f[(ju)])
             u = np.squeeze(u[(ju)])
             v = np.squeeze(v[(ju)])
