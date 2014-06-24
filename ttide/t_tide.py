@@ -224,6 +224,8 @@ def t_tide(xin,**kwargs):
                 stime=value
             if (key=='lat'):
                 lat=value
+            if (key=='constitnames'):
+                constitnames=value
 
 #Check to make sure that incoming data is a vector.
     inn= xin.shape 
@@ -396,16 +398,16 @@ def t_tide(xin,**kwargs):
     # functions used in the least-squares fit above.									   
     if ((lat.size !=0) & (stime.size !=0)):       
         # Time and latitude								   
-        # Get nodal corrections at midpoint time.	   
-        v, u, f = t_vuf(ltype, centraltime, np.hstack([ju, jinf]).reshape(1, -1).astype(int), lat) # nargout=3
+        # Get nodal corrections at midpoint time.	 
+        v, u, f = t_vuf(ltype, centraltime, np.hstack([ju, jinf]).astype(int), lat) # nargout=3
         vu = np.dot((v + u), 360)
         # total phase correction (degrees)
-        nodcor = 'Greenwich phase computed with nodal corrections applied to amplitude \\n and phase relative to center time'
+        nodcor = 'Greenwich phase computed with nodal corrections \n applied to amplitude and phase relative to center time\n'
     else:
         if not  (0 in stime.shape):
             # Time only  										   
             # Get nodal corrections at midpoint time							   
-            v, u, f = t_vuf(ltype, centraltime, np.hstack([ju, jinf]).reshape(1, -1).astype(int)) # nargout=3
+            v, u, f = t_vuf(ltype, centraltime, np.hstack([ju, jinf]).astype(int)) # nargout=3
             vu = np.dot((v + u), 360)
             # total phase correction (degrees)	
             nodcor = 'Greenwich phase computed, no nodal corrections'
@@ -519,9 +521,9 @@ def t_tide(xin,**kwargs):
         else:
             print "Unrecognized type of error analysis: " + errcalc + " specified!"
     #-----Convert complex amplitudes to standard ellipse parameters--------
-    aap = ap / np.repeat(f,nreal).reshape(len(f),nreal)
+    aap = ap / np.repeat(f,nreal).reshape(f.shape[0],nreal)
     # Apply nodal corrections and
-    aam = am / np.repeat(f,nreal).reshape(len(f),nreal)
+    aam = am / np.repeat(f,nreal).reshape(f.shape[0],nreal)
     # compute ellipse parameters.
     fmaj = aap + aam
     # major axis
@@ -529,11 +531,11 @@ def t_tide(xin,**kwargs):
     # minor axis
   
 
-    
-    gp = np.mod(np.repeat(vu,nreal).reshape(len(vu),nreal) - epsp, 360)
+
+    gp = np.mod(np.repeat(vu,nreal).reshape(vu.shape[0],nreal) - epsp, 360)
 
     # pos. Greenwich phase in deg.
-    gm = np.mod(np.repeat(vu,nreal).reshape(len(vu),nreal) + epsm, 360)
+    gm = np.mod(np.repeat(vu,nreal).reshape(vu.shape[0],nreal) + epsm, 360)
 
     # neg. Greenwich phase in deg.
     finc = (epsp + epsm) / 2
@@ -661,7 +663,7 @@ def t_tide(xin,**kwargs):
         if stime.size != 0:
             print  'start time: %s' % mpl.dates.num2date(stime).strftime('%Y-%m-%d %H:%M:%S')
         print  'rayleigh criterion = %.1f\n' % ray
-        print  '%s\n' % nodcor
+        print  '%s' % nodcor
         #  print '\n     coefficients from least squares fit of x\n');
         #  print '\n tide    freq        |a+|       err_a+      |a-|       err_a-\n');
         #  for k=1:length(fu);
@@ -749,23 +751,28 @@ def constituents(minres, constit, shallow, infname, infref, centraltime):
 #               for ick in range(1, (max(jck.shape) +1)):
 #                    disp('     ' + const.name(ju[(jck[(ick -1)] -1)], :) + ' vs ' + const.name(ju[(jck[(ick -1)] + 1 -1)], :) + ' - not using ' + const.name(ju[(jrm[(ick -1)] -1)], :))
                 ju[(jrm -1)] = np.array([])
+
     if constit.size !=0:
         # Selected if constituents are specified in input.
         ju = np.array([])
-        for k in range(1, (constit.shape[0] +1)):
-            j1 = strmatch(constit[(k -1), :], const['name'])
-            if (0 in j1.shape):
-                disp("Can't recognize name " + constit[(k -1), :] + ' for forced search')
+        for k in range(0, (constit.shape[0])):
+            j1=np.array([])            
+            j1 = np.where(const['name']==constit[(k)])[0]
+            if (j1.size==0):
+                print "Can't recognize name " + constit[k] + ' for forced search'
+            #else:
+            #    if j1.size == 1:
+            #        disp('*************************************************************************')
+            #        disp("Z0 specification ignored - for non-tidal offsets see 'secular' property")
+            #        disp('*************************************************************************')
             else:
-                if j1 == 1:
-                    disp('*************************************************************************')
-                    disp("Z0 specification ignored - for non-tidal offsets see 'secular' property")
-                    disp('*************************************************************************')
-                else:
-                    ju = np.array([ju, j1]).reshape(1, -1)
-        dum, II = sort(const['freq'][ju]) # nargout=2
+                ju = np.concatenate([ju, j1])
+
+        ju=ju.astype(int)
+        II= np.argsort(const['freq'][ju].T)      
         # sort in ascending order of frequency.
-        ju = ju[(II -1)]
+        ju = np.squeeze(ju[II])
+
     #cout
     #disp(['   number of standard constituents used: ',int2str(length(ju))])
     if shallow.size !=0:
@@ -779,7 +786,6 @@ def constituents(minres, constit, shallow, infname, infref, centraltime):
                     disp(shallow[(k -1), :] + ' Not a shallow-water constituent')
                 disp('   Forced fit to ' + shallow[(k -1), :])
                 ju = np.array([ju, j1]).reshape(1, -1)
-
     nameu = const['name'][ju]
     fu = const['freq'][ju]
 
@@ -907,7 +913,7 @@ def noise_realizations(xres, fu, dt, nreal, errcalc):
     NM = np.zeros(shape=(max(fu.shape), nreal), dtype='complex128')
     NP = np.zeros(shape=(max(fu.shape), nreal), dtype='complex128')
 
-    for k in range(0, fu.shape[0]):
+    for k in range(0, fu.shape[0]):        
         l = np.squeeze(np.flatnonzero(np.all([fu[k] > fband[:, 0] , fu[k] < fband[:, 1]],axis=0)))
         N = np.hstack([np.zeros(4,).reshape(-1,1), np.dot(np.squeeze(Mat[:, :, l]), np.random.randn(4, nreal-1))])
         NP[(k), :] = (N[0, :]+1j*N[1, :]) 

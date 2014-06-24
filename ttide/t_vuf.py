@@ -104,9 +104,9 @@ def t_vuf(ltype,ctime,ju,lat=None):
                 f[(k)] = np.prod(np.power(np.squeeze(f[shallow['iname'][ik]-1]), np.squeeze(shallow['coef'][ik])))
                 u[(k)] = np.sum(np.multiply(np.squeeze(u[shallow['iname'][ik]-1]), np.squeeze(shallow['coef'][ik])))
                 v[(k)] = np.sum(np.multiply(np.squeeze(v[shallow['iname'][ik]-1]), np.squeeze(shallow['coef'][ik])))           
-                       
-            f = np.squeeze(f[(ju)])
-            u = np.squeeze(u[(ju)])
+     
+            f = f[(ju)]
+            u = u[(ju)]
             v = np.squeeze(v[(ju)])
 
         else:
