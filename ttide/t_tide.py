@@ -356,48 +356,45 @@ def t_tide(xin,**kwargs):
                 j2 = np.min(j1 + nsub - 1, nobs)
                 E = np.hstack([np.ones(shape=(j2 - j1 + 1, 1), dtype='float64'), cos(np.dot(np.dot((np.dot(2, pi)), t[(j1 -1):j2]), fu.T)), sin(np.dot(np.dot((np.dot(2, pi)), t[(j1 -1):j2]), fu.T))])            
                 xout[(j1 -1):j2] = np.dot(E, coef)
-    # Check variance explained (but do this with the original fit).
- 
+
+
+# Check variance explained (but do this with the original fit, and the residuals!) 
     xres = xin-xout
-    # and the residuals!
+
     if np.isreal(xin).any():
-        # Real time series
+# Real time series
         varx = np.cov(xin[(gd)])
         varxp = np.cov(xout[(gd)])
         varxr = np.cov(xres[(gd)])
-        #cout
-        #print('   percent of var residual after lsqfit/var original: 
-        #5.2f 
-        #\n',100*(varxr/varx));  
+        #print('   percent of var residual after lsqfit/var original: %5.2f' % (100*(varxr/varx)) );  
     else:
-        # Complex time series
+# Complex time series
         varx = np.cov(np.real(xin[(gd)]))
         varxp = np.cov(np.real(xout[(gd)]))
         varxr = np.cov(np.real(xres[(gd)]))
-        #cout
-        #print('   percent of X var residual after lsqfit/var original: 
-        #5.2f 
-        #\n',100*(varxr/varx));
+        #print('   percent of X var residual after lsqfit/var original: %5.2f' % (100*(varxr/varx)) );
         vary = np.cov(np.imag(xin[(gd)]))
         varyp = np.cov(np.imag(xout[(gd)]))
         varyr = np.cov(np.imag(xres[(gd)]))
-        #cout
-        #print('   percent of Y var residual after lsqfit/var original: 
-        #5.2f 
-        #\n',100*(varyr/vary));
-    #---------- Correct for prefiltering-----------------------------------
+        #print('   percent of Y var residual after lsqfit/var original: %5.2f\n' % (100*(varyr/vary)) );
+
+##################################################################################################	
+#---------- Correct for prefiltering-----------------------------------
+##################################################################################################	
     corrfac = spi.interpolate.interp1d(corr_fs,corr_fac)(fu)
-    # To stop things blowing up!
+# To stop things blowing up!
     corrfac[corrfac > 100] = 1
     corrfac[corrfac < 0.01] = 1
     corrfac[np.isnan(corrfac)] = 1
     ap = ap*np.squeeze(corrfac)
     am = am * np.squeeze(np.conj(corrfac))
-    #---------------Nodal Corrections-------------------------------------- 						   
-    # Generate nodal corrections and calculate phase relative to Greenwich. 						   
-    # Note that this is a slightly weird way to do the nodal corrections,							   
-    # but is 'traditional'.  The "right" way would be to change the basis							   
-    # functions used in the least-squares fit above.									   
+
+##################################################################################################	
+#---------------Nodal Corrections-------------------------------------- 						   
+# Generate nodal corrections and calculate phase relative to Greenwich. 						   
+# Note that this is a slightly weird way to do the nodal corrections, but is 'traditional'.
+# The "right" way would be to change the basis functions used in the least-squares fit above.
+##################################################################################################										   
     if ((lat.size !=0) & (stime.size !=0)):       
         # Time and latitude								   
         # Get nodal corrections at midpoint time.	 
@@ -418,25 +415,26 @@ def t_tide(xin,**kwargs):
             vu = np.zeros(shape=(max(ju.shape) + max(jinf.shape), 1), dtype='float64')
             f = np.ones(shape=(max(ju.shape) + max(jinf.shape), 1), dtype='float64')
             nodcor = 'Phases at central time'
-    #cout									   
-    #print(['   ',nodcor,'\n']);												   
-    #---------------Inference Corrections----------------------------------
-    # Once again, the "right" way to do this would be to change the basis
-    # functions.
+
+
+##################################################################################################											   
+#---------------Inference Corrections----------------------------------
+# Once again, the "right" way to do this would be to change the basis functions.
+##################################################################################################
     ii = np.flatnonzero(np.isfinite(jref))
     if ii:
         print('   Do inference corrections\\n')
         snarg = np.dot(np.dot(np.dot(nobsu, pi), (fi[(ii -1)] - fu[(jref[(ii -1)] -1)])), dt)
         scarg = sin(snarg) / snarg
         if infamprat.shape[1] == 1:
-            # For real time series
+# For real time series
             pearg = np.dot(np.dot(2, pi), (vu[(mu + ii -1)] - vu[(jref[(ii -1)] -1)] + infph[(ii -1)])) / 360
             pcfac = infamprat[(ii -1)] * f[(mu + ii -1)] / f[(jref[(ii -1)] -1)] * exp(np.dot(i, pearg))
             pcorr = 1 + pcfac * scarg
             mcfac = conj(pcfac)
             mcorr = conj(pcorr)
         else:
-            # For complex time series
+# For complex time series
             pearg = np.dot(np.dot(2, pi), (vu[(mu + ii -1)] - vu[(jref[(ii -1)] -1)] + infph[(ii -1), 0])) / 360
             pcfac = infamprat[(ii -1), 0] * f[(mu + ii -1)] / f[(jref[(ii -1)] -1)] * exp(np.dot(i, pearg))
             pcorr = 1 + pcfac * scarg
@@ -451,75 +449,81 @@ def t_tide(xin,**kwargs):
         am = np.array([am, am[(jref[(ii -1)] -1)] * mcfac]).reshape(1, -1)
         fu = np.array([fu, fi[(ii -1)]]).reshape(1, -1)
         nameu = np.array([nameu, namei[(ii -1), :]]).reshape(1, -1)
-    # --------------Error Bar Calculations---------------------------------
-    #
-    # Error bar calcs involve two steps:
-    #      1) Estimate the uncertainties in the analyzed amplitude
-    #         for both + and - frequencies (i.e., in 'ap' and 'am').
-    #         A simple way of doing this is to take the variance of the
-    #         original time series and divide it into the amount appearing
-    #         in the bandwidth of the analysis (approximately 1/length).
-    #         A more sophisticated way is to assume "locally white"
-    #         noise in the vicinity of, e.g., the diurnal consistuents.
-    #         This takes into account slopes in the continuum spectrum.
-    #
-    #      2) Transform those uncertainties into ones suitable for ellipse
-    #         parameters (axis lengths, angles). This can be done 
-    #         analytically for large signal-to-noise ratios. However, the 
-    #         transformation is non-linear at lows SNR, say, less than 10
-    #         or so.
-    #
+
+##################################################################################################
+# --------------Error Bar Calculations---------------------------------
+# 
+# Error bar calcs involve two steps:
+# 1) Estimate the uncertainties in the analyzed amplitude
+#   for both + and - frequencies (i.e., in 'ap' and 'am').
+#   A simple way of doing this is to take the variance of the
+#   original time series and divide it into the amount appearing
+#   in the bandwidth of the analysis (approximately 1/length).
+#   A more sophisticated way is to assume "locally white"
+#   noise in the vicinity of, e.g., the diurnal consistuents.
+#   This takes into account slopes in the continuum spectrum.
+# 
+# 2) Transform those uncertainties into ones suitable for ellipse
+#   parameters (axis lengths, angles). This can be done 
+#   analytically for large signal-to-noise ratios. However, the 
+#   transformation is non-linear at lows SNR, say, less than 10
+#   or so.
+# 
+##################################################################################################
+
+# Fill in "internal" NaNs with linearly interpolated values so we can fft things.
     xr = fixgaps(xres)
-    # Fill in "internal" NaNs with linearly interpolated
-    # values so we can fft things.
+
     nreal = 1
-    if errcalc.endswith('boot'):
-        #cout									   
-        #print('   Using nonlinear bootstrapped error estimates\n');
-        # "noise" matrices are created with the right covariance structure
-        # to add to the analyzed components to create 'nreal' REPLICATES. 
-        # 
+
+    if errcalc.endswith('boot'):								   
+        #print('Using nonlinear bootstrapped error estimates.');
+##################################################################################################
+# "noise" matrices are created with the right covariance structure
+# to add to the analyzed components to create 'nreal' REPLICATES. 
+##################################################################################################
+
         nreal = 300
-        # Create noise matrices 
-        NP, NM = noise_realizations(xr[(np.isfinite(xr))], fu, dt, nreal, errcalc) # nargout=2
-        # All replicates are then transformed (nonlinearly) into ellipse 
-        # parameters.  The computed error bars are then based on the std
-        # dev of the replicates.
+# Create noise matrices 
+        NP, NM = noise_realizations(xr[(np.isfinite(xr))], fu, dt, nreal, errcalc) 
+# All replicates are then transformed (nonlinearly) into ellipse parameters.  
+#The computed error bars are then based on the std dev of the replicates.
   
         AP = np.repeat(ap,nreal).reshape(len(ap),nreal) + NP
-        # Add to analysis (first column
-        AM = np.repeat(am,nreal).reshape(len(am),nreal) + NM
-        # of NM,NP=0 so first column of
-        # AP/M holds ap/m).
 
+        AM = np.repeat(am,nreal).reshape(len(am),nreal) + NM
+# Add to analysis (first column of NM,NP=0 so first column of AP/M holds ap/m).
+
+# Angle/magnitude form:
         epsp = (np.dot(np.angle(AP), 180) / pi)
-        # Angle/magnitude form:
         epsm = (np.dot(np.angle(AM), 180) / pi)
         ap = abs(AP)
         am = abs(AM)
     else:
         if errcalc=='linear':
-            print('   Using linearized error estimates\\n')
-            #
-            # Uncertainties in analyzed amplitudes are computed in different
-            # spectral bands. Real and imaginary parts of the residual time series
-            # are treated separately (no cross-covariance is assumed).
-            #
-            # Noise estimates are then determined from a linear analysis of errors,
-            # assuming that everything is uncorrelated. This is OK for scalar time
-            # series but can fail for vector time series if the noise is not 
-            # isotropic.
-            ercx, eicx = noise_stats(xr[(isfinite(xr) -1)], fu, dt) # nargout=2
-            # Note - here we assume that the error in the cos and sin terms is 
-            # equal, and equal to total power in the encompassing frequency bin. 
-            # It seems like there should be a factor of 2 here somewhere but it 
-            # only works this way! <shrug>
-            emaj, emin, einc, epha = errell(ap + am, np.dot(i, (ap - am)), ercx, ercx, eicx, eicx) # nargout=4
+            print('Using linearized error estimates.')
+##################################################################################################
+# Uncertainties in analyzed amplitudes are computed in different
+# spectral bands. Real and imaginary parts of the residual time series
+# are treated separately (no cross-covariance is assumed).
+# 
+# Noise estimates are then determined from a linear analysis of errors,
+# assuming that everything is uncorrelated. This is OK for scalar time
+# series but can fail for vector time series if the noise is not 
+# isotropic.
+##################################################################################################
 
-            epsp = np.dot(angle(ap), 180) / pi
-            epsm = np.dot(angle(am), 180) / pi
-            ap = abs(ap)
-            am = abs(am)
+            ercx, eicx = noise_stats(xr[np.isfinite(xr)], fu, dt)
+
+# Note - here we assume that the error in the cos and sin terms is equal, and equal to total
+# power in the encompassing frequency bin. It seems like there should be a factor of 2 here 
+# somewhere but it only works this way! <shrug>
+
+            emaj, emin, einc, epha = errell(ap + am, np.dot(1j, (ap - am)), ercx, ercx, eicx, eicx)
+            epsp = np.dot(np.angle(ap), 180) / pi
+            epsm = np.dot(np.angle(am), 180) / pi
+            ap = np.absolute(ap)
+            am = np.absolute(am)
         else:
             print "Unrecognized type of error analysis: " + errcalc + " specified!"
     #-----Convert complex amplitudes to standard ellipse parameters--------
@@ -538,9 +542,9 @@ def t_tide(xin,**kwargs):
 
     # pos. Greenwich phase in deg.
     gm = np.mod(np.repeat(vu,nreal).reshape(vu.shape[0],nreal) + epsm, 360)
-
+    
     # neg. Greenwich phase in deg.
-    finc = (epsp + epsm) / 2
+    finc = ((epsp + epsm) / 2)
     finc[:, 0] = np.mod(finc[:, 0], 180)
     
     
@@ -936,10 +940,10 @@ def noise_stats(xres, fu, dt):
     # Get the statistics for each component.
     ercx = np.zeros(shape=(mu, 1), dtype='float64')
     eicx = np.zeros(shape=(mu, 1), dtype='float64')
-    for k1 in range(1, (nfband +1)):
-        k = np.flatnonzero(fu >= fband[(k1 -1), 0] & fu <= fband[(k1 -1), 1])
-        ercx[(k -1)] = sqrt(Pxrave[(k1 -1)])
-        eicx[(k -1)] = sqrt(Pxiave[(k1 -1)])
+    for k1 in range(0, nfband):
+        k = np.flatnonzero(np.all([fu >= fband[k1, 0] , fu <= fband[k1,1]],axis=0))     
+        ercx[(k)] = np.sqrt(Pxrave[(k1)])
+        eicx[(k)] = np.sqrt(Pxiave[(k1)])
     return ercx, eicx
 def residual_spectrum(xres, fu, dt):
     """RESIDUAL_SPECTRUM: Computes statistics from an input spectrum over
@@ -1040,17 +1044,17 @@ def errell(cxi, sxi, ercx, ersx, ercy, ersy):
      B. Beardsley  1/15/99; 1/20/99
      Version 1.0
     """
-    r2d = 180.0 / pi
-    cx = real(cxi[:])
-    sx = real(sxi[:])
-    cy = imag(cxi[:])
-    sy = imag(sxi[:])
+    r2d = 180.0 / np.pi
+    cx = np.real(cxi[:])
+    sx = np.real(sxi[:])
+    cy = np.imag(cxi[:])
+    sy = np.imag(sxi[:])
     ercx = ercx[:]
     ersx = ersx[:]
     ercy = ercy[:]
     ersy = ersy[:]
-    rp = 0.5 * sqrt((cx + sy) ** 2 + (cy - sx) ** 2)
-    rm = 0.5 * sqrt((cx - sy) ** 2 + (cy + sx) ** 2)
+    rp = 0.5 * np.sqrt((cx + sy) ** 2 + (cy - sx) ** 2)
+    rm = 0.5 * np.sqrt((cx - sy) ** 2 + (cy + sx) ** 2)
     ercx2 = ercx ** 2
     ersx2 = ersx ** 2
     ercy2 = ercy ** 2
@@ -1064,13 +1068,13 @@ def errell(cxi, sxi, ercx, ersx, ercy, ersy):
     dsx2 = (0.25 * (gx + hx)) ** 2
     dcy2 = (0.25 * (hx - gx)) ** 2
     dsy2 = (0.25 * (ex - fx)) ** 2
-    emaj = sqrt(dcx2 * ercx2 + dsx2 * ersx2 + dcy2 * ercy2 + dsy2 * ersy2)
+    emaj = np.sqrt(dcx2 * ercx2 + dsx2 * ersx2 + dcy2 * ercy2 + dsy2 * ersy2)
     # minor axis error
     dcx2 = (0.25 * (ex - fx)) ** 2
     dsx2 = (0.25 * (gx - hx)) ** 2
     dcy2 = (0.25 * (hx + gx)) ** 2
     dsy2 = (0.25 * (ex + fx)) ** 2
-    emin = sqrt(dcx2 * ercx2 + dsx2 * ersx2 + dcy2 * ercy2 + dsy2 * ersy2)
+    emin = np.sqrt(dcx2 * ercx2 + dsx2 * ersx2 + dcy2 * ercy2 + dsy2 * ersy2)
     # inclination error
     rn = np.dot(2.0, (cx * cy + sx * sy))
     rd = cx ** 2 + sx ** 2 - (cy ** 2 + sy ** 2)
@@ -1079,7 +1083,7 @@ def errell(cxi, sxi, ercx, ersx, ercy, ersy):
     dsx2 = ((rd * sy - rn * sx) / den) ** 2
     dcy2 = ((rd * cx + rn * cy) / den) ** 2
     dsy2 = ((rd * sx + rn * sy) / den) ** 2
-    einc = r2d * sqrt(dcx2 * ercx2 + dsx2 * ersx2 + dcy2 * ercy2 + dsy2 * ersy2)
+    einc = r2d * np.sqrt(dcx2 * ercx2 + dsx2 * ersx2 + dcy2 * ercy2 + dsy2 * ersy2)
     # phase error
     rn = np.dot(2.0, (cx * sx + cy * sy))
     rd = cx ** 2 - sx ** 2 + cy ** 2 - sy ** 2
@@ -1088,5 +1092,5 @@ def errell(cxi, sxi, ercx, ersx, ercy, ersy):
     dsx2 = ((rd * cx + rn * sx) / den) ** 2
     dcy2 = ((rd * sy - rn * cy) / den) ** 2
     dsy2 = ((rd * cy + rn * sy) / den) ** 2
-    epha = r2d * sqrt(dcx2 * ercx2 + dsx2 * ersx2 + dcy2 * ercy2 + dsy2 * ersy2)
+    epha = r2d * np.sqrt(dcx2 * ercx2 + dsx2 * ersx2 + dcy2 * ercy2 + dsy2 * ersy2)
     return emaj, emin, einc, epha
