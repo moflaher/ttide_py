@@ -226,6 +226,8 @@ def t_tide(xin,**kwargs):
                 lat=value
             if (key=='constitnames'):
                 constitnames=value
+            if (key=='errcalc'):
+                errcalc=value
 
 #Check to make sure that incoming data is a vector.
     inn= xin.shape 
@@ -252,10 +254,10 @@ def t_tide(xin,**kwargs):
     nobsu = nobs - np.remainder(nobs - 1, 2)
 
 #Make series odd to give a center point
-# Time vector for entire time series centered at series midpoint. 
+#Time vector for entire time series centered at series midpoint. 
     t = (dt*(np.arange(nobs)+1-np.ceil(nobsu/2))).reshape(-1,1)
      
-    if not  (0 in stime.shape):
+    if stime.size != 0:
         centraltime = stime + np.dot(np.floor(nobsu / 2) / 24.0, dt)
     else:
         centraltime = np.array([])
@@ -870,10 +872,10 @@ def noise_realizations(xres, fu, dt, nreal, errcalc):
         if errcalc=='wboot':
             fband = np.array([0, 0.5]).reshape(1, -1)
             nx = max(xres.shape)
-            A = cov(real(xres), imag(xres)) / nx
-            Pxrave = A[0, 0]
-            Pxiave = A[1, 1]
-            Pxcave = A[0, 1]
+            A = np.cov(np.real(xres), np.imag(xres)) / nx
+            Pxrave = np.array([A[0, 0]])
+            Pxiave = np.array([A[1, 1]])
+            Pxcave = np.array([A[0, 1]])
         else:
             sys.exit("Unrecognized type of bootstap analysis specified: '" + errcalc + "'")
     nfband = fband.shape[0]
