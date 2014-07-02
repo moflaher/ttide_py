@@ -36,18 +36,20 @@ from ttide.t_tide import t_tide
 
 
 
+
 All other input is variable.
 Currently dt,stime,lat,constitnames, and errcalc can be specified. To do so use key=value (ex dt=0.5).
 
-dt              Sampling interval (hours)   default = 1
 
-stime           Start time as number of days. using mpl.dates rather then datetime because it handles fractional days   default = empty
+dt -              Sampling interval (hours)   default = 1
 
-lat             Decimal degress (+north)    default = empty
+stime -           Start time as number of days. using mpl.dates rather then datetime because it handles fractional days   default = empty
 
-errcalc         Method for calculation of confidence limits. (cboot,wboot,linear(not finished)) default = 'cboot'
+lat -             Decimal degress (+north)    default = empty
 
-constitnames    Names of constituents to use. Use as such, constitnames=np.array([['M2  '],['N2  ']]). For the time being constituent names must be padded with spaces to a length of 4. default = empty
+errcalc -         Method for calculation of confidence limits. (cboot,wboot,linear(not finished)) default = 'cboot'
+
+constitnames -    Names of constituents to use. Use as such, constitnames=np.array([['M2  '],['N2  ']]). For the time being constituent names must be padded with spaces to a length of 4. default = empty
 
 
 
