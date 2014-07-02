@@ -904,7 +904,7 @@ def noise_realizations(xres, fu, dt, nreal, errcalc):
      
         D,V = np.linalg.eigh(B) # nargout=2 
 
-#next five lines are horrible coding/math someone should check it over
+    #next five lines are horrible coding/math someone should check it over
     #swap so the vectors match matlab, should check if this always holds
         V[[1,0],[1,3]]=V[[0,1],[3,1]]
         V[[3,2],[1,3]]=V[[2,3],[3,1]]
