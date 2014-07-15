@@ -29,7 +29,7 @@ def t_getconsts(ctime):
         const=const[()]
         sat=np.load(os.path.join(base_dir,'t_constituents_sat.npy'))
         sat=sat[()]
-        shallow=np.load(os.path.join(base_dir,'t_constituents_const.npy'))
+        shallow=np.load(os.path.join(base_dir,'t_constituents_shallow.npy'))
         shallow=shallow[()]
     else:
         print "You do not have t_constituents_*.npy saved from t_constituents.mat, to much work to convert code get them for now."

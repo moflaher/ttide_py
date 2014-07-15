@@ -199,7 +199,7 @@ def t_tide(xin,**kwargs):
     dt = 1
     stime=np.array([])
     lat = np.array([])
-
+    output=True
     ray = 1    
     fid = 1
     corr_fs = np.array([0, 1000000.0])
@@ -228,6 +228,8 @@ def t_tide(xin,**kwargs):
                 constitnames=value
             if (key=='errcalc'):
                 errcalc=value
+            if (key=='output'):
+                output=value
 
 #Check to make sure that incoming data is a vector.
     inn= xin.shape 
@@ -657,59 +659,61 @@ def t_tide(xin,**kwargs):
         #5.2f 
         #\n',100*(varyr/vary));
     #-----------------Output results---------------------------------------
-    if fid > 1:
-        print  '\\n\n %s\\n', 'file name: ' + filen
-    else:
-        if fid == 1:
-            print  '-----------------------------------'
-    if fid > 0:
-        date='Placeholder'
-        print  'date: %s' % date
-        print  'nobs = %d \nngood = %d \nrecord length (days) = %.2f' % (nobs, ngood, np.dot(max(xin.shape), dt) / 24)
-        if stime.size != 0:
-            print  'start time: %s' % mpl.dates.num2date(stime).strftime('%Y-%m-%d %H:%M:%S')
-        print  'rayleigh criterion = %.1f\n' % ray
-        print  '%s' % nodcor
-        #  print '\n     coefficients from least squares fit of x\n');
-        #  print '\n tide    freq        |a+|       err_a+      |a-|       err_a-\n');
-        #  for k=1:length(fu);
-        #    if ap(k)>eap(k) | am(k)>eam(k), print('*'); else print(' '); end;
-        #    print '
-        #s  
-        #8.5f  
-        #9.4f  
-        #9.4f  
-        #9.4f  
-        #9.4f\n',nameu(k,:),fu(k),ap(k),eap(k),am(k),eam(k));
-        #  end
-        print  'x0= %.3g, x trend= %.3g' % ( np.real(z0), np.real(dz0))
-        print  'var(x)= ' , varx , '   var(xp)= ' , varxp , '   var(xres)= ' , varxr , ''
-        print ''
-        print  'percent var predicted/var original= %.1f ' % (np.dot(100, varxp) / varx)
-        print ''
-        if np.isreal(xin).all():
-            print  '     tidal amplitude and phase with 95 % CI estimates'
-            print  '   tide      freq         amp     amp_err     pha     pha_err    snr'
-            for k in range(0, max(fu.shape) ):
-                if snr[(k)] > synth:
-                    print  '* %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), snr[(k)].astype(float))
-                else:
-                   print  '  %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), snr[(k)].astype(float))                
+    if output==True:
+
+        if fid > 1:
+            print  '\\n\n %s\\n', 'file name: ' + filen
         else:
-            print  'y0= %.3f, x trend= %.3f' % (np.imag(z0), np.imag(dz0))
-            print  'var(y)= %f    var(yp)= %f  var(yres)= %f ' % (vary,varyp,varyr)
-            print  'percent var predicted/var original=  %.1f  ' %( np.dot(100, varyp) / vary)
-            print  'ellipse parameters with 95 % CI estimates'
-            print  '  tide     freq       major      emaj      minor      emin     inc      einc      pha       epha       snr'            
-            for k in range(0, max(fu.shape) ):
-                if snr[(k)] > synth:
-                    print  '* %s  %9.7f  %9.4f  %8.3f %9.4f  %8.3f %8.2f  %8.2f  %8.2f  %8.2f %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), tidecon[(k), 4].astype(float), tidecon[(k), 5].astype(float), tidecon[(k), 6].astype(float), tidecon[(k), 7].astype(float), snr[(k)].astype(float))
-                else:
-                   print  '  %s  %9.7f  %9.4f  %8.3f %9.4f  %8.3f %8.2f  %8.2f  %8.2f  %8.2f %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), tidecon[(k), 4].astype(float), tidecon[(k), 5].astype(float), tidecon[(k), 6].astype(float), tidecon[(k), 7].astype(float), snr[(k)].astype(float))
-            print  'total var= %f   pred var=  %f ' % (varx + vary,varxp + varyp )
-            print  'percent total var predicted/var original=  %.1f  ' % ( np.dot(100, (varxp + varyp)) / (varx + vary))
-        if fid != 1:
-            st = fid.close()
+            if fid == 1:
+                print  '-----------------------------------'
+        if fid > 0:
+            date='Placeholder'
+            print  'date: %s' % date
+            print  'nobs = %d \nngood = %d \nrecord length (days) = %.2f' % (nobs, ngood, np.dot(max(xin.shape), dt) / 24)
+            if stime.size != 0:
+                print  'start time: %s' % mpl.dates.num2date(stime).strftime('%Y-%m-%d %H:%M:%S')
+            print  'rayleigh criterion = %.1f\n' % ray
+            print  '%s' % nodcor
+            #  print '\n     coefficients from least squares fit of x\n');
+            #  print '\n tide    freq        |a+|       err_a+      |a-|       err_a-\n');
+            #  for k=1:length(fu);
+            #    if ap(k)>eap(k) | am(k)>eam(k), print('*'); else print(' '); end;
+            #    print '
+            #s  
+            #8.5f  
+            #9.4f  
+            #9.4f  
+            #9.4f  
+            #9.4f\n',nameu(k,:),fu(k),ap(k),eap(k),am(k),eam(k));
+            #  end
+            print  'x0= %.3g, x trend= %.3g' % ( np.real(z0), np.real(dz0))
+            print  'var(x)= ' , varx , '   var(xp)= ' , varxp , '   var(xres)= ' , varxr , ''
+            print ''
+            print  'percent var predicted/var original= %.1f ' % (np.dot(100, varxp) / varx)
+            print ''
+            if np.isreal(xin).all():
+                print  '     tidal amplitude and phase with 95 % CI estimates'
+                print  '   tide      freq         amp     amp_err     pha     pha_err    snr'
+                for k in range(0, max(fu.shape) ):
+                    if snr[(k)] > synth:
+                        print  '* %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), snr[(k)].astype(float))
+                    else:
+                       print  '  %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), snr[(k)].astype(float))                
+            else:
+                print  'y0= %.3f, x trend= %.3f' % (np.imag(z0), np.imag(dz0))
+                print  'var(y)= %f    var(yp)= %f  var(yres)= %f ' % (vary,varyp,varyr)
+                print  'percent var predicted/var original=  %.1f  ' %( np.dot(100, varyp) / vary)
+                print  'ellipse parameters with 95 % CI estimates'
+                print  '  tide     freq       major      emaj      minor      emin     inc      einc      pha       epha       snr'            
+                for k in range(0, max(fu.shape) ):
+                    if snr[(k)] > synth:
+                        print  '* %s  %9.7f  %9.4f  %8.3f %9.4f  %8.3f %8.2f  %8.2f  %8.2f  %8.2f %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), tidecon[(k), 4].astype(float), tidecon[(k), 5].astype(float), tidecon[(k), 6].astype(float), tidecon[(k), 7].astype(float), snr[(k)].astype(float))
+                    else:
+                       print  '  %s  %9.7f  %9.4f  %8.3f %9.4f  %8.3f %8.2f  %8.2f  %8.2f  %8.2f %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), tidecon[(k), 4].astype(float), tidecon[(k), 5].astype(float), tidecon[(k), 6].astype(float), tidecon[(k), 7].astype(float), snr[(k)].astype(float))
+                print  'total var= %f   pred var=  %f ' % (varx + vary,varxp + varyp )
+                print  'percent total var predicted/var original=  %.1f  ' % ( np.dot(100, (varxp + varyp)) / (varx + vary))
+            if fid != 1:
+                st = fid.close()
     xout = xout.reshape(inn[0], 1)
     #if [0, 3, 4] == nargout:
     #    pass
