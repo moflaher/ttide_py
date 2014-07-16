@@ -6,7 +6,6 @@ from scipy.io import loadmat,savemat
 import os
 from t_astron import t_astron
 
-
 def t_getconsts(ctime):
     """T_GETCONSTS Gets constituent data structures
      [CONST,SAT,SHALLOW]=T_GETCONSTS returns data structures holding
@@ -157,7 +156,8 @@ def t_getconsts(ctime):
         ii=np.isfinite(const['ishallow']).flatten()
         # diffs are in the 10th decimal place (9th sig fig).
         const['freq'][~ii] = (np.dot(const['doodson'][~ii, :], ader)) / (24)
-        for k in np.flatnonzero(ii): 
-            ik = (const['ishallow'][k] + np.array([ range(0, (const['nshallow'][k]) ) ])-1).astype(int)            
+        for k in np.flatnonzero(ii):     
+            ik = ( const['ishallow'][k]-1 + np.array( range(0,const['nshallow'][k]) ) ).astype(np.int16)   
             const['freq'][k] = np.sum(np.multiply(np.squeeze(const['freq'][shallow['iname'][ik]-1]), np.squeeze(shallow['coef'][ik])))
+
     return const, sat, shallow

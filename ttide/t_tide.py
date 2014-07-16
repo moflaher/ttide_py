@@ -15,7 +15,6 @@ import matplotlib as mpl
 np.set_printoptions(precision=8,suppress=True)
 
 
-
 def t_tide(xin,**kwargs):
     """T_TIDE Harmonic analysis of a time series
      [NAME,FREQ,TIDECON,XOUT]=T_TIDE(XIN) computes the tidal analysis 

@@ -101,9 +101,11 @@ def t_vuf(ltype,ctime,ju,lat=None):
             # Compute amplitude and phase corrections for shallow water constituents. 
             for k in np.flatnonzero(np.isfinite(const['ishallow']).flatten()):
                 ik = (const['ishallow'][k] + np.array([ range(0, (const['nshallow'][k]) ) ])-1).astype(int)
-                f[(k)] = np.prod(np.power(np.squeeze(f[shallow['iname'][ik]-1]), np.squeeze(shallow['coef'][ik])))
-                u[(k)] = np.sum(np.multiply(np.squeeze(u[shallow['iname'][ik]-1]), np.squeeze(shallow['coef'][ik])))
-                v[(k)] = np.sum(np.multiply(np.squeeze(v[shallow['iname'][ik]-1]), np.squeeze(shallow['coef'][ik])))           
+                iname=shallow['iname'][ik]-1
+                coef=np.squeeze(shallow['coef'][ik])
+                f[(k)] = np.prod(np.power(np.squeeze(f[iname]),coef))
+                u[(k)] = np.sum(np.multiply(np.squeeze(u[iname]), coef))
+                v[(k)] = np.sum(np.multiply(np.squeeze(v[iname]), coef))           
      
             f = f[(ju)]
             u = u[(ju)]
@@ -113,7 +115,7 @@ def t_vuf(ltype,ctime,ju,lat=None):
             # Astronomical arguments only, no nodal corrections.
             # Compute phases for shallow water constituents.
             for k in np.flatnonzero(np.isfinite(const['ishallow']).flatten()):
-                ik = (const['ishallow'][k] + np.array([ range(0, (const['nshallow'][k]) ) ])-1).astype(int)
+                ik = (const['ishallow'][k]-1 + np.array( range(0,const['nshallow'][k]) ) ).astype(np.int16)
                 v[(k)] = np.sum(np.multiply(np.squeeze(v[shallow['iname'][ik]-1]), np.squeeze(shallow['coef'][ik])))
             v = np.squeeze(v[(ju)])
             f = np.ones(len(v))
