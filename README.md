@@ -19,7 +19,7 @@ This is just a programming language conversion.
 Installation
 ============
 
-This has little to no testing. USE AT YOUR OWN RISK.
+This has little to no testing. Use at your own risk. It has only been tested on my personal machine.
 
 Run,
 
@@ -38,7 +38,7 @@ from ttide.t_tide import t_tide
 
 
 All other input is variable.
-Currently dt,stime,lat,constitnames, and errcalc can be specified. To do so use key=value (ex dt=0.5).
+Currently dt,stime,lat,constitnames,output and errcalc can be specified. To do so use key=value (ex dt=0.5).
 
 
 dt -              Sampling interval (hours)   default = 1
@@ -51,6 +51,8 @@ errcalc -         Method for calculation of confidence limits. (cboot,wboot,line
 
 constitnames -    Names of constituents to use. Use as such, constitnames=np.array([['M2  '],['N2  ']]). For the time being constituent names must be padded with spaces to a length of 4. default = empty
 
+output -          Flag to disable output. default = True
+
 
 
 Notes
@@ -58,7 +60,7 @@ Notes
 
 1) The code to handle timeseries longer then 18.6 years has not been converted yet.
 
-2) t_tide doesn't call t_predic at the end yet. The return xout is incorrect. 
+2) t_tide doesn't call t_predic at the end yet. The returned xout is incorrect. 
 
 3) t_predic is working. Call it with [xout]=t_predic(time_in,names,freq,tidecon)
 
