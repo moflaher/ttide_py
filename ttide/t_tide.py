@@ -309,7 +309,7 @@ def t_tide(xin,**kwargs):
     else:
         # More complicated code required for long time series when memory may be
         # a problem. Modified from code submitted by Derek Goring (NIWA Chrischurch)
-        # Basically the normal equations are formed (rather than using Matlab's \
+        # Basically the normal equations are formed (rather than using Matlab'iss \
         # algorithm for least squares); this can be done by adding up subblocks
         # of data. Notice how the code is messier, and we have to recalculate everything
         # to get the original fit.
@@ -362,7 +362,9 @@ def t_tide(xin,**kwargs):
 # Check variance explained (but do this with the original fit, and the residuals!) 
     xres = xin-xout
 
-    if np.isreal(xin).any():
+    #original code breaks output if input is all zeros when computing results for whole grid
+    #if np.isreal(xin).any():
+    if (xin.dtype!=complex):
 # Real time series
         varx = np.cov(xin[(gd)])
         varxp = np.cov(xout[(gd)])
@@ -591,7 +593,8 @@ def t_tide(xin,**kwargs):
         emin = np.dot(1.96, emin)
         einc = np.dot(1.96, einc)
         epha = np.dot(1.96, epha)
-    if np.isreal(xin).all():
+    #if np.isreal(xin).any():
+    if (xin.dtype!=complex):
         tidecon = np.array([fmaj[:, 0], emaj, pha[:, 0], epha]).T
     else:
         tidecon = np.array([fmaj[:, 0], emaj, fmin[:, 0], emin, finc[:, 0], einc, pha[:, 0], epha]).T   
@@ -602,6 +605,7 @@ def t_tide(xin,**kwargs):
         fu, I = sort(fu) # nargout=2
         nameu = nameu[(I -1), :]
         tidecon = tidecon[(I -1), :]
+    print tidecon
     snr = (tidecon[:, 0] / tidecon[:, 1]) ** 2
     # signal to noise ratio
     #--------Generate a 'prediction' using significant constituents----------
@@ -632,7 +636,8 @@ def t_tide(xin,**kwargs):
     xres = xin[:] - xout[:]
     # and the residuals!
     #error;
-    if np.isreal(xin).all():
+    #if np.isreal(xin).any():
+    if (xin.dtype!=complex):
         # Real time series
         varx = np.cov(xin[(gd)])
         varxp = np.cov(xout[(gd)])
@@ -690,7 +695,8 @@ def t_tide(xin,**kwargs):
             print ''
             print  'percent var predicted/var original= %.1f ' % (np.dot(100, varxp) / varx)
             print ''
-            if np.isreal(xin).all():
+            #if np.isreal(xin).any():
+            if (xin.dtype!=complex):
                 print  '     tidal amplitude and phase with 95 % CI estimates'
                 print  '   tide      freq         amp     amp_err     pha     pha_err    snr'
                 for k in range(0, max(fu.shape) ):
