@@ -605,7 +605,6 @@ def t_tide(xin,**kwargs):
         fu, I = sort(fu) # nargout=2
         nameu = nameu[(I -1), :]
         tidecon = tidecon[(I -1), :]
-    print tidecon
     snr = (tidecon[:, 0] / tidecon[:, 1]) ** 2
     # signal to noise ratio
     #--------Generate a 'prediction' using significant constituents----------
