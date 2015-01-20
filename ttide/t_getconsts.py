@@ -11,18 +11,18 @@ def t_getconsts(ctime):
      [CONST,SAT,SHALLOW]=T_GETCONSTS returns data structures holding
      information for tidal analyses.
 
-     Variables are loaded from 't_constituents.mat', otherwise the 
+     Variables are loaded from 't_constituents.mat', otherwise the
      ascii files 'tide3.dat' (provided with the IOS analysis package)
-     and 't_equilib.dat' are read, and the results stored in 
+     and 't_equilib.dat' are read, and the results stored in
      't_constituents.mat' for future use.
 
-     [...]=T_GETCONSTS(TIME) recomputes the frequencies from the 
+     [...]=T_GETCONSTS(TIME) recomputes the frequencies from the
      rates-of-change of astronomical parameters at the matlab TIME given.
      R. Pawlowicz 11/8/99
      Version 1.0
     """
 
-    base_dir = os.path.dirname(__file__)
+    base_dir = os.path.join(os.path.dirname(__file__), 'data')
     if os.path.exists(os.path.join(base_dir,'t_constituents_const.npy')) & os.path.exists(os.path.join(base_dir,'t_constituents_sat.npy')) & os.path.exists(os.path.join(base_dir,'t_constituents_shallow.npy')):
         const=np.load(os.path.join(base_dir,'t_constituents_const.npy'))
         const=const[()]
@@ -156,8 +156,8 @@ def t_getconsts(ctime):
         ii=np.isfinite(const['ishallow']).flatten()
         # diffs are in the 10th decimal place (9th sig fig).
         const['freq'][~ii] = (np.dot(const['doodson'][~ii, :], ader)) / (24)
-        for k in np.flatnonzero(ii):     
-            ik = ( const['ishallow'][k]-1 + np.array( range(0,const['nshallow'][k]) ) ).astype(np.int16)   
+        for k in np.flatnonzero(ii):
+            ik = ( const['ishallow'][k]-1 + np.array( range(0,const['nshallow'][k]) ) ).astype(np.int16)
             const['freq'][k] = np.sum(np.multiply(np.squeeze(const['freq'][shallow['iname'][ik]-1]), np.squeeze(shallow['coef'][ik])))
 
     return const, sat, shallow
