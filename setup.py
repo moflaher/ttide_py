@@ -14,5 +14,5 @@ setup(name='ttide',
       author_email='073208o@acadiau.ca',
       license='MIT',
       packages=['ttide'],
-      data_files=[('ttide', ['ttide/t_constituents_const.npy','ttide/t_constituents_sat.npy','ttide/t_constituents_shallow.npy'])],
+      package_data={'ttide': ['data/*.npy']},
       zip_safe=False)
