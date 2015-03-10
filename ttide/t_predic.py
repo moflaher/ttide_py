@@ -7,7 +7,7 @@ import os
 from t_getconsts import t_getconsts
 from t_vuf import t_vuf
 
-def t_predic(tim,names,freq,tidecon):
+def t_predic(tim,names,freq,tidecon,**kwargs):
     """T_PREDIC Tidal prediction
      YOUT=T_PREDIC(TIM,NAMES,FREQ,TIDECON) makes a tidal prediction
      using the output of T_TIDE at the specified times TIM in decimal 
@@ -59,80 +59,34 @@ def t_predic(tim,names,freq,tidecon):
               avoid memory overflows for long time series).
      29/9/04 - small bug with undefined ltype fixed
     """
-    #nargin = len(varargin)
-    #if nargin > 0:
-    #    tim = varargin[0]
-    #if nargin > 1:
-    #    varargin = varargin[1]
-    #if nargin < 2:
-    #    # Not enough
-    #    error('Not enough input arguments')
+
     longseries = 0
     ltype = 'nodal'
-    #if isstruct(varargin[0]):
-    #    names = varargin[0].name
-    #    freq = varargin[0].freq
-    #    tidecon = varargin[0].tidecon
-    #    if hasattr(varargin[0], 'ltype') & varargin[0].ltyp(range(1, 4)) == 'ful':
-    #        longseries = 1
-    #    varargin[0] = np.array([])
-    #else:
-    #    if max(varargin.shape) < 3:
-    #        error('Not enough input arguments')
-    #    names = varargin[0]
-    #    freq = varargin[1]
-    #    tidecon = varargin[2]
-    #    varargin[0:3] = np.array([])
-
-    
-
     lat = np.array([])
     synth = 0
     k = 1
-    #while max(varargin.shape) > 0:
-
-    #    if ischar(varargin[0]):
-    #        if 'lat' == lower(varargin[-2](range(1, 4))):
-    #            lat = varargin[1]
-    #        else:
-    #            if 'syn' == lower(varargin[-2](range(1, 4))):
-    #                synth = varargin[1]
-    #            else:
-    #                if 'ana' == lower(varargin[-2](range(1, 4))):
-    #                    if isstr(varargin[1]):
-    #                        ltype = varargin[1]
-    #                        if varargin[1](range(1, 4)) == 'ful':
-    #                            longseries = 1
-    #                else:
-    #                    error("Can't understand property:" + varargin[0])
-    #        varargin[(np.array([1, 2]).reshape(1, -1) -1)] = np.array([])
-    #    else:
-    #        if 1 == k:
-    #            lat = varargin[0]
-    #        else:
-    #            if 2 == k:
-    #                synth = varargin[0]
-    #            else:
-    #               error('Too many input parameters')
-    #        varargin[0] = np.array([])
-    #    k = k + 1
-
     tim=tim.reshape(-1,1)
 
-
+#use kargs to set values other then the defaults
+    if kwargs is not None:
+        for key, value in kwargs.iteritems():
+            if (key=='ltype'):
+                ltype=value
+            if (key=='synth'):
+                synth=value
 
     # Do the synthesis.        
     snr = (tidecon[:, 0] / tidecon[:, 1]) ** 2
     # signal to noise ratio
     if synth > 0:
         I = snr > synth
-        if not  any(I):
+        if not any(I):
             warning('No predictions with this SNR')
             yout = NaN + np.zeros(shape=(tim.shape, tim.shape), dtype='float64')
             return yout
-        tidecon = tidecon[(I -1), :]
-        names = names[(I -1), :]
-        freq = freq[(I -1)]
+        tidecon = tidecon[I, :]
+        names = names[I]
+        freq = freq[I]
     if tidecon.shape[1] == 4:
         # Real time series
         ap = np.multiply(tidecon[:, 0]/2.0, np.exp(-1j*tidecon[:, 2]*np.pi/180) )
@@ -140,8 +94,8 @@ def t_predic(tim,names,freq,tidecon):
     else:
         ap = np.multiply((tidecon[:, 0] + tidecon[:, 2]) / 2.0, np.exp(np.dot(np.dot(1j, np.pi) / 180, (tidecon[:, 4] - tidecon[:, 6]))))
         am = np.multiply((tidecon[:, 0] - tidecon[:, 2]) / 2.0, np.exp(np.dot(np.dot(1j, np.pi) / 180, (tidecon[:, 4] + tidecon[:, 6]))))
-    # Mean at central point (get rid of one point at end to take mean of
-    # odd number of points if necessary).
+
+    # Mean at central point (get rid of one point at end to take mean of odd number of points if necessary).
     jdmid = np.mean(tim[0:np.dot(2, np.fix((max(tim.shape) - 1) / 2)) + 1])
     if longseries:
         const = t_get18consts
@@ -156,31 +110,30 @@ def t_predic(tim,names,freq,tidecon):
                     ju[(k -1)] = inam[(iminf -1)]
     else:
         const, sat, cshallow = t_getconsts(np.array([]))
-        ju = np.zeros([len(freq),1], dtype='float64')
+        ju = np.zeros((len(freq),), dtype='int32')
         # Check to make sure names and frequencies match expected values.
-        for k in range(0, (names.shape[0])):            
-            ju[(k)] = np.where(const['name']==names[(k)])
+        for k in range(0, (names.shape[0])):      
+            ju[k] = np.argwhere(const['name']==names[(k)])
         #if any(freq~=const.freq(ju)),
         #  error('Frequencies do not match names in input');
         #end;
     # Get the astronical argument with or without nodal corrections.  
-    if ((len(lat)!=0) & (np.absolute(jdmid)> 1)):
-        v, u, f = t_vuf(ltype, jdmid, ju, lat) # nargout=3
+    if ((lat.size!=0) & (np.absolute(jdmid)> 1)):
+        v, u, f = t_vuf(ltype, jdmid, ju, lat) 
     else:
-        if abs(jdmid) > 1:
+        if np.fabs(jdmid) > 1:
             # a real date				  
-            v, u, f = t_vuf(ltype, jdmid, ju.astype(int)) # nargout=3
+            v, u, f = t_vuf(ltype, jdmid, ju) # nargout=3
         else:
-            v = np.zeros(shape=(max(ju.shape), 1), dtype='float64')
+            v = np.zeros((len(ju),), dtype='float64')
             u = v
-            f = np.ones(shape=(max(ju.shape), 1), dtype='float64')
-
-    ap = ap * f * np.exp(np.dot(np.dot(np.dot(+1j, 2), np.pi), (u + v)))
-    am = am * f * np.exp(np.dot(np.dot(np.dot(-1j, 2), np.pi), (u + v)))
+            f = np.ones((len(ju),), dtype='float64')
+    
+    ap = ap * f * np.exp(+1j*2*np.pi*(u + v))
+    am = am * f * np.exp(-1j*2*np.pi*(u + v))
     tim = tim - jdmid
 
-    n= tim.shape[0]
-    m= tim.shape[1]
+    n,m= tim.shape 
     tim = tim[:].T
     ntim = max(tim.shape)
     nsub = 10000
@@ -191,8 +144,8 @@ def t_predic(tim,names,freq,tidecon):
         j2 = np.min([j1 + nsub, ntim]).astype(int)
         tap=np.repeat(ap,j2-j1).reshape(len(ap),j2-j1)
         tam=np.repeat(am,j2-j1).reshape(len(am),j2-j1)
-        yout[(j1):j2]=np.sum(np.multiply(np.exp(np.dot(24*1j*2*np.pi*freq,tim[j1:j2])),tap),0)+np.sum(np.multiply(np.exp(np.dot(24*-1j*2*np.pi*freq,tim[j1:j2])),tam),0)      
-    yout = yout.reshape(n, m)
+        yout[(j1):j2]=np.sum(np.multiply(np.exp(np.outer(24*1j*2*np.pi*freq,tim[j1:j2])),tap),0)+np.sum(np.multiply(np.exp(np.outer(24*-1j*2*np.pi*freq,tim[j1:j2])),tam),0)      
+
     if (tidecon.shape[1]==4):
         return np.real(yout)
     else:

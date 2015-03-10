@@ -11,6 +11,7 @@ import matplotlib.mlab as mplm
 from t_getconsts import t_getconsts
 from t_vuf import t_vuf
 import t_utils as tu
+from t_predic import t_predic
 import matplotlib as mpl
 
 np.set_printoptions(precision=8,suppress=True)
@@ -558,28 +559,15 @@ def t_tide(xin,**kwargs):
     # we always ref. against northern 
     # semi-major axis.
     finc = tu.cluster(finc, 180)
-    # Cluster angles around the 'true' 
-    # angle to avoid 360 degree wraps.
+    # Cluster angles around the 'true' angle to avoid 360 degree wraps.
     pha = np.mod(gp + finc, 360)
     # Greenwich phase in degrees.
     pha = tu.cluster(pha, 360)
-    # Cluster angles around the 'true' angle
-    # to avoid 360 degree wraps.
-    #----------------Generate 95
-    # CI---------------------------------------
+    # Cluster angles around the 'true' angle to avoid 360 degree wraps.
+
+#----------------Generate 95% CI---------------------------------------
     # For bootstrapped errors, we now compute limits of the distribution.
     if errcalc.endswith('boot'):
-        # std dev-based estimates.
-        # The 95
-        # CI are computed from the sigmas
-        # by a 1.96 fudge factor (infinite degrees of freedom).
-        # emaj=1.96*std(fmaj,0,2);
-        # emin=1.96*std(fmin,0,2);
-        # einc=1.96*std(finc,0,2);
-        # epha=1.96*std(pha ,0,2);
-        # Median-absolute-deviation (MAD) based estimates.
-        # (possibly more stable?)
-
         emaj = np.dot(np.median(abs(fmaj - np.dot(np.median(fmaj, 1).reshape(len(np.median(fmaj, 1)),1), np.ones(shape=(1, nreal), dtype='float64'))), 1) / 0.6375, 1.96)
         emin = np.dot(np.median(abs(fmin - np.dot(np.median(fmin, 1).reshape(len(np.median(fmin, 1)),1), np.ones(shape=(1, nreal), dtype='float64'))), 1) / 0.6375, 1.96)
         einc = np.dot(np.median(abs(finc - np.dot(np.median(finc, 1).reshape(len(np.median(finc, 1)),1), np.ones(shape=(1, nreal), dtype='float64'))), 1) / 0.6375, 1.96)
@@ -587,23 +575,21 @@ def t_tide(xin,**kwargs):
         #change emaj,emin,einc to same as epha should be faster and its shorter. gives same answer
 
     else:
-        # In the linear analysis, the 95
-        # CI are computed from the sigmas
+        # In the linear analysis, the 95 CI are computed from the sigmas
         # by this fudge factor (infinite degrees of freedom).
         emaj = np.dot(1.96, emaj)
         emin = np.dot(1.96, emin)
         einc = np.dot(1.96, einc)
         epha = np.dot(1.96, epha)
-    #if np.isreal(xin).any():
+
     if (xin.dtype!=complex):
         tidecon = np.array([fmaj[:, 0], emaj, pha[:, 0], epha]).T
     else:
         tidecon = np.array([fmaj[:, 0], emaj, fmin[:, 0], emin, finc[:, 0], einc, pha[:, 0], epha]).T   
     tideconout=tidecon.copy()     
-    # Sort results by frequency (needed if anything has been inferred since 
-    # these are stuck at the end of the list by code above).
+    # Sort results by frequency (needed if anything has been inferred since these are stuck at the end of the list by code above).
     if any(np.isfinite(jref)):
-        fu, I = sort(fu) # nargout=2
+        fu, I = sort(fu)
         nameu = nameu[(I -1), :]
         tidecon = tidecon[(I -1), :]
     snr = (tidecon[:, 0] / tidecon[:, 1]) ** 2
@@ -612,118 +598,76 @@ def t_tide(xin,**kwargs):
     xoutOLD = xout
     if synth >= 0:
         if lat.size !=0 & stime.size !=0:
-            #cout									   
-            #print('   Generating prediction with nodal corrections, SNR is 
-            #f\n',synth);
-            xout = t_predic(stime + np.dot(np.array([range(0, (nobs - 1 +1))]).reshape(1, -1), dt) / 24.0, nameu, fu, tidecon, 'lat', lat, 'synth', synth, 'anal', ltype)
+            #This does not account for latitude, functionality not added to t_predic yet.
+            xout = t_predic(stime + np.array([range(nobs)])*dt/24.0, nameu, fu, tidecon,synth=synth)
+        elif (stime.size!=0):
+            xout = t_predic(stime + np.array([range(nobs)])*dt/24.0, nameu, fu, tidecon,synth=synth)
         else:
-            if not  (0 in stime.shape):
-                #cout									   
-                #print('   Generating prediction without nodal corrections, SNR is 
-                #f\n',synth);
-                print "This would be a t_predic call."
-                #xout = t_predic(stime + np.dot(np.array([range(0, (nobs - 1 +1))]).reshape(1, -1), dt) / 24.0, nameu, fu, tidecon, 'synth', synth, 'anal', ltype)
-            else:
-                #cout									   
-                #print('   Generating prediction without nodal corrections, SNR is 
-                #f\n',synth);
-                print "This would be a t_predic call."
-                #haven't fixed t_predic yet commenting it out to to see if t_tide can be made to work.
-                #xout = t_predic(t / 24.0, nameu, fu, tidecon, 'synth', synth, 'anal', ltype)
+            xout = t_predic(t / 24.0, nameu, fu, tidecon,synth=synth)
     else:
-        print('   Returning fitted prediction\\n')
-    # Check variance explained (but now do this with the synthesized fit).
+        print('   Returning fitted prediction\n')
+
+    # Check variance explained (but now do this with the synthesized fit) and the residuals!
     xres = xin[:] - xout[:]
-    # and the residuals!
-    #error;
-    #if np.isreal(xin).any():
+
     if (xin.dtype!=complex):
         # Real time series
-        varx = np.cov(xin[(gd)])
-        varxp = np.cov(xout[(gd)])
-        varxr = np.cov(xres[(gd)])
-        #cout									   
-        #print('   percent of var residual after synthesis/var original: 
-        #5.2f 
-        #\n',100*(varxr/varx));  
+        varx = np.cov(xin[gd])
+        varxp = np.cov(xout[gd])
+        varxr = np.cov(xres[gd])
     else:
         # Complex time series
-        varx = np.cov(np.real(xin[(gd)]))
-        varxp = np.cov(np.real(xout[(gd)]))
-        varxr = np.cov(np.real(xres[(gd)]))
-        #cout									   
-        #print('   percent of X var residual after synthesis/var original: 
-        #5.2f 
-        #\n',100*(varxr/varx));
-        vary = np.cov(np.imag(xin[(gd)]))
-        varyp = np.cov(np.imag(xout[(gd)]))
-        varyr = np.cov(np.imag(xres[(gd)]))
-        #cout									   
-        #print('   percent of Y var residual after synthesis/var original: 
-        #5.2f 
-        #\n',100*(varyr/vary));
-    #-----------------Output results---------------------------------------
+        varx = np.cov(np.real(xin[gd]))
+        varxp = np.cov(np.real(xout[gd]))
+        varxr = np.cov(np.real(xres[gd]))
+        vary = np.cov(np.imag(xin[gd]))
+        varyp = np.cov(np.imag(xout[gd]))
+        varyr = np.cov(np.imag(xres[gd]))
+
+#-----------------Output results---------------------------------------
     if output==True:
 
         print  '-----------------------------------'
 
-        date='Placeholder'
-        print  'date: %s' % date
         print  'nobs = %d \nngood = %d \nrecord length (days) = %.2f' % (nobs, ngood, np.dot(max(xin.shape), dt) / 24)
         if stime.size != 0:
             print  'start time: %s' % mpl.dates.num2date(stime).strftime('%Y-%m-%d %H:%M:%S')
         print  'rayleigh criterion = %.1f\n' % ray
         print  '%s' % nodcor
-            #  print '\n     coefficients from least squares fit of x\n');
-            #  print '\n tide    freq        |a+|       err_a+      |a-|       err_a-\n');
-            #  for k=1:length(fu);
-            #    if ap(k)>eap(k) | am(k)>eam(k), print('*'); else print(' '); end;
-            #    print '
-            #s  
-            #8.5f  
-            #9.4f  
-            #9.4f  
-            #9.4f  
-            #9.4f\n',nameu(k,:),fu(k),ap(k),eap(k),am(k),eam(k));
-            #  end
         print  'x0= %.3g, x trend= %.3g' % ( np.real(z0), np.real(dz0))
         print  'var(x)= ' , varx , '   var(xp)= ' , varxp , '   var(xres)= ' , varxr , ''
-        print ''
+        print 
         print  'percent var predicted/var original= %.1f ' % (np.dot(100, varxp) / varx)
-        print ''
-        #if np.isreal(xin).any():
+        print 
         if (xin.dtype!=complex):
-            print  '     tidal amplitude and phase with 95 % CI estimates'
-            print  '   tide      freq         amp     amp_err     pha     pha_err    snr'
-            for k in range(0, max(fu.shape) ):
+            print  '        tidal amplitude and phase with 95 % CI estimates'
+            print  ' tide      freq        amp      amp_err    pha      pha_err    snr'
+            for k,fuk in enumerate(fu):
+                outstr=(nameu[k], fuk, tidecon[k,0], tidecon[k,1], tidecon[k,2], tidecon[k,3], snr[k])
                 if snr[k] > synth:
-                    print  '* %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), snr[(k)].astype(float))
+                    print  '* %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' % outstr
                 else:
-                    print  '  %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), snr[(k)].astype(float))                
+                    print  '  %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' % outstr              
         else:
             print  'y0= %.3f, x trend= %.3f' % (np.imag(z0), np.imag(dz0))
             print  'var(y)= %f    var(yp)= %f  var(yres)= %f ' % (vary,varyp,varyr)
+            print 
             print  'percent var predicted/var original=  %.1f  ' %( np.dot(100, varyp) / vary)
-            print  'ellipse parameters with 95 % CI estimates'
-            print  '  tide     freq       major      emaj      minor      emin     inc      einc      pha       epha       snr'            
-            for k in range(0, max(fu.shape) ):
-                if snr[(k)] > synth:
-                    print  '* %s  %9.7f  %9.4f  %8.3f %9.4f  %8.3f %8.2f  %8.2f  %8.2f  %8.2f %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), tidecon[(k), 4].astype(float), tidecon[(k), 5].astype(float), tidecon[(k), 6].astype(float), tidecon[(k), 7].astype(float), snr[(k)].astype(float))
-                else:
-                    print  '  %s  %9.7f  %9.4f  %8.3f %9.4f  %8.3f %8.2f  %8.2f  %8.2f  %8.2f %8.2g' % (nameu[(k)], fu[(k)].astype(float), tidecon[(k), 0].astype(float), tidecon[(k), 1].astype(float), tidecon[(k), 2].astype(float), tidecon[(k), 3].astype(float), tidecon[(k), 4].astype(float), tidecon[(k), 5].astype(float), tidecon[(k), 6].astype(float), tidecon[(k), 7].astype(float), snr[(k)].astype(float))
             print  'total var= %f   pred var=  %f ' % (varx + vary,varxp + varyp )
             print  'percent total var predicted/var original=  %.1f  ' % ( np.dot(100, (varxp + varyp)) / (varx + vary))
+            print 
+            print  'ellipse parameters with 95 % CI estimates'
+            print  ' tide     freq        major      emaj      minor      emin     inc      einc      pha       epha      snr'            
+            for k,fuk in enumerate(fu):
+                outstr=(nameu[k], fuk, tidecon[k,0], tidecon[k,1], tidecon[k,2], tidecon[k,3], tidecon[k,4], tidecon[k,5], tidecon[k,6], tidecon[k,7], snr[k])
+                if snr[(k)] > synth:
+                    print  '* %s  %9.7f  %9.4f  %8.3f %9.4f  %8.3f %8.2f  %8.2f  %8.2f  %8.2f %8.2g' % outstr
+                else:
+                    print  '  %s  %9.7f  %9.4f  %8.3f %9.4f  %8.3f %8.2f  %8.2f  %8.2f  %8.2f %8.2g' % outstr
+
 
     xout = xout.reshape(inn[0], 1)
-    #if [0, 3, 4] == nargout:
-    #    pass
-    #else:
-    #    if [1] == nargout:
-    #        nameu = type('struct', (), {})()
-    #    else:
-    #        if [2] == nargout:
-    #            nameu = type('struct', (), {})()
-    #            fu = xout
+
     return nameu, fu, tideconout, xout
 
 

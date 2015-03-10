@@ -399,3 +399,5 @@ def errell(cxi, sxi, ercx, ersx, ercy, ersy):
     dsy2 = ((rd * cy + rn * sy) / den) ** 2
     epha = r2d * np.sqrt(dcx2 * ercx2 + dsx2 * ersx2 + dcy2 * ercy2 + dsy2 * ersy2)
     return emaj, emin, einc, epha
+
+
