@@ -55,7 +55,8 @@ def t_vuf(ltype,ctime,ju,lat=None):
         # Phase relative to Greenwich (in units of cycles).
         # (This only returns values when we have doodson#s, i.e., not for the 
         # shallow water components, but these will be computed later.)
-        v = np.fmod(np.dot(const['doodson'], astro.T) + const['semi'], 1)
+        v = np.fmod(np.dot(const['doodson'], astro) + const['semi'], 1)
+
         if lat != None:
             # If we have a latitude, get nodal corrections.
             # Apparently the second-order terms in the tidal potential go to zero
@@ -109,15 +110,25 @@ def t_vuf(ltype,ctime,ju,lat=None):
      
             f = f[(ju)]
             u = u[(ju)]
-            v = np.squeeze(v[(ju)])
+            v = v[(ju)]
 
         else:
             # Astronomical arguments only, no nodal corrections.
             # Compute phases for shallow water constituents.
             for k in np.flatnonzero(np.isfinite(const['ishallow']).flatten()):
+                #print k
                 ik = (const['ishallow'][k]-1 + np.array( range(0,const['nshallow'][k]) ) ).astype(np.int16)
+                #print ik
+                #print shallow['iname'][ik]-1
+                #print v.shape
+                #print v[shallow['iname'][ik]-1]
+                #print v
+                #print np.squeeze(v[shallow['iname'][ik]-1]).shape
+                #print np.squeeze(shallow['coef'][ik]).shape
                 v[(k)] = np.sum(np.multiply(np.squeeze(v[shallow['iname'][ik]-1]), np.squeeze(shallow['coef'][ik])))
-            v = np.squeeze(v[(ju)])
+                #break
+
+            v = v[(ju)]
             f = np.ones(len(v))
             u = np.zeros(len(v))
     return v, u, f

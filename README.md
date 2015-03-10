@@ -49,7 +49,7 @@ lat -             Decimal degress (+north)    default = empty
 
 errcalc -         Method for calculation of confidence limits. (cboot,wboot,linear(not finished)) default = 'cboot'
 
-constitnames -    Names of constituents to use. Use as such, constitnames=np.array([['M2  '],['N2  ']]). For the time being constituent names must be padded with spaces to a length of 4. default = empty
+constitnames -    Names of constituents to use. default = empty
 
 output -          Flag to disable output. default = True
 
@@ -64,7 +64,7 @@ Notes
 
 3) t_predic is working. Call it with [xout]=t_predic(time_in,names,freq,tidecon)
 
-4) The code is still pretty messy and they are a few dirty hacks, that probably won't hold up and will need to be fixed. The most notable is in noise_realizations, ~lines 909:912. I swap eig vectors around to match matlabs output.
+4) The code is still pretty messy and they are a few dirty hacks, that probably won't hold up and will need to be fixed. The most notable is in noise_realizations. I swap eig vectors around to match matlabs output.
 Also, the returned diagonal matrix would sometimes be a negative on the order of 10^-10. Values between (-0.00000000001,0) are forced to 0. 
 
 
