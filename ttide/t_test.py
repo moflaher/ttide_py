@@ -4,12 +4,12 @@ import os
 from t_tide import t_tide
 
 #Build an M2 tidal series with 5m elevation
-ein=5*np.cos(((2*np.pi/12.42))*np.arange(1000))
+ein=5*np.cos(((2*np.pi/12.42))*np.arange(1001))
 
 #Build an M2 tidal series for current
 #Use to 2m/s horizontal currents and .5m/s vertical currents
-uin=2*np.cos(((2*np.pi/12.42))*np.arange(1000))
-vin=0.5*np.cos(((2*np.pi/12.42))*np.arange(1000))
+uin=2*np.cos(((2*np.pi/12.42))*np.arange(1001))
+vin=0.5*np.cos(((2*np.pi/12.42))*np.arange(1001))
 uvin=uin+1j*vin
 
 

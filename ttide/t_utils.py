@@ -1,6 +1,5 @@
 from __future__ import division
 import numpy as np
-from scipy.io import loadmat,savemat
 import os
 import scipy.interpolate as spi
 import scipy.signal as sps
@@ -19,9 +18,6 @@ def fourpad(conin):
         conin[i]=con.ljust(4)
 
     return conin
-
-
-
 
 def constituents(minres, constit, shallow, infname, infref, centraltime):
     """[name,freq,kmpr]=constituents(minres,infname) loads tidal constituent
@@ -148,6 +144,7 @@ def fixgaps(x):
         y[(bd -1)] = interp1(gd, x[(gd -1)], np.flatnonzero(bd))
     
     return y
+
 def cluster(ain, clusang):
     """CLUSTER: Clusters angles in rows around the angles in the first 
      column. CLUSANG is the allowable ambiguity (usually 360 degrees but
@@ -160,6 +157,7 @@ def cluster(ain, clusang):
     ii = (ain - np.repeat(ain[:,0],ain.shape[1]).reshape(ain.shape[0],ain.shape[1])) < - clusang / 2
     ain[(ii)] = ain[(ii)] + clusang
     return ain
+
 def noise_realizations(xres, fu, dt, nreal, errcalc):
     """NOISE_REALIZATIONS: Generates matrices of noise (with correct
      cross-correlation structure) for bootstrap analysis.
