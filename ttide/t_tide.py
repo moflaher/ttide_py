@@ -10,7 +10,7 @@ from t_vuf import t_vuf
 import t_utils as tu
 from t_predic import t_predic
 import matplotlib as mpl
-import matplotlib.dates as dates
+
 
 np.set_printoptions(precision=8,suppress=True)
 
@@ -213,6 +213,7 @@ def t_tide(xin,**kwargs):
     lsq = 'best'
     k = 1  
     pi=np.pi
+    out_style='classic'
 
 #use kargs to set values other then the defaults
     if kwargs is not None:
@@ -231,6 +232,8 @@ def t_tide(xin,**kwargs):
                 output=value
             if (key=='synth'):
                 synth=value
+            if (key=='out_style'):
+                out_style=tu.style_check(value)                
 
 
 
@@ -632,45 +635,39 @@ def t_tide(xin,**kwargs):
         varyr = np.cov(np.imag(xres[gd]))
 
 #-----------------Output results---------------------------------------
-    if output==True:
+    if output!=False:
+        out={}
+        out['nobs']=nobs
+        out['ngood']=ngood
+        out['dt']=dt
+        out['xin']=xin
+        out['ray']=ray
+        out['nodcor']=nodcor
+        out['z0']=z0
+        out['dz0']=dz0
+        out['varx']=varx
+        out['varxp']=varxp
+        out['varxr']=varxr
 
-        print  '-----------------------------------'
+        out['fu']=fu
+        out['nameu']=nameu
+        out['tidecon']=tidecon
+        out['snr']=snr
+        out['synth']=synth
 
-        print  'nobs = %d \nngood = %d \nrecord length (days) = %.2f' % (nobs, ngood, np.dot(max(xin.shape), dt) / 24)
         if stime.size != 0:
-            print  'start time: %s' % dates.num2date(stime).strftime('%Y-%m-%d %H:%M:%S')
-        print  'rayleigh criterion = %.1f\n' % ray
-        print  '%s' % nodcor
-        print  'x0= %.3g, x trend= %.3g' % ( np.real(z0), np.real(dz0))
-        print  'var(x)= ' , varx , '   var(xp)= ' , varxp , '   var(xres)= ' , varxr , ''
-        print 
-        print  'percent var predicted/var original= %.1f ' % (np.dot(100, varxp) / varx)
-        print 
-        if (xin.dtype!=complex):
-            print  '        tidal amplitude and phase with 95 % CI estimates'
-            print  ' tide      freq        amp      amp_err    pha      pha_err    snr'
-            for k,fuk in enumerate(fu):
-                outstr=(nameu[k], fuk, tidecon[k,0], tidecon[k,1], tidecon[k,2], tidecon[k,3], snr[k])
-                if snr[k] > synth:
-                    print  '* %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' % outstr
-                else:
-                    print  '  %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' % outstr              
-        else:
-            print  'y0= %.3f, x trend= %.3f' % (np.imag(z0), np.imag(dz0))
-            print  'var(y)= %f    var(yp)= %f  var(yres)= %f ' % (vary,varyp,varyr)
-            print 
-            print  'percent var predicted/var original=  %.1f  ' %( np.dot(100, varyp) / vary)
-            print  'total var= %f   pred var=  %f ' % (varx + vary,varxp + varyp )
-            print  'percent total var predicted/var original=  %.1f  ' % ( np.dot(100, (varxp + varyp)) / (varx + vary))
-            print 
-            print  'ellipse parameters with 95 % CI estimates'
-            print  ' tide     freq        major      emaj      minor      emin     inc      einc      pha       epha      snr'            
-            for k,fuk in enumerate(fu):
-                outstr=(nameu[k], fuk, tidecon[k,0], tidecon[k,1], tidecon[k,2], tidecon[k,3], tidecon[k,4], tidecon[k,5], tidecon[k,6], tidecon[k,7], snr[k])
-                if snr[(k)] > synth:
-                    print  '* %s  %9.7f  %9.4f  %8.3f %9.4f  %8.3f %8.2f  %8.2f  %8.2f  %8.2f %8.2g' % outstr
-                else:
-                    print  '  %s  %9.7f  %9.4f  %8.3f %9.4f  %8.3f %8.2f  %8.2f  %8.2f  %8.2f %8.2g' % outstr
+            out['stime']=stime
+        if (xin.dtype==complex):
+            out['vary']=vary
+            out['varyp']=varyp
+            out['varyr']=varyr
+    
+        if (out_style=='classic'):
+            tu.classic_style(out)
+        if (out_style=='pandas'):
+            tu.pandas_style(out)
+
+
 
 
     xout = xout.reshape(inn[0], 1)

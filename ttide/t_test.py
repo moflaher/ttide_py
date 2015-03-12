@@ -31,6 +31,13 @@ print
 print '===================================================================='
 print
 
+#Pandas output case
+[nameu, freq, tidecon, xout]=t_tide(ein,out_style='pandas')
+
+print
+print '===================================================================='
+print
+
 #M2 tides only
 [nameu, freq, tidecon, xout]=t_tide(ein,constitnames=['M2'])
 
@@ -74,6 +81,13 @@ print
 
 #No output test case
 [nameu, freq, tidecon, xout]=t_tide(uvin,output=False)
+
+print
+print '===================================================================='
+print
+
+#Pandas output case
+[nameu, freq, tidecon, xout]=t_tide(uvin,out_style='pandas')
 
 print
 print '===================================================================='

@@ -52,7 +52,9 @@ constitnames -    Names of constituents to use. default = empty
 
 output -          Flag to disable output. default = True
 
-synth -          Synthesis value for tidal prediction. default = 2
+synth -           Synthesis value for tidal prediction. default = 2
+
+out_style -       Output format. (classic,pandas) default='classic'
 
 
 
@@ -63,7 +65,7 @@ Notes
 
 2) t_predic is working. Call it with [xout]=t_predic(time_in,names,freq,tidecon)
 
-3) The code is a little messy and they are a few hacky bits, that probably will need to be fixed. The most notable is in noise_realizations. It swaps eig vectors around to match Matlab's output.
+3) The code is a little messy and they are a few hacky bits that probably will need to be fixed. The most notable is in noise_realizations. It swaps eig vectors around to match Matlab's output.
 Also, the returned diagonal array would sometimes be a negative on the order of 10^-10. Values between (-0.00000000001,0) are forced to 0. 
 
 4) ttide_py was initially converted to python with SMOP. Available at, https://github.com/victorlei/smop.git.
