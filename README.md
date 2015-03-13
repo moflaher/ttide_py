@@ -37,7 +37,7 @@ from ttide.t_tide import t_tide
 
 
 All other input is optional.
-Currently dt,stime,lat,constitnames,output,errcalc, and synth can be specified. To do so use key=value (ex dt=0.5).
+Currently dt,stime,lat,constitnames,output,errcalc,synth,out_style, and secular can be specified. To do so use key=value (ex dt=0.5).
 
 
 dt -              Sampling interval (hours)   default = 1
@@ -55,6 +55,8 @@ output -          Flag to disable output. default = True
 synth -           Synthesis value for tidal prediction. default = 2
 
 out_style -       Output format. (classic,pandas) default='classic'
+
+secular -         Adjustment for long-term behavior. (mean,linear) default='linear'
 
 
 

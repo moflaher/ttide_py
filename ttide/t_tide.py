@@ -233,7 +233,9 @@ def t_tide(xin,**kwargs):
             if (key=='synth'):
                 synth=value
             if (key=='out_style'):
-                out_style=tu.style_check(value)                
+                out_style=tu.style_check(value)          
+            if (key=='secular'):
+                secular=value        
 
 
 
