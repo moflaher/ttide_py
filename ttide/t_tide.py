@@ -330,11 +330,11 @@ def t_tide(xin,**kwargs):
         # Block length - doesn't matter really but should be small enough to
         # get allocated quickly	      
         if secular[0:3] == 'lin':
-            lhs = np.zeros(shape=(np.dot(mu, 2) + 2, np.dot(mu, 2) + 2), dtype='float64')
-            rhs = np.zeros(shape=(np.dot(mu, 2) + 2, 1), dtype='float64')
+            lhs = np.zeros(shape=(2*mu+2, 2*mu+2), dtype='float64')
+            rhs = np.zeros(shape=(2*mu+2, ), dtype='float64')
             for j1 in range(1, (ngood +1), nsub):
-                j2 = np.min(j1 + nsub - 1, ngood)
-                E = np.hstack([np.ones(shape=(j2 - j1 + 1, 1), dtype='float64'), cos(np.dot(np.dot((np.dot(2, pi)), t[(gd[(j1 -1):j2] -1)]), fu.T)), sin(np.dot(np.dot((np.dot(2, pi)), t[(gd[(j1 -1):j2] -1)]), fu.T)), np.dot(t[(gd[(j1 -1):j2] -1)], (2 / dt / nobsu))])
+                j2 = np.min([j1 + nsub - 1, ngood])
+                E = np.hstack([np.ones((j2 - j1 + 1,1)), np.cos(2*pi*np.outer(t[gd[(j1 -1):j2] -1],fu)), np.sin(2*pi*np.outer(t[gd[(j1 -1):j2] -1],fu)), t[(gd[(j1 -1):j2] -1)].reshape(-1,1)*(2 / dt / nobsu)])
                 rhs = rhs + np.dot(E.T, xin[(gd[(j1 -1):j2] -1)])
                 lhs = lhs + np.dot(E.T, E)
         else:
@@ -342,12 +342,10 @@ def t_tide(xin,**kwargs):
             rhs = np.zeros(shape=(2*mu+1, ), dtype='float64')
             for j1 in range(1, (ngood +1), nsub):
                 j2 = np.min([j1 + nsub - 1, ngood])
-                #E = np.hstack([np.ones(shape=(j2 - j1 + 1, 1), dtype='float64'), np.cos(np.dot(np.dot((np.dot(2, pi)), t[(gd[(j1 -1):j2] -1)]), fu.T)), np.sin(np.dot(np.dot((np.dot(2, pi)), t[(gd[(j1 -1):j2] -1)]), fu.T))])
                 E = np.hstack([np.ones((j2 - j1 + 1,1)), np.cos(2*pi*np.outer(t[gd[(j1 -1):j2] -1],fu)), np.sin(2*pi*np.outer(t[gd[(j1 -1):j2] -1],fu))])
                 rhs = rhs + np.dot(E.T, xin[(gd[(j1 -1):j2] -1)])
                 lhs = lhs + np.dot(E.T, E)
         coef = np.linalg.lstsq(lhs, rhs)[0]
-
         coef=coef.T
 
         #z0 a+ and a- amplitudes
@@ -360,17 +358,16 @@ def t_tide(xin,**kwargs):
         else:
             dz0 = 0
 
-        xout = xin
+        xout = xin.copy()
         # Copies over NaN   
         if secular[0:3] == 'lin':
             for j1 in range(1, (nobs +1), nsub):
-                j2 = np.min(j1 + nsub - 1, nobs)
-                E = np.hstack([np.ones(shape=(j2 - j1 + 1, 1), dtype='float64'), cos(np.dot(np.dot((np.dot(2, pi)), t[(j1 -1):j2]), fu.T)), sin(np.dot(np.dot((np.dot(2, pi)), t[(j1 -1):j2]), fu.T)), np.dot(t[(j1 -1):j2], (2 / dt / nobsu))])
+                j2 = np.min([j1 + nsub - 1, nobs])             
+                E = np.hstack([np.ones((j2 - j1 + 1,1)), np.cos(2*pi*np.outer(t[(j1 -1):j2],fu)), np.sin(2*pi*np.outer(t[(j1 -1):j2],fu)), np.dot(t[(j1 -1):j2], (2 / dt / nobsu)).reshape(-1,1)])  
                 xout[(j1 -1):j2] = np.dot(E, coef)
         else:
             for j1 in range(1, (nobs +1), nsub):
-                j2 = np.min([j1 + nsub - 1, nobs])
-                #E = np.hstack([np.ones(shape=(j2 - j1 + 1, 1), dtype='float64'), cos(np.dot(np.dot((np.dot(2, pi)), t[(j1 -1):j2]), fu.T)), sin(np.dot(np.dot((np.dot(2, pi)), t[(j1 -1):j2]), fu.T))])      
+                j2 = np.min([j1 + nsub - 1, nobs])   
                 E = np.hstack([np.ones((j2 - j1 + 1,1)), np.cos(2*pi*np.outer(t[(j1 -1):j2],fu)), np.sin(2*pi*np.outer(t[(j1 -1):j2],fu))])   
                 xout[(j1 -1):j2] = np.dot(E, coef)
 
@@ -383,17 +380,16 @@ def t_tide(xin,**kwargs):
         varx = np.cov(xin[(gd)])
         varxp = np.cov(xout[(gd)])
         varxr = np.cov(xres[(gd)])
-        #print('   percent of var residual after lsqfit/var original: %5.2f' % (100*(varxr/varx)) );  
     else:
 # Complex time series
         varx = np.cov(np.real(xin[(gd)]))
         varxp = np.cov(np.real(xout[(gd)]))
         varxr = np.cov(np.real(xres[(gd)]))
-        #print('   percent of X var residual after lsqfit/var original: %5.2f' % (100*(varxr/varx)) );
+
         vary = np.cov(np.imag(xin[(gd)]))
         varyp = np.cov(np.imag(xout[(gd)]))
         varyr = np.cov(np.imag(xres[(gd)]))
-        #print('   percent of Y var residual after lsqfit/var original: %5.2f\n' % (100*(varyr/vary)) );
+
 
 ##################################################################################################	
 #---------- Correct for prefiltering-----------------------------------
@@ -507,15 +503,15 @@ def t_tide(xin,**kwargs):
 #The computed error bars are then based on the std dev of the replicates.
   
         AP = np.repeat(ap,nreal).reshape(len(ap),nreal) + NP
-
         AM = np.repeat(am,nreal).reshape(len(am),nreal) + NM
 # Add to analysis (first column of NM,NP=0 so first column of AP/M holds ap/m).
 
 # Angle/magnitude form:
-        epsp = (np.dot(np.angle(AP), 180) / pi)
-        epsm = (np.dot(np.angle(AM), 180) / pi)
-        ap = abs(AP)
-        am = abs(AM)
+        epsp = np.angle(AP)*180/pi
+        epsm = np.angle(AM)*180/pi
+
+        ap = np.absolute(AP)
+        am = np.absolute(AM)
     else:
         if errcalc=='linear':
             print('Using linearized error estimates.')
