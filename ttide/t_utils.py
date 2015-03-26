@@ -426,7 +426,7 @@ def classic_style(out):
         print 
         print  'percent var predicted/var original= %.1f ' % (np.dot(100, out['varxp']) / out['varx'])
         print 
-        if (out['xin'].dtype!=complex):
+        if (not 'complex' in out['xin'].dtype.name):
             print  '        tidal amplitude and phase with 95 % CI estimates'
             print  ' tide      freq        amp      amp_err    pha      pha_err    snr'
             for k,fuk in enumerate(out['fu']):
@@ -455,7 +455,7 @@ def classic_style(out):
 
 def pandas_style(out):
     print
-    if (out['xin'].dtype!=complex):  
+    if (not 'complex' in out['xin'].dtype.name):  
         print '======================================================================'
     else:
         print '===================================================================================================================='
@@ -491,7 +491,7 @@ def pandas_style(out):
         print df.to_string(col_space=10,formatters=fmt)
 
     print
-    if (out['xin'].dtype!=complex):  
+    if (not 'complex' in out['xin'].dtype.name): 
         print '======================================================================'
     else:
         print '===================================================================================================================='

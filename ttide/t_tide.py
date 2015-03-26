@@ -375,7 +375,7 @@ def t_tide(xin,**kwargs):
 # Check variance explained (but do this with the original fit, and the residuals!) 
     xres = xin-xout
 
-    if (xin.dtype!=complex):
+    if (not 'complex' in xin.dtype.name):
 # Real time series
         varx = np.cov(xin[(gd)])
         varxp = np.cov(xout[(gd)])
@@ -590,7 +590,7 @@ def t_tide(xin,**kwargs):
         einc = np.dot(1.96, einc)
         epha = np.dot(1.96, epha)
 
-    if (xin.dtype!=complex):
+    if (not 'complex' in xin.dtype.name):
         tidecon = np.array([fmaj[:, 0], emaj, pha[:, 0], epha]).T
     else:
         tidecon = np.array([fmaj[:, 0], emaj, fmin[:, 0], emin, finc[:, 0], einc, pha[:, 0], epha]).T   
@@ -618,7 +618,7 @@ def t_tide(xin,**kwargs):
     # Check variance explained (but now do this with the synthesized fit) and the residuals!
     xres = xin[:] - xout[:]
 
-    if (xin.dtype!=complex):
+    if (not 'complex' in xin.dtype.name):
         # Real time series
         varx = np.cov(xin[gd])
         varxp = np.cov(xout[gd])
