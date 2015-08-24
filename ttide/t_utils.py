@@ -264,10 +264,10 @@ def residual_spectrum(xres, fu, dt):
     # Call to SIGNAL PROCESSING TOOLBOX - see note in t_readme.
     #[Pxc,fx]=csd(real(xres),imag(xres),nx,1/dt); 
     # Call to SIGNAL PROCESSING TOOLBOX - see note in t_readme.
-    fx, Pxr = sps.welch(np.real(xres), window=np.hanning(nx), noverlap=np.ceil(nx / 2),nfft=nx,fs=1/dt) # nargout=2
+    fx, Pxr = sps.welch(np.real(xres), window=np.hanning(nx), noverlap=np.ceil(nx / 2),nfft=nx,fs=1/dt,nperseg=nx) # nargout=2
     # Call to SIGNAL PROCESSING TOOLBOX - see note in t_readme. If you have an error here you are probably missing this toolbox
     Pxr = Pxr / 2 / dt
-    fx, Pxi = sps.welch(np.imag(xres), window=np.hanning(nx), noverlap=np.ceil(nx / 2),nfft=nx,fs=1/dt) # nargout=2
+    fx, Pxi = sps.welch(np.imag(xres), window=np.hanning(nx), noverlap=np.ceil(nx / 2),nfft=nx,fs=1/dt,nperseg=nx) # nargout=2
     # Call to SIGNAL PROCESSING TOOLBOX - see note in t_readme.
     Pxi = Pxi / 2 / dt
     Pxc,fx = mplm.csd(np.real(xres), np.imag(xres),nx,1 / dt) # nargout=2

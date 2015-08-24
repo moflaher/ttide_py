@@ -612,7 +612,7 @@ def t_tide(xin,**kwargs):
             xout = t_predic(stime + np.array([range(nobs)])*dt/24.0, nameu, fu, tidecon,synth=synth)
         else:
             xout = t_predic(t / 24.0, nameu, fu, tidecon,synth=synth)
-    else:
+    elif output:        
         print('   Returning fitted prediction\n')
 
     # Check variance explained (but now do this with the synthesized fit) and the residuals!
