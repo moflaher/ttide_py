@@ -23,7 +23,7 @@ def t_getconsts(ctime):
         shallow=np.load(os.path.join(base_dir,'t_constituents_shallow.npy'))
         shallow=shallow[()]
     else:
-        print "You do not have t_constituents_*.npy check that package installation is correct."
+        print("You do not have t_constituents_*.npy check that package installation is correct.")
         const=[]
         sat=[]
         shallow=[]

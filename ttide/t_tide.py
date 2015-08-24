@@ -217,7 +217,7 @@ def t_tide(xin,**kwargs):
 
 #use kargs to set values other then the defaults
     if kwargs is not None:
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             if (key=='dt'):
                 dt=value
             if (key=='stime'):
@@ -538,7 +538,7 @@ def t_tide(xin,**kwargs):
             ap = np.absolute(ap)
             am = np.absolute(am)
         else:
-            print "Unrecognized type of error analysis: " + errcalc + " specified!"
+            print("Unrecognized type of error analysis: " + errcalc + " specified!")
     #-----Convert complex amplitudes to standard ellipse parameters--------
     aap = ap / np.repeat(f,nreal).reshape(f.shape[0],nreal)
     # Apply nodal corrections and
