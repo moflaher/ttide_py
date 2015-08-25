@@ -1,32 +1,26 @@
-from __future__ import division
+from __future__ import division,absolute_import
 import numpy as np
-import os
+import os, copy
 from t_astron import t_astron
+from __init__ import _const,_sat,_shallow
 
 def t_getconsts(ctime):
     """
     t_getconsts - Gets constituent data structures holding information for tidal analyses
-    Variables are loaded from 't_constituents_*.npy'
+    Variables are loaded from 't_constituents_*.npy' on init and a copy is made now.
     When ctime is specified t_getconsts recomputes the frequencies from the rates-of-change of astronomical parameters at the matlab TIME given.
 
      :Parameters: 
         ctime: a datetime, the start time of the data input into t_tide.     
 
-    """
 
-    base_dir = os.path.join(os.path.dirname(__file__), 'data')
-    if os.path.exists(os.path.join(base_dir,'t_constituents_const.npy')) & os.path.exists(os.path.join(base_dir,'t_constituents_sat.npy')) & os.path.exists(os.path.join(base_dir,'t_constituents_shallow.npy')):
-        const=np.load(os.path.join(base_dir,'t_constituents_const.npy'))
-        const=const[()]
-        sat=np.load(os.path.join(base_dir,'t_constituents_sat.npy'))
-        sat=sat[()]
-        shallow=np.load(os.path.join(base_dir,'t_constituents_shallow.npy'))
-        shallow=shallow[()]
-    else:
-        print "You do not have t_constituents_*.npy check that package installation is correct."
-        const=[]
-        sat=[]
-        shallow=[]
+    Note:
+        Not sure if a copy has to be made here or if they can be used directly. For now a copy should be much fast then a load.
+    """
+    const=copy.deepcopy(_const)
+    sat=copy.deepcopy(_sat)
+    shallow=copy.deepcopy(_shallow)
+
        
     if ctime.size!=0:
         # If no time, just take the "standard" frequencies, otherwise compute them from derivatives of astro parameters. 
