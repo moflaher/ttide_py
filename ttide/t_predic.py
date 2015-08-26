@@ -66,7 +66,7 @@ def t_predic(tim,names,freq,tidecon,**kwargs):
 
 #use kargs to set values other then the defaults
     if kwargs is not None:
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             if (key=='ltype'):
                 ltype=value
             if (key=='synth'):
@@ -78,8 +78,8 @@ def t_predic(tim,names,freq,tidecon,**kwargs):
     if synth > 0:
         I = snr > synth
         if not any(I):
-            warning('No predictions with this SNR')
-            yout = NaN + np.zeros(shape=(tim.shape, tim.shape), dtype='float64')
+            print('No predictions with this SNR')
+            yout = np.nan + np.zeros(shape=(tim.shape, tim.shape), dtype='float64')
             return yout
         tidecon = tidecon[I, :]
         names = names[I]

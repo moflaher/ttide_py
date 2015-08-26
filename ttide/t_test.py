@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division,print_function
 import numpy as np
 import os
 from t_tide import t_tide
@@ -20,47 +20,47 @@ uvin=uin+1j*vin
 #Basic test case
 [nameu, freq, tidecon, xout]=t_tide(ein)
 
-print
-print '===================================================================='
-print
+print()
+print('====================================================================')
+print()
 
 #No output test case
 [nameu, freq, tidecon, xout]=t_tide(ein,output=False)
 
-print
-print '===================================================================='
-print
+print()
+print('====================================================================')
+print()
 
 #Pandas output case
 [nameu, freq, tidecon, xout]=t_tide(ein,out_style='pandas')
 
-print
-print '===================================================================='
-print
+print()
+print('====================================================================')
+print()
 
 #M2 tides only
 [nameu, freq, tidecon, xout]=t_tide(ein,constitnames=['M2'])
 
 
-print
-print '===================================================================='
-print
+print()
+print('====================================================================')
+print()
 
 #5 tidal constituents (all should basically be zero other then M2)
 [nameu, freq, tidecon, xout]=t_tide(ein,constitnames=['M2','N2','S2','K1','O1'])
 
 
-print
-print '===================================================================='
-print
+print()
+print('====================================================================')
+print()
 
 #M2 tides with a starttime
 [nameu, freq, tidecon, xout]=t_tide(ein,constitnames=['M2'],stime=768000)
 
 
-print
-print '===================================================================='
-print
+print()
+print('====================================================================')
+print()
 
 #M2 tides with a starttime and latitude
 [nameu, freq, tidecon, xout]=t_tide(ein,constitnames=['M2'],stime=768000,lat=45)
@@ -75,47 +75,47 @@ print
 #Basic test case
 [nameu, freq, tidecon, xout]=t_tide(uvin)
 
-print
-print '===================================================================='
-print
+print()
+print('====================================================================')
+print()
 
 #No output test case
 [nameu, freq, tidecon, xout]=t_tide(uvin,output=False)
 
-print
-print '===================================================================='
-print
+print()
+print('====================================================================')
+print()
 
 #Pandas output case
 [nameu, freq, tidecon, xout]=t_tide(uvin,out_style='pandas')
 
-print
-print '===================================================================='
-print
+print()
+print('====================================================================')
+print()
 
 #M2 tides only
 [nameu, freq, tidecon, xout]=t_tide(uvin,constitnames=['M2'])
 
 
-print
-print '===================================================================='
-print
+print()
+print('====================================================================')
+print()
 
 #5 tidal constituents (all should basically be zero other then M2)
 [nameu, freq, tidecon, xout]=t_tide(uvin,constitnames=['M2','N2','S2','K1','O1'])
 
 
-print
-print '===================================================================='
-print
+print()
+print('====================================================================')
+print()
 
 #M2 tides with a starttime
 [nameu, freq, tidecon, xout]=t_tide(uvin,constitnames=['M2'],stime=768000)
 
 
-print
-print '===================================================================='
-print
+print()
+print('====================================================================')
+print()
 
 #M2 tides with a starttime and latitude
 [nameu, freq, tidecon, xout]=t_tide(uvin,constitnames=['M2'],stime=768000,lat=45)
