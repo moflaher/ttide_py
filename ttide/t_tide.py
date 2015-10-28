@@ -12,12 +12,12 @@ from t_predic import t_predic
 import matplotlib as mpl
 
 
-np.set_printoptions(precision=8,suppress=True)
+np.set_printoptions(precision=8, suppress=True)
 
 
-def t_tide(xin,**kwargs):
+def t_tide(xin, **kwargs):
     """T_TIDE Harmonic analysis of a time series
-     [NAME,FREQ,TIDECON,XOUT]=T_TIDE(XIN) computes the tidal analysis 
+     [NAME,FREQ,TIDECON,XOUT]=T_TIDE(XIN) computes the tidal analysis
      of the (possibly complex) time series XIN.
 
      [TIDESTRUC,XOUT]=T_TIDE(XIN) returns the analysis information in
@@ -31,18 +31,18 @@ def t_tide(xin,**kwargs):
 
      These properties are:
 
-           'interval'       Sampling interval (hours), default = 1. 
+           'interval'       Sampling interval (hours), default = 1.
 
        The next two are required if nodal corrections are to be computed,
        otherwise not necessary. If they are not included then the reported
-       phases are raw constituent phases at the central time. 
+       phases are raw constituent phases at the central time.
 
        If your time series is longer than 18.6 years then nodal corrections
        are not made -instead we fit directly to all satellites (start time
        is then just used to generate Greenwich phases).
 
            'start time'     [year,month,day,hour,min,sec]
-                            - min,sec are optional OR 
+                            - min,sec are optional OR
                             decimal day (matlab DATENUM scalar)
            'latitude'       decimal degrees (+north) (default: none).
 
@@ -57,13 +57,13 @@ def t_tide(xin,**kwargs):
                             If the time series has been passed through
                             a pre-filter of some kind (say, to reduce the
                             low-frequency variability), then the analyzed
-                            constituents will have to be corrected for 
-                            this. The correction transfer function 
-                            (1/filter transfer function) has (possibly 
-                            complex) magnitude CORR at frequency FS (cph). 
-                            Corrections of more than a factor of 100 are 
+                            constituents will have to be corrected for
+                            this. The correction transfer function
+                            (1/filter transfer function) has (possibly
+                            complex) magnitude CORR at frequency FS (cph).
+                            Corrections of more than a factor of 100 are
                             not applied; it is assumed these refer to tidal
-                            constituents that were intentionally filtered 
+                            constituents that were intentionally filtered
                             out, e.g., the fortnightly components.
 
        Adjustment for long-term behavior ("secular" behavior).
@@ -72,60 +72,60 @@ def t_tide(xin,**kwargs):
 
        Inference of constituents.
            'inference'      NAME,REFERENCE,AMPRAT,PHASE_OFFSET
-                            where NAME is an array of the names of 
-                            constituents to be inferred, REFERENCE is an 
-                            array of the names of references, and AMPRAT 
+                            where NAME is an array of the names of
+                            constituents to be inferred, REFERENCE is an
+                            array of the names of references, and AMPRAT
                             and PHASE_OFFSET are the amplitude factor and
-                            phase offset (in degrees)from the references. 
+                            phase offset (in degrees)from the references.
                             NAME and REFERENCE are Nx4 (max 4 characters
                             in name), and AMPRAT and PHASE_OFFSET are Nx1
-                            (for scalar time series) and Nx2 for vector 
+                            (for scalar time series) and Nx2 for vector
                             time series (column 1 is for + frequencies and
                             column 2 for - frequencies).
                             NB - you can only infer ONE unknown constituent
-                            per known constituent (i.e. REFERENCE must not 
+                            per known constituent (i.e. REFERENCE must not
                             contain multiple instances of the same name).
 
        Shallow water constituents
            'shallow'        NAME
-                            A matrix whose rows contain the names of 
+                            A matrix whose rows contain the names of
                             shallow-water constituents to analyze.
 
-       Resolution criterions for least-squares fit.        
+       Resolution criterions for least-squares fit.
            'rayleigh'       scalar - Rayleigh criteria, default = 1.
                             Matrix of strings - names of constituents to
                                        use (useful for testing purposes).
 
        Calculation of confidence limits.
-           'error'          'wboot'  - Boostrapped confidence intervals 
-                                       based on a correlated bivariate 
+           'error'          'wboot'  - Boostrapped confidence intervals
+                                       based on a correlated bivariate
                                        white-noise model.
-                            'cboot'  - Boostrapped confidence intervals 
-                                       based on an uncorrelated bivariate 
+                            'cboot'  - Boostrapped confidence intervals
+                                       based on an uncorrelated bivariate
                                        coloured-noise model (default).
-                            'linear' - Linearized error analysis that 
-                                       assumes an uncorrelated bivariate 
-                                       coloured noise model. 
+                            'linear' - Linearized error analysis that
+                                       assumes an uncorrelated bivariate
+                                       coloured noise model.
 
        Computation of "predicted" tide (passed to t_predic, but note that
                                         the default value is different).
            'synthesis'      0 - use all selected constituents
-                            scalar>0 - use only those constituents with a 
-                                       SNR greater than that given (1 or 2 
+                            scalar>0 - use only those constituents with a
+                                       SNR greater than that given (1 or 2
                                        are good choices, 2 is the default).
-                                  <0 - return result of least-squares fit 
-                                       (should be the same as using '0', 
-                                       except that NaN-holes in original 
+                                  <0 - return result of least-squares fit
+                                       (should be the same as using '0',
+                                       except that NaN-holes in original
                                        time series will remain and mean/trend
                                        are included).
 
        Least squares soln computational efficiency parameter
-    	'lsq'		'direct'  - use A\ x fit
-    			'normal'  - use (A'A)\(A'x) (may be necessary
-    				    for very large input vectors since
+        'lsq'        'direct'  - use A\ x fit
+                'normal'  - use (A'A)\(A'x) (may be necessary
+                        for very large input vectors since
                                        A'A is much smaller than A)
-    			'best'	  - automatically choose based on
-    				    length of series (default).
+                'best'      - automatically choose based on
+                        length of series (default).
 
            It is possible to call t_tide without using property names,
            in which case the assumed calling sequence is
@@ -133,13 +133,13 @@ def t_tide(xin,**kwargs):
               T_TIDE(XIN,INTERVAL,START_TIME,LATITUDE,RAYLEIGH)
 
 
-      OUTPUT: 
+      OUTPUT:
 
         nameu=list of constituents used
         fu=frequency of tidal constituents (cycles/hr)
         tidecon=[fmaj,emaj,fmin,emin,finc,einc,pha,epha] for vector xin
                =[fmaj,emaj,pha,epha] for scalar (real) xin
-           fmaj,fmin - constituent major and minor axes (same units as xin)       
+           fmaj,fmin - constituent major and minor axes (same units as xin)
            emaj,emin - 95
      confidence intervals for fmaj,fmin
            finc - ellipse orientations (degrees)
@@ -151,55 +151,54 @@ def t_tide(xin,**kwargs):
         xout=tidal prediction
 
      Note: Although missing data can be handled with NaN, it is wise not
-           to have too many of them. If your time series has a lot of 
-           missing data at the beginning and/or end, then truncate the 
-           input time series.  The Rayleigh criterion is applied to 
-           frequency intervals calculated as the inverse of the input 
+           to have too many of them. If your time series has a lot of
+           missing data at the beginning and/or end, then truncate the
+           input time series.  The Rayleigh criterion is applied to
+           frequency intervals calculated as the inverse of the input
            series length.
 
      A description of the theoretical basis of the analysis and some
      implementation details can be found in:
 
-     Pawlowicz, R., B. Beardsley, and S. Lentz, "Classical Tidal 
-       "Harmonic Analysis Including Error Estimates in MATLAB 
+     Pawlowicz, R., B. Beardsley, and S. Lentz, "Classical Tidal
+       "Harmonic Analysis Including Error Estimates in MATLAB
         using T_TIDE", Computers and Geosciences, 28, 929-937 (2002).
 
      (citation of this article would be appreciated if you find the
       toolbox useful).
-     R. Pawlowicz 11/8/99 - Completely rewritten from the transliterated-
-                            to-matlab IOS/Foreman fortran code by S. Lentz
-                            and B. Beardsley.
-                  3/3/00  - Redid errors to take into account covariances 
-                            between u and v errors.
-                  7/21/00 - Found that annoying bug in error calc! 
-                  11/1/00 - Added linear error analysis.
-                  8/29/01 - Made synth=1 default, also changed behavior 
-                            when no lat/time given so that phases are raw
-                            at central time. 
-                  9/1/01  - Moved some SNR code to t_predic.
-                  9/28/01 - made sure you can't choose Z0 as constituent.
-                  6/12/01 - better explanation for variance calcs, fixed
-                            bug in typed output (thanks Mike Cook).
-                  8/2/03 - Added block processing for long time series (thanks
-                           to Derek Goring).
-                  9/2/03 - Beta version of 18.6 year series handling
-                  12/2/03 - Bug (x should be xin) fixed thanks to Mike Cook (again!)
-                  4/3/11 - Changed (old) psd to (new) pwelch calls, also
-                           isfinite for finite.
-                  23/3/11 - Corrected my conversion from psd to pwelch, thanks
-                           to Dan Codiga and (especially) Evan Haug!
+    R. Pawlowicz
+    11/8/99 -  Completely rewritten from the transliterated-
+                to-matlab IOS/Foreman fortran code by S. Lentz
+                and B. Beardsley.
+    3/3/00  -   Redid errors to take into account covariances
+                between u and v errors.
+    7/21/00 -   Found that annoying bug in error calc!
+    11/1/00 -   Added linear error analysis.
+    8/29/01 -   Made synth=1 default, also changed behavior
+                when no lat/time given so that phases are raw
+                at central time.
+    9/1/01  -   Moved some SNR code to t_predic.
+    9/28/01 -   made sure you can't choose Z0 as constituent.
+    6/12/01 -   better explanation for variance calcs, fixed
+                bug in typed output (thanks Mike Cook).
+    8/2/03 -    Added block processing for long time series (thanks
+                to Derek Goring).
+    9/2/03 -    Beta version of 18.6 year series handling
+    12/2/03 -   Bug (x should be xin) fixed thanks to Mike Cook (again!)
+    4/3/11 -    Changed (old) psd to (new) pwelch calls, also
+                isfinite for finite.
+    23/3/11 -   Corrected my conversion from psd to pwelch, thanks
+                to Dan Codiga and (especially) Evan Haug!
 
      Version 1.3
      ----------------------Parse inputs-----------------------------------
     """
 
-
-
     dt = 1
-    stime=np.array([])
+    stime = np.array([])
     lat = np.array([])
-    output=True
-    ray = 1    
+    output = True
+    ray = 1
     fid = 1
     corr_fs = np.array([0, 1000000.0])
     corr_fac = np.array([1, 1])
@@ -211,104 +210,112 @@ def t_tide(xin,**kwargs):
     errcalc = 'cboot'
     synth = 2
     lsq = 'best'
-    k = 1  
-    pi=np.pi
-    out_style='classic'
+    k = 1
+    pi = np.pi
+    out_style = 'classic'
 
-#use kargs to set values other then the defaults
+    # Use kargs to set values other then the defaults
     if kwargs is not None:
         for key, value in kwargs.items():
-            if (key=='dt'):
-                dt=value
-            if (key=='stime'):
-                stime=np.array(value)
-            if (key=='lat'):
-                lat=np.array(value)
-            if (key=='constitnames'):
-                constitnames=tu.fourpad(value)
-            if (key=='errcalc'):
-                errcalc=value
-            if (key=='output'):
-                output=value
-            if (key=='synth'):
-                synth=value
-            if (key=='out_style'):
-                out_style=tu.style_check(value)          
-            if (key=='secular'):
-                secular=value        
+            if (key == 'dt'):
+                dt = value
+            if (key == 'stime'):
+                stime = np.array(value)
+            if (key == 'lat'):
+                lat = np.array(value)
+            if (key == 'constitnames'):
+                constitnames = tu.fourpad(value)
+            if (key == 'errcalc'):
+                errcalc = value
+            if (key == 'output'):
+                output = value
+            if (key == 'synth'):
+                synth = value
+            if (key == 'out_style'):
+                out_style = tu.style_check(value)
+            if (key == 'secular'):
+                secular = value
 
-
-
-#Check to make sure that incoming data is a vector.
-    inn= xin.shape 
+    # Check to make sure that incoming data is a vector.
+    inn = xin.shape
     if len(inn) != 1:
         error('Input time series is not a vector')
 
-#Check size of incoming data.
+    # Check size of incoming data.
     nobs = max(xin.shape)
 
-#Set matrix method if auto-choice.
-#This could be increased for nobs>10000. 
-#100,000 uses a reasonable amount of ram for current systems.
-#Kept as is for the time being to say as true to Matlab version as possible.
+    # Set matrix method if auto-choice.
+    # This could be increased for nobs>10000.
+    # 100,000 uses a reasonable amount of ram for current systems.
+    # Kept as is for the time being to stay true to Matlab version.
     if lsq[0:3] == 'bes':
         if nobs > 10000:
             lsq = 'normal'
         else:
             lsq = 'direct'
 
-#Check to see if timeseries spans 18.6 years.
+    # Check to see if timeseries spans 18.6 years.
     if nobs*dt > 18.6*365.25*24:
         longseries = 1
         ltype = 'full'
     else:
         longseries = 0
         ltype = 'nodal'
-    nobsu = nobs - np.remainder(nobs - 1, 2)
+    nobsu = nobs - np.remainder(nobs-1, 2)
 
-#Make series odd to give a center point
-#Time vector for entire time series centered at series midpoint. 
+    # Make series odd to give a center point
+    # Time vector for entire time series centered at series midpoint.
     t = (dt*(np.arange(nobs)+1-np.ceil(nobsu/2)))
-     
+
     if stime.size != 0:
-        centraltime = stime + np.dot(np.floor(nobsu / 2) / 24.0, dt)
+        centraltime = stime + np.dot(np.floor(nobsu/2)/24.0, dt)
     else:
         centraltime = np.array([])
 
-# -------Get the frequencies to use in the harmonic analysis-----------
-    nameu, fu, ju, namei, fi, jinf, jref = tu.constituents(ray / (np.dot(dt, nobsu)), constitnames, shallownames, infiname, infirefname, centraltime)
+    # -------Get the frequencies to use in the harmonic analysis-----------
+    tmptuple = tu.constituents(ray/(np.dot(dt, nobsu)),
+                               constitnames, shallownames,
+                               infiname, infirefname,
+                               centraltime)
+    nameu, fu, ju, namei, fi, jinf, jref = tmptuple
 
     mu = len(fu)
     mi = len(fi)
 
     # # inferred
-    # Find the good data points (here I assume that in a complex time series, if u is bad, so is v).
+    # Find the good data points
+    # (here I assume that in a complex time series, if u is bad, so is v).
     gd = np.flatnonzero(np.isfinite(xin[0:nobsu]))
     ngood = max(gd.shape)
 
     # Now solve for the secular trend plus the analysis. Instead of solving
-    # for + and - frequencies using exp(i*f*t), I use sines and cosines to 
-    # keep tc real.  If the input series is real, than this will 
-    # automatically use real-only computation (faster). However, for the analysis, 
-    # it's handy to get the + and - frequencies ('ap' and 'am'), and so 
-    # that's what we do afterwards.
-    # The basic code solves the matrix problem Ac=x+errors where the functions to
-    # use in the fit fill up the A matrix, which is of size (number points)x(number
-    # constituents). This can get very, very large for long time series, and
-    # for this the more complex block processing algorithm was added. It should
-    # give identical results (up to roundoff error)
+    # for + and - frequencies using exp(i*f*t), I use sines and cosines to
+    # keep tc real.  If the input series is real, than this will
+    # Automatically use real-only computation (faster).
+    # However, for the analysis, it's handy to get the + and - frequencies
+    # ('ap' and 'am'), and so that's what we do afterwards.
+    # The basic code solves the matrix problem Ac=x+errors where the functions
+    # to use in the fit fill up the A matrix, which is of size
+    # (number points)x(number constituents). This can get very, very large
+    # for long time series, and for this the more complex block processing
+    # algorithm was added. It should give
+    # identical results (up to roundoff error)
     if lsq[0:3] == 'dir':
         if secular[0:3] == 'lin':
-            tc = np.hstack([np.ones((len(t),1)), np.cos(2*pi*np.outer(t,fu)), np.sin(2*pi*np.outer(t,fu)),t.reshape(-1,1)*(2 / dt / nobsu)])
-        else: 
-            tc = np.hstack([np.ones((len(t),1)), np.cos(2*pi*np.outer(t,fu)), np.sin(2*pi*np.outer(t,fu))])
+            tc = np.hstack([np.ones((len(t), 1)),
+                            np.cos(2*pi*np.outer(t, fu)),
+                            np.sin(2*pi*np.outer(t, fu)),
+                            t.reshape(-1, 1)*(2/dt/nobsu)])
+        else:
+            tc = np.hstack([np.ones((len(t), 1)),
+                            np.cos(2*pi*np.outer(t, fu)),
+                            np.sin(2*pi*np.outer(t, fu))])
 
-        coef = np.linalg.lstsq(tc[gd, :], xin[gd])[0]     
-        coef=coef.T
+        coef = np.linalg.lstsq(tc[gd, :], xin[gd])[0].T
 
-        #z0 a+ and a- amplitudes
+        # z0 a+ and a- amplitudes
         z0 = coef[0]
-        ap = (coef[1:mu+1]-1j*coef[(1+mu):(mu*2)+1])/2   
+        ap = (coef[1:mu+1]-1j*coef[(1+mu):(mu*2)+1])/2
         am = (coef[1:mu+1]+1j*coef[(1+mu):(mu*2)+1])/2
 
         if secular[0:3] == 'lin':
@@ -316,41 +323,49 @@ def t_tide(xin,**kwargs):
         else:
             dz0 = 0
 
-        #Save least squares fitted prediction incase synth<=0
-        xout = np.dot(tc,coef)
+        # Save least squares fitted prediction incase synth<=0
+        xout = np.dot(tc, coef)
 
     else:
-        # More complicated code required for long time series when memory may be
-        # a problem. Modified from code submitted by Derek Goring (NIWA Chrischurch)
-        # Basically the normal equations are formed (rather than using Matlab'iss \
-        # algorithm for least squares); this can be done by adding up subblocks
-        # of data. Notice how the code is messier, and we have to recalculate everything
-        # to get the original fit.
+        # More complicated code required for long
+        # timeseries when memory maybe a problem.
+        # Modified from code submitted by Derek Goring (NIWA Chrischurch)
+        # Basically the normal equations are formed
+        # (rather than using Matlab's algorithm for least squares);
+        # this can be done by adding up subblocks of data.
+        # Notice how the code is messier,
+        # and we have to recalculate everything to get the original fit.
         nsub = 5000
         # Block length - doesn't matter really but should be small enough to
-        # get allocated quickly	      
+        # get allocated quickly
         if secular[0:3] == 'lin':
             lhs = np.zeros(shape=(2*mu+2, 2*mu+2), dtype='float64')
             rhs = np.zeros(shape=(2*mu+2, ), dtype='float64')
-            for j1 in range(1, (ngood +1), nsub):
-                j2 = np.min([j1 + nsub - 1, ngood])
-                E = np.hstack([np.ones((j2 - j1 + 1,1)), np.cos(2*pi*np.outer(t[gd[(j1 -1):j2] -1],fu)), np.sin(2*pi*np.outer(t[gd[(j1 -1):j2] -1],fu)), t[(gd[(j1 -1):j2] -1)].reshape(-1,1)*(2 / dt / nobsu)])
-                rhs = rhs + np.dot(E.T, xin[(gd[(j1 -1):j2] -1)])
+            for j1 in range(1, (ngood+1), nsub):
+                j2 = np.min([j1+nsub-1, ngood])
+                tslice = t[gd[(j1-1):j2]-1]
+                E = np.hstack([np.ones((j2-j1+1, 1)),
+                               np.cos(2*pi*np.outer(tslice, fu)),
+                               np.sin(2*pi*np.outer(tslice, fu)),
+                               tslice.reshape(-1, 1)*(2/dt/nobsu)])
+                rhs = rhs + np.dot(E.T, xin[(gd[(j1-1):j2]-1)])
                 lhs = lhs + np.dot(E.T, E)
         else:
             lhs = np.zeros(shape=(2*mu+1, 2*mu+1), dtype='float64')
             rhs = np.zeros(shape=(2*mu+1, ), dtype='float64')
-            for j1 in range(1, (ngood +1), nsub):
-                j2 = np.min([j1 + nsub - 1, ngood])
-                E = np.hstack([np.ones((j2 - j1 + 1,1)), np.cos(2*pi*np.outer(t[gd[(j1 -1):j2] -1],fu)), np.sin(2*pi*np.outer(t[gd[(j1 -1):j2] -1],fu))])
-                rhs = rhs + np.dot(E.T, xin[(gd[(j1 -1):j2] -1)])
+            for j1 in range(1, (ngood+1), nsub):
+                j2 = np.min([j1+nsub-1, ngood])
+                tslice = t[gd[(j1-1):j2]-1]
+                E = np.hstack([np.ones((j2-j1+1, 1)),
+                               np.cos(2*pi*np.outer(tslice, fu)),
+                               np.sin(2*pi*np.outer(tslice, fu))])
+                rhs = rhs + np.dot(E.T, xin[(gd[(j1-1):j2]-1)])
                 lhs = lhs + np.dot(E.T, E)
-        coef = np.linalg.lstsq(lhs, rhs)[0]
-        coef=coef.T
+        coef = np.linalg.lstsq(lhs, rhs)[0].T
 
-        #z0 a+ and a- amplitudes
+        # z0 a+ and a- amplitudes
         z0 = coef[0]
-        ap = (coef[1:mu+1]-1j*coef[(1+mu):(mu*2)+1])/2   
+        ap = (coef[1:mu+1]-1j*coef[(1+mu):(mu*2)+1])/2
         am = (coef[1:mu+1]+1j*coef[(1+mu):(mu*2)+1])/2
 
         if secular[0:3] == 'lin':
@@ -359,29 +374,36 @@ def t_tide(xin,**kwargs):
             dz0 = 0
 
         xout = xin.copy()
-        # Copies over NaN   
+        # Copies over NaN
         if secular[0:3] == 'lin':
-            for j1 in range(1, (nobs +1), nsub):
-                j2 = np.min([j1 + nsub - 1, nobs])             
-                E = np.hstack([np.ones((j2 - j1 + 1,1)), np.cos(2*pi*np.outer(t[(j1 -1):j2],fu)), np.sin(2*pi*np.outer(t[(j1 -1):j2],fu)), np.dot(t[(j1 -1):j2], (2 / dt / nobsu)).reshape(-1,1)])  
-                xout[(j1 -1):j2] = np.dot(E, coef)
+            for j1 in range(1, (nobs+1), nsub):
+                j2 = np.min([j1+nsub-1, nobs])
+                tslice = t[(j1-1):j2]
+                E = np.hstack([np.ones((j2-j1+1, 1)),
+                               np.cos(2*pi*np.outer(tslice, fu)),
+                               np.sin(2*pi*np.outer(tslice, fu)),
+                               np.dot(tslice, (2/dt/nobsu)).reshape(-1, 1)])
+                xout[(j1-1):j2] = np.dot(E, coef)
         else:
-            for j1 in range(1, (nobs +1), nsub):
-                j2 = np.min([j1 + nsub - 1, nobs])   
-                E = np.hstack([np.ones((j2 - j1 + 1,1)), np.cos(2*pi*np.outer(t[(j1 -1):j2],fu)), np.sin(2*pi*np.outer(t[(j1 -1):j2],fu))])   
-                xout[(j1 -1):j2] = np.dot(E, coef)
+            for j1 in range(1, (nobs+1), nsub):
+                j2 = np.min([j1+nsub-1, nobs])
+                tslice = t[(j1-1):j2]
+                E = np.hstack([np.ones((j2-j1+1, 1)),
+                               np.cos(2*pi*np.outer(tslice, fu)),
+                               np.sin(2*pi*np.outer(tslice, fu))])
+                xout[(j1-1):j2] = np.dot(E, coef)
 
-
-# Check variance explained (but do this with the original fit, and the residuals!) 
+    # Check variance explained
+    # (but do this with the original fit, and the residuals!)
     xres = xin-xout
 
-    if (not 'complex' in xin.dtype.name):
-# Real time series
+    if 'complex' not in xin.dtype.name:
+        # Real time series
         varx = np.cov(xin[(gd)])
         varxp = np.cov(xout[(gd)])
         varxr = np.cov(xres[(gd)])
     else:
-# Complex time series
+        # Complex time series
         varx = np.cov(np.real(xin[(gd)]))
         varxp = np.cov(np.real(xout[(gd)]))
         varxr = np.cov(np.real(xres[(gd)]))
@@ -390,181 +412,201 @@ def t_tide(xin,**kwargs):
         varyp = np.cov(np.imag(xout[(gd)]))
         varyr = np.cov(np.imag(xres[(gd)]))
 
-
-##################################################################################################	
-#---------- Correct for prefiltering-----------------------------------
-##################################################################################################	
-    corrfac = spi.interpolate.interp1d(corr_fs,corr_fac)(fu)
-# To stop things blowing up!
+    ####################################################################
+    # ---------- Correct for prefiltering--------------------------------
+    ####################################################################
+    corrfac = spi.interpolate.interp1d(corr_fs, corr_fac)(fu)
+    # To stop things blowing up!
     corrfac[corrfac > 100] = 1
     corrfac[corrfac < 0.01] = 1
     corrfac[np.isnan(corrfac)] = 1
     ap = ap*np.squeeze(corrfac)
     am = am * np.squeeze(np.conj(corrfac))
 
-##################################################################################################	
-#---------------Nodal Corrections-------------------------------------- 						   
-# Generate nodal corrections and calculate phase relative to Greenwich. 						   
-# Note that this is a slightly weird way to do the nodal corrections, but is 'traditional'.
-# The "right" way would be to change the basis functions used in the least-squares fit above.
-##################################################################################################										    
-    if ((lat.size !=0) & (stime.size !=0)):       
-        # Time and latitude								   
-        # Get nodal corrections at midpoint time.	 
-        v, u, f = t_vuf(ltype, centraltime, np.hstack([ju, jinf]).astype(int), lat) 
+    ####################################################################
+    # ---------------Nodal Corrections-----------------------------------
+    # Generate nodal corrections and calculate phase relative to
+    # Greenwich. Note that this is a slightly weird way to do the nodal
+    # corrections, but is 'traditional'. The "right" way would be to
+    # change the basis functions used in the least-squares fit above.
+    ####################################################################
+    if ((lat.size != 0) & (stime.size != 0)):
+        # Time and latitude
+        # Get nodal corrections at midpoint time.
+        v, u, f = t_vuf(ltype, centraltime,
+                        np.hstack([ju, jinf]).astype(int), lat)
         vu = np.dot((v + u), 360)
         # total phase correction (degrees)
-        nodcor = 'Greenwich phase computed with nodal corrections \n applied to amplitude and phase relative to center time\n'
-    elif (stime.size!=0):
-        # Time only  										   
-        # Get nodal corrections at midpoint time							   
-        v, u, f = t_vuf(ltype, centraltime, np.hstack([ju, jinf]).astype(int))
+        nodcor = 'Greenwich phase computed with nodal\n \
+                  corrections applied to amplitude\n \
+                  and phase relative to center time\n'
+    elif (stime.size != 0):
+        # Time only
+        # Get nodal corrections at midpoint time
+        v, u, f = t_vuf(ltype, centraltime,
+                        np.hstack([ju, jinf]).astype(int))
         vu = np.dot((v + u), 360)
-        # total phase correction (degrees)	
+        # total phase correction (degrees)
         nodcor = 'Greenwich phase computed, no nodal corrections'
     else:
-        # No time, no latitude	
-        nshape=(len(ju)+len(jinf),1)
+        # No time, no latitude
+        nshape = (len(ju)+len(jinf), 1)
         vu = np.zeros(nshape, dtype='float64')
         f = np.ones(nshape, dtype='float64')
         nodcor = 'Phases at central time'
 
-
-##################################################################################################											   
-#---------------Inference Corrections----------------------------------
-# Once again, the "right" way to do this would be to change the basis functions.
-##################################################################################################
+    ####################################################################
+    # ---------------Inference Corrections------------------------------
+    # Once again, the "right" way to do this
+    # would be to change the basis functions.
+    ####################################################################
     ii = np.flatnonzero(np.isfinite(jref))
     if ii:
         print('   Do inference corrections\\n')
-        snarg = np.dot(np.dot(np.dot(nobsu, pi), (fi[(ii -1)] - fu[(jref[(ii -1)] -1)])), dt)
+        snarg = np.dot(np.dot(nobsu*pi, (fi[(ii-1)]-fu[(jref[(ii-1)]-1)])), dt)
         scarg = sin(snarg) / snarg
         if infamprat.shape[1] == 1:
-# For real time series
-            pearg = np.dot(np.dot(2, pi), (vu[(mu + ii -1)] - vu[(jref[(ii -1)] -1)] + infph[(ii -1)])) / 360
-            pcfac = infamprat[(ii -1)] * f[(mu + ii -1)] / f[(jref[(ii -1)] -1)] * exp(np.dot(i, pearg))
+            # For real time series
+            pearg = np.dot(2*pi,
+                           (vu[(mu+ii-1)] -
+                            vu[(jref[(ii-1)]-1)] +
+                            infph[(ii-1)]))/360
+            pcfac = infamprat[(ii-1)]*f[(mu+ii-1)] / \
+                f[(jref[(ii-1)]-1)]*exp(np.dot(i, pearg))
             pcorr = 1 + pcfac * scarg
             mcfac = conj(pcfac)
             mcorr = conj(pcorr)
         else:
-# For complex time series
-            pearg = np.dot(np.dot(2, pi), (vu[(mu + ii -1)] - vu[(jref[(ii -1)] -1)] + infph[(ii -1), 0])) / 360
-            pcfac = infamprat[(ii -1), 0] * f[(mu + ii -1)] / f[(jref[(ii -1)] -1)] * exp(np.dot(i, pearg))
+            # For complex time series
+            pearg = np.dot(2*pi,
+                           (vu[(mu+ii-1)] -
+                            vu[(jref[(ii-1)]-1)] +
+                            infph[(ii-1), 0]))/360
+            pcfac = infamprat[(ii-1), 0]*f[(mu+ii-1)] / \
+                f[(jref[(ii-1)]-1)]*exp(np.dot(i, pearg))
             pcorr = 1 + pcfac * scarg
-            mearg = np.dot(np.dot(- 2, pi), (vu[(mu + ii -1)] - vu[(jref[(ii -1)] -1)] + infph[(ii -1), 1])) / 360
-            mcfac = infamprat[(ii -1), 1] * f[(mu + ii -1)] / f[(jref[(ii -1)] -1)] * exp(np.dot(i, mearg))
-            mcorr = 1 + mcfac * scarg
-        ap[(jref[(ii -1)] -1)] = ap[(jref[(ii -1)] -1)] / pcorr
+            mearg = np.dot(-2*pi,
+                           (vu[(mu+ii-1)] -
+                            vu[(jref[(ii-1)]-1)] +
+                            infph[(ii-1), 1]))/360
+            mcfac = infamprat[(ii-1), 1]*f[(mu+ii-1)] / \
+                f[(jref[(ii-1)]-1)]*exp(np.dot(i, mearg))
+            mcorr = 1+mcfac*scarg
+        ap[(jref[(ii-1)]-1)] = ap[(jref[(ii-1)]-1)] / pcorr
         # Changes to existing constituents
-        ap = np.array([ap, ap[(jref[(ii -1)] -1)] * pcfac]).reshape(1, -1)
+        ap = np.array([ap, ap[(jref[(ii-1)]-1)]*pcfac]).reshape(1, -1)
         # Inferred constituents
-        am[(jref[(ii -1)] -1)] = am[(jref[(ii -1)] -1)] / mcorr
-        am = np.array([am, am[(jref[(ii -1)] -1)] * mcfac]).reshape(1, -1)
-        fu = np.array([fu, fi[(ii -1)]]).reshape(1, -1)
-        nameu = np.array([nameu, namei[(ii -1), :]]).reshape(1, -1)
+        am[(jref[(ii-1)]-1)] = am[(jref[(ii-1)]-1)] / mcorr
+        am = np.array([am, am[(jref[(ii-1)]-1)]*mcfac]).reshape(1, -1)
+        fu = np.array([fu, fi[(ii-1)]]).reshape(1, -1)
+        nameu = np.array([nameu, namei[(ii-1), :]]).reshape(1, -1)
 
-##################################################################################################
-# --------------Error Bar Calculations---------------------------------
-# 
-# Error bar calcs involve two steps:
-# 1) Estimate the uncertainties in the analyzed amplitude
-#   for both + and - frequencies (i.e., in 'ap' and 'am').
-#   A simple way of doing this is to take the variance of the
-#   original time series and divide it into the amount appearing
-#   in the bandwidth of the analysis (approximately 1/length).
-#   A more sophisticated way is to assume "locally white"
-#   noise in the vicinity of, e.g., the diurnal consistuents.
-#   This takes into account slopes in the continuum spectrum.
-# 
-# 2) Transform those uncertainties into ones suitable for ellipse
-#   parameters (axis lengths, angles). This can be done 
-#   analytically for large signal-to-noise ratios. However, the 
-#   transformation is non-linear at lows SNR, say, less than 10
-#   or so.
-# 
-##################################################################################################
+    ####################################################################
+    # --------------Error Bar Calculations------------------------------
+    #
+    # Error bar calcs involve two steps:
+    # 1) Estimate the uncertainties in the analyzed amplitude
+    #   for both + and - frequencies (i.e., in 'ap' and 'am').
+    #   A simple way of doing this is to take the variance of the
+    #   original time series and divide it into the amount appearing
+    #   in the bandwidth of the analysis (approximately 1/length).
+    #   A more sophisticated way is to assume "locally white"
+    #   noise in the vicinity of, e.g., the diurnal consistuents.
+    #   This takes into account slopes in the continuum spectrum.
+    #
+    # 2) Transform those uncertainties into ones suitable for ellipse
+    #   parameters (axis lengths, angles). This can be done
+    #   analytically for large signal-to-noise ratios. However, the
+    #   transformation is non-linear at lows SNR, say, less than 10
+    #   or so.
+    #
+    ####################################################################
 
-# Fill in "internal" NaNs with linearly interpolated values so we can fft things.
+    # Fill in "internal" NaNs with linearly interpolated
+    # values so we can fft things.
     xr = tu.fixgaps(xres)
 
     nreal = 1
 
-    if errcalc.endswith('boot'):								   
-        #print('Using nonlinear bootstrapped error estimates.');
-##################################################################################################
-# "noise" matrices are created with the right covariance structure
-# to add to the analyzed components to create 'nreal' REPLICATES. 
-##################################################################################################
+    if errcalc.endswith('boot'):
+        # print('Using nonlinear bootstrapped error estimates.');
+        ################################################################
+        # "noise" matrices are created with the right covariance
+        # structure to add to the analyzed components to
+        # create 'nreal' REPLICATES.
+        ################################################################
 
         nreal = 300
-# Create noise matrices 
-        NP, NM = tu.noise_realizations(xr[(np.isfinite(xr))], fu, dt, nreal, errcalc) 
-# All replicates are then transformed (nonlinearly) into ellipse parameters.  
-#The computed error bars are then based on the std dev of the replicates.
-  
-        AP = np.repeat(ap,nreal).reshape(len(ap),nreal) + NP
-        AM = np.repeat(am,nreal).reshape(len(am),nreal) + NM
-# Add to analysis (first column of NM,NP=0 so first column of AP/M holds ap/m).
+        # Create noise matrices
+        NP, NM = tu.noise_realizations(xr[(np.isfinite(xr))],
+                                       fu, dt, nreal, errcalc)
+        # All replicates are then transformed (nonlinearly) into
+        # ellipse parameters. The computed error bars are then
+        # based on the std dev of the replicates.
 
-# Angle/magnitude form:
+        AP = np.repeat(ap, nreal).reshape(len(ap), nreal) + NP
+        AM = np.repeat(am, nreal).reshape(len(am), nreal) + NM
+        # Add to analysis (first column of NM,NP=0
+        # so first column of AP/M holds ap/m).
+
+        # Angle/magnitude form:
         epsp = np.angle(AP)*180/pi
         epsm = np.angle(AM)*180/pi
 
         ap = np.absolute(AP)
         am = np.absolute(AM)
     else:
-        if errcalc=='linear':
+        if errcalc == 'linear':
             print('Using linearized error estimates.')
-##################################################################################################
-# Uncertainties in analyzed amplitudes are computed in different
-# spectral bands. Real and imaginary parts of the residual time series
-# are treated separately (no cross-covariance is assumed).
-# 
-# Noise estimates are then determined from a linear analysis of errors,
-# assuming that everything is uncorrelated. This is OK for scalar time
-# series but can fail for vector time series if the noise is not 
-# isotropic.
-##################################################################################################
+            ############################################################
+            # Uncertainties in analyzed amplitudes are computed in
+            # different spectral bands. Real and imaginary parts of
+            # the residual time series are treated separately
+            # (no cross-covariance is assumed).
+            #
+            # Noise estimates are then determined from a linear analysis
+            # of errors, assuming that everything is uncorrelated.
+            # This is OK for scalar timeseries but can fail for vector
+            # time series if the noise is not isotropic.
+            ############################################################
 
             ercx, eicx = tu.noise_stats(xr[np.isfinite(xr)], fu, dt)
 
-# Note - here we assume that the error in the cos and sin terms is equal, and equal to total
-# power in the encompassing frequency bin. It seems like there should be a factor of 2 here 
-# somewhere but it only works this way! <shrug>
+            # Note - here we assume that the error in the cos and sin
+            # terms is equal, and equal to total power in the
+            # encompassing frequency bin. It seems like there should be
+            # a factor of 2 here somewhere but it only works this way!
+            # <shrug>
 
-            emaj, emin, einc, epha = errell(ap + am, np.dot(1j, (ap - am)), ercx, ercx, eicx, eicx)
+            emaj, emin, einc, epha = errell(ap+am, np.dot(1j, (ap-am)),
+                                            ercx, ercx, eicx, eicx)
             epsp = np.dot(np.angle(ap), 180) / pi
             epsm = np.dot(np.angle(am), 180) / pi
             ap = np.absolute(ap)
             am = np.absolute(am)
         else:
-            print("Unrecognized type of error analysis: " + errcalc + " specified!")
-    #-----Convert complex amplitudes to standard ellipse parameters--------
-    aap = ap / np.repeat(f,nreal).reshape(f.shape[0],nreal)
+            print("Unrecognized type of error analysis: " +
+                  errcalc + " specified!")
+    # -----Convert complex amplitudes to standard ellipse parameters----
+    aap = ap / np.repeat(f, nreal).reshape(f.shape[0], nreal)
     # Apply nodal corrections and
-    aam = am / np.repeat(f,nreal).reshape(f.shape[0],nreal)
+    aam = am / np.repeat(f, nreal).reshape(f.shape[0], nreal)
     # compute ellipse parameters.
     fmaj = aap + aam
     # major axis
     fmin = aap - aam
     # minor axis
-  
 
-
-    gp = np.mod(np.repeat(vu,nreal).reshape(vu.shape[0],nreal) - epsp, 360)
-
+    gp = np.mod(np.repeat(vu, nreal).reshape(vu.shape[0], nreal)-epsp, 360)
     # pos. Greenwich phase in deg.
-    gm = np.mod(np.repeat(vu,nreal).reshape(vu.shape[0],nreal) + epsm, 360)
-    
+    gm = np.mod(np.repeat(vu, nreal).reshape(vu.shape[0], nreal)+epsm, 360)
     # neg. Greenwich phase in deg.
     finc = ((epsp + epsm) / 2)
     finc[:, 0] = np.mod(finc[:, 0], 180)
-    
-    
 
     # Ellipse inclination in degrees
-    # (mod 180 to prevent ambiguity, i.e., 
-    # we always ref. against northern 
+    # (mod 180 to prevent ambiguity, i.e.,
+    # we always ref. against northern
     # semi-major axis.
     finc = tu.cluster(finc, 180)
     # Cluster angles around the 'true' angle to avoid 360 degree wraps.
@@ -573,14 +615,21 @@ def t_tide(xin,**kwargs):
     pha = tu.cluster(pha, 360)
     # Cluster angles around the 'true' angle to avoid 360 degree wraps.
 
-#----------------Generate 95% CI---------------------------------------
+    # ----------------Generate 95% CI-----------------------------------
     # For bootstrapped errors, we now compute limits of the distribution.
     if errcalc.endswith('boot'):
-        emaj = np.multiply(np.median(np.absolute(fmaj- (np.median(fmaj,1).reshape(-1,1)*np.ones([1,nreal])) ),1)/0.6375, 1.96)
-        emin = np.multiply(np.median(np.absolute(fmin- (np.median(fmin,1).reshape(-1,1)*np.ones([1,nreal])) ),1)/0.6375, 1.96)
-        einc = np.multiply(np.median(np.absolute(finc- (np.median(finc,1).reshape(-1,1)*np.ones([1,nreal])) ),1)/0.6375, 1.96)
-        epha = np.multiply(np.median(np.absolute( pha- (np.median( pha,1).reshape(-1,1)*np.ones([1,nreal])) ),1)/0.6375, 1.96)
+        def booterrcalc(para, nreal):
+            errval = np.multiply(
+                      np.median(
+                       np.absolute(
+                        fmaj-(np.median(fmaj, 1).reshape(-1, 1) *
+                              np.ones([1, nreal]))), 1)/0.6375, 1.96)
+            return errval
 
+        emaj = booterrcalc(fmaj, nreal)
+        emin = booterrcalc(fmin, nreal)
+        einc = booterrcalc(finc, nreal)
+        epha = booterrcalc(pha, nreal)
 
     else:
         # In the linear analysis, the 95 CI are computed from the sigmas
@@ -590,35 +639,41 @@ def t_tide(xin,**kwargs):
         einc = np.dot(1.96, einc)
         epha = np.dot(1.96, epha)
 
-    if (not 'complex' in xin.dtype.name):
+    if 'complex' not in xin.dtype.name:
         tidecon = np.array([fmaj[:, 0], emaj, pha[:, 0], epha]).T
     else:
-        tidecon = np.array([fmaj[:, 0], emaj, fmin[:, 0], emin, finc[:, 0], einc, pha[:, 0], epha]).T   
-    tideconout=tidecon.copy()     
-    # Sort results by frequency (needed if anything has been inferred since these are stuck at the end of the list by code above).
+        tidecon = np.array([fmaj[:, 0], emaj, fmin[:, 0], emin,
+                            finc[:, 0], einc, pha[:, 0], epha]).T
+    tideconout = tidecon.copy()
+    # Sort results by frequency (needed if anything has been inferred
+    # since these are stuck at the end of the list by code above).
     if any(np.isfinite(jref)):
         fu, I = sort(fu)
-        nameu = nameu[(I -1), :]
-        tidecon = tidecon[(I -1), :]
+        nameu = nameu[(I-1), :]
+        tidecon = tidecon[(I-1), :]
     snr = (tidecon[:, 0] / tidecon[:, 1]) ** 2
     # signal to noise ratio
-    #--------Generate a 'prediction' using significant constituents----------
+    # --------Generate a 'prediction' using significant constituents----
     xoutOLD = xout
     if synth >= 0:
-        if lat.size !=0 & stime.size !=0:
-            #This does not account for latitude, functionality not added to t_predic yet.
-            xout = t_predic(stime + np.array([range(nobs)])*dt/24.0, nameu, fu, tidecon,synth=synth)
-        elif (stime.size!=0):
-            xout = t_predic(stime + np.array([range(nobs)])*dt/24.0, nameu, fu, tidecon,synth=synth)
+        if lat.size != 0 & stime.size != 0:
+            # This does not account for latitude,
+            # functionality not added to t_predic yet.
+            xout = t_predic(stime + np.array([range(nobs)])*dt/24.0,
+                            nameu, fu, tidecon, synth=synth)
+        elif (stime.size != 0):
+            xout = t_predic(stime + np.array([range(nobs)])*dt/24.0,
+                            nameu, fu, tidecon, synth=synth)
         else:
-            xout = t_predic(t / 24.0, nameu, fu, tidecon,synth=synth)
-    elif output:        
+            xout = t_predic(t / 24.0, nameu, fu, tidecon, synth=synth)
+    elif output:
         print('   Returning fitted prediction\n')
 
-    # Check variance explained (but now do this with the synthesized fit) and the residuals!
+    # Check variance explained (but now do this
+    # with the synthesized fit) and the residuals!
     xres = xin[:] - xout[:]
 
-    if (not 'complex' in xin.dtype.name):
+    if 'complex' not in xin.dtype.name:
         # Real time series
         varx = np.cov(xin[gd])
         varxp = np.cov(xout[gd])
@@ -632,44 +687,39 @@ def t_tide(xin,**kwargs):
         varyp = np.cov(np.imag(xout[gd]))
         varyr = np.cov(np.imag(xres[gd]))
 
-#-----------------Output results---------------------------------------
-    if output!=False:
-        out={}
-        out['nobs']=nobs
-        out['ngood']=ngood
-        out['dt']=dt
-        out['xin']=xin
-        out['ray']=ray
-        out['nodcor']=nodcor
-        out['z0']=z0
-        out['dz0']=dz0
-        out['varx']=varx
-        out['varxp']=varxp
-        out['varxr']=varxr
+    # -----------------Output results-----------------------------------
+    if output is not False:
+        out = {}
+        out['nobs'] = nobs
+        out['ngood'] = ngood
+        out['dt'] = dt
+        out['xin'] = xin
+        out['ray'] = ray
+        out['nodcor'] = nodcor
+        out['z0'] = z0
+        out['dz0'] = dz0
+        out['varx'] = varx
+        out['varxp'] = varxp
+        out['varxr'] = varxr
 
-        out['fu']=fu
-        out['nameu']=nameu
-        out['tidecon']=tidecon
-        out['snr']=snr
-        out['synth']=synth
+        out['fu'] = fu
+        out['nameu'] = nameu
+        out['tidecon'] = tidecon
+        out['snr'] = snr
+        out['synth'] = synth
 
         if stime.size != 0:
-            out['stime']=stime
-        if (xin.dtype==complex):
-            out['vary']=vary
-            out['varyp']=varyp
-            out['varyr']=varyr
-    
-        if (out_style=='classic'):
+            out['stime'] = stime
+        if 'complex' in xin.dtype.name:
+            out['vary'] = vary
+            out['varyp'] = varyp
+            out['varyr'] = varyr
+
+        if 'classic' in out_style:
             tu.classic_style(out)
-        if (out_style=='pandas'):
+        if 'pandas' in out_style:
             tu.pandas_style(out)
-
-
-
 
     xout = xout.reshape(inn[0], 1)
 
     return nameu, fu, tideconout, xout
-
-
