@@ -237,12 +237,16 @@ def noise_realizations(xres, fu, dt, nreal, errcalc):
     NP = np.zeros(shape=(max(fu.shape), nreal), dtype='complex128')
 
     for k in range(0, fu.shape[0]):
-        l = np.squeeze(np.flatnonzero(np.all([fu[k] > fband[:, 0] , fu[k] < fband[:, 1]],axis=0)))
-        N = np.hstack([np.zeros(4,).reshape(-1,1), np.dot(np.squeeze(Mat[:, :, l]), np.random.randn(4, nreal-1))])
+        l = np.squeeze(np.flatnonzero(np.all([fu[k] > fband[:, 0],
+                                              fu[k] < fband[:, 1]], axis=0)))
+        N = np.hstack([np.zeros(4,).reshape(-1, 1),
+                       np.dot(np.squeeze(Mat[:, :, l]),
+                       np.random.randn(4, nreal-1))])
         NP[(k), :] = (N[0, :]+1j*N[1, :])
         NM[(k), :] = (N[2, :]+1j*N[3, :])
 
     return NP, NM
+
 
 def residual_spectrum(xres, fu, dt):
     """RESIDUAL_SPECTRUM: Computes statistics from an input spectrum over
@@ -258,60 +262,55 @@ def residual_spectrum(xres, fu, dt):
      Version 1.0
      Define frequency bands for spectral averaging.
     """
-    fband = np.array([0.0001, 0.00417, 0.03192, 0.04859, 0.07218, 0.08884, 0.11243, 0.1291, 0.15269, 0.16936, 0.19295, 0.20961, 0.2332, 0.251, 0.26, 0.29, 0.3, 0.5]).reshape(9,2)
+    fband = np.array([[0.0001, 0.00417],
+                      [0.03192, 0.04859],
+                      [0.07218, 0.08884],
+                      [0.11243, 0.1291],
+                      [0.15269, 0.16936],
+                      [0.19295, 0.20961],
+                      [0.2332, 0.251],
+                      [0.26, 0.29],
+                      [0.3, 0.5]])
 
     # If we have a sampling interval> 1 hour, we might have to get
     # rid of some bins.
-    #fband(fband(:,1)>1/(2*dt),:)=[];
+    # fband(fband(:,1)>1/(2*dt),:)=[];
     nfband = fband.shape[0]
     nx = max(xres.shape)
 
     # Spectral estimate (takes real time series only).
-    # Matlab has changed their spectral estimator functions
-    # To match the old code, I have to divide by 2*dt. This is because
-    #
-    #  PSD*dt  is two-sided spectrum in units of power per hertz.
-    #
-    #  PWELCH is the one-sided spectrum in power per hertz
-    #
-    #  So PWELCH/2 = PSD*dt
-    #[Pxr,fx]=psd(real(xres),nx,1/dt);
-    # Call to SIGNAL PROCESSING TOOLBOX - see note in t_readme. If you have an error here you are probably missing this toolbox
-    #[Pxi,fx]=psd(imag(xres),nx,1/dt);
-    # Call to SIGNAL PROCESSING TOOLBOX - see note in t_readme.
-    #[Pxc,fx]=csd(real(xres),imag(xres),nx,1/dt);
-    # Call to SIGNAL PROCESSING TOOLBOX - see note in t_readme.
-    fx, Pxr = sps.welch(np.real(xres), window=np.hanning(nx), noverlap=np.ceil(nx / 2),nfft=nx,fs=1/dt,nperseg=nx) # nargout=2
-    # Call to SIGNAL PROCESSING TOOLBOX - see note in t_readme. If you have an error here you are probably missing this toolbox
+    fx, Pxr = sps.welch(np.real(xres), window=np.hanning(nx),
+                        noverlap=np.ceil(nx / 2), nfft=nx, fs=1/dt, nperseg=nx)
     Pxr = Pxr / 2 / dt
-    fx, Pxi = sps.welch(np.imag(xres), window=np.hanning(nx), noverlap=np.ceil(nx / 2),nfft=nx,fs=1/dt,nperseg=nx) # nargout=2
-    # Call to SIGNAL PROCESSING TOOLBOX - see note in t_readme.
+    fx, Pxi = sps.welch(np.imag(xres), window=np.hanning(nx),
+                        noverlap=np.ceil(nx / 2), nfft=nx, fs=1/dt, nperseg=nx)
     Pxi = Pxi / 2 / dt
-    Pxc,fx = mplm.csd(np.real(xres), np.imag(xres),nx,1 / dt) # nargout=2
-    # Call to SIGNAL PROCESSING TOOLBOX - see note in t_readme.
-    #matlab cpsd returns only reals when given a real xres have to test for complex and maybe change to ifstatement
-    Pxc=np.real(Pxc)
+    Pxc, fx = mplm.csd(np.real(xres), np.imag(xres), nx, 1/dt)
+
+    # matlab cpsd returns only reals when given a real xres have to
+    # test for complex and maybe change to ifstatement
+    Pxc = np.real(Pxc)
     Pxc = Pxc / 2 / dt
     df = fx[2] - fx[1]
 
-
-    Pxr[np.around(fu / df).astype(int) ] = np.nan
     # Sets Px=NaN in bins close to analyzed frequencies
+    # to prevent leakage problems?).
+    Pxr[np.around(fu / df).astype(int)] = np.nan
     Pxi[np.around(fu / df).astype(int)] = np.nan
-    # (to prevent leakage problems?).
     Pxc[np.around(fu / df).astype(int)] = np.nan
+
     Pxrave = np.zeros(shape=(nfband, 1), dtype='float64')
     Pxiave = np.zeros(shape=(nfband, 1), dtype='float64')
     Pxcave = np.zeros(shape=(nfband, 1), dtype='float64')
+
     # Loop downwards in frequency through bands (cures short time series
     # problem with no data in lowest band).
-    #
     # Divide by nx to get power per frequency bin, and multiply by 2
     # to account for positive and negative frequencies.
-    #
-
     for k in range(nfband-1, -1, - 1):
-        jband = np.flatnonzero(np.all(np.vstack([fx >= fband[(k), 0],fx <= fband[(k), 1] , np.isfinite(Pxr)]).T,axis=1))
+        jband = np.flatnonzero(np.all(np.vstack([fx >= fband[(k), 0],
+                                                 fx <= fband[(k), 1],
+                                                np.isfinite(Pxr)]).T, axis=1))
         if any(jband):
             Pxrave[k] = np.dot(np.mean(Pxr[(jband)]), 2) / nx
             Pxiave[k] = np.dot(np.mean(Pxi[(jband)]), 2) / nx
@@ -334,17 +333,19 @@ def noise_stats(xres, fu, dt):
      R. Pawlowicz 11/1/00
      Version 1.0
     """
-    fband, Pxrave, Pxiave, Pxcave = residual_spectrum(xres, fu, dt) # nargout=4
+    fband, Pxrave, Pxiave, Pxcave = residual_spectrum(xres, fu, dt)
     nfband = fband.shape[0]
     mu = max(fu.shape)
     # Get the statistics for each component.
     ercx = np.zeros(shape=(mu, 1), dtype='float64')
     eicx = np.zeros(shape=(mu, 1), dtype='float64')
     for k1 in range(0, nfband):
-        k = np.flatnonzero(np.all([fu >= fband[k1, 0] , fu <= fband[k1,1]],axis=0))
+        k = np.flatnonzero(np.all([fu >= fband[k1, 0],
+                                   fu <= fband[k1, 1]], axis=0))
         ercx[(k)] = np.sqrt(Pxrave[(k1)])
         eicx[(k)] = np.sqrt(Pxiave[(k1)])
     return ercx, eicx
+
 
 def errell(cxi, sxi, ercx, ersx, ercy, ersy):
     """[emaj,emin,einc,epha]=errell(cx,sx,cy,sy,ercx,ersx,ercy,ersy) computes
@@ -389,13 +390,15 @@ def errell(cxi, sxi, ercx, ersx, ercy, ersy):
     dsx2 = (0.25 * (gx + hx)) ** 2
     dcy2 = (0.25 * (hx - gx)) ** 2
     dsy2 = (0.25 * (ex - fx)) ** 2
-    emaj = np.sqrt(dcx2 * ercx2 + dsx2 * ersx2 + dcy2 * ercy2 + dsy2 * ersy2)
+    emaj = np.sqrt(dcx2 * ercx2 + dsx2 * ersx2 +
+                   dcy2 * ercy2 + dsy2 * ersy2)
     # minor axis error
     dcx2 = (0.25 * (ex - fx)) ** 2
     dsx2 = (0.25 * (gx - hx)) ** 2
     dcy2 = (0.25 * (hx + gx)) ** 2
     dsy2 = (0.25 * (ex + fx)) ** 2
-    emin = np.sqrt(dcx2 * ercx2 + dsx2 * ersx2 + dcy2 * ercy2 + dsy2 * ersy2)
+    emin = np.sqrt(dcx2 * ercx2 + dsx2 * ersx2 +
+                   dcy2 * ercy2 + dsy2 * ersy2)
     # inclination error
     rn = np.dot(2.0, (cx * cy + sx * sy))
     rd = cx ** 2 + sx ** 2 - (cy ** 2 + sy ** 2)
@@ -404,7 +407,8 @@ def errell(cxi, sxi, ercx, ersx, ercy, ersy):
     dsx2 = ((rd * sy - rn * sx) / den) ** 2
     dcy2 = ((rd * cx + rn * cy) / den) ** 2
     dsy2 = ((rd * sx + rn * sy) / den) ** 2
-    einc = r2d * np.sqrt(dcx2 * ercx2 + dsx2 * ersx2 + dcy2 * ercy2 + dsy2 * ersy2)
+    einc = r2d * np.sqrt(dcx2 * ercx2 + dsx2 * ersx2 +
+                         dcy2 * ercy2 + dsy2 * ersy2)
     # phase error
     rn = np.dot(2.0, (cx * sx + cy * sy))
     rd = cx ** 2 - sx ** 2 + cy ** 2 - sy ** 2
@@ -413,19 +417,20 @@ def errell(cxi, sxi, ercx, ersx, ercy, ersy):
     dsx2 = ((rd * cx + rn * sx) / den) ** 2
     dcy2 = ((rd * sy - rn * cy) / den) ** 2
     dsy2 = ((rd * cy + rn * sy) / den) ** 2
-    epha = r2d * np.sqrt(dcx2 * ercx2 + dsx2 * ersx2 + dcy2 * ercy2 + dsy2 * ersy2)
+    epha = r2d * np.sqrt(dcx2 * ercx2 + dsx2 * ersx2 +
+                         dcy2 * ercy2 + dsy2 * ersy2)
+
     return emaj, emin, einc, epha
 
 
 def style_check(style):
 
-    if (style=='pandas'):
+    if (style == 'pandas'):
         try:
             import pandas as pd
         except ImportError:
             print('Cannot import pandas using classic output.')
-            style='classic'
-
+            style = 'classic'
 
     return style
 
@@ -433,98 +438,138 @@ def style_check(style):
 def classic_style(out):
         print('-----------------------------------')
 
-        print('nobs = %d \nngood = %d \nrecord length (days) = %.2f' % (out['nobs'], out['ngood'], np.dot(max(out['xin'].shape), out['dt']) / 24))
+        print('nobs = %d \nngood = %d \nrecord length (days) = %.2f' %
+              (out['nobs'], out['ngood'],
+               np.dot(max(out['xin'].shape), out['dt']) / 24))
         if ('stime' in out):
-            print('start time: %s' % dates.num2date(out['stime']).strftime('%Y-%m-%d %H:%M:%S'))
+            print('start time: %s' %
+                  dates.num2date(out['stime']).strftime('%Y-%m-%d %H:%M:%S'))
         print('rayleigh criterion = %.1f\n' % out['ray'])
         print('%s' % out['nodcor'])
-        print('x0= %.3g, x trend= %.3g' % ( np.real(out['z0']), np.real(out['dz0'])))
-        print('var(x)= ' , out['varx'] , '   var(xp)= ' , out['varxp'] , '   var(xres)= ' , out['varxr'] , '')
+        print('x0= %.3g, x trend= %.3g' %
+              (np.real(out['z0']), np.real(out['dz0'])))
+        print('var(x)= ', out['varx'], '   var(xp)= ', out['varxp'],
+              '   var(xres)= ', out['varxr'], '')
         print()
-        print('percent var predicted/var original= %.1f ' % (np.dot(100, out['varxp']) / out['varx']))
+        print('percent var predicted/var original= %.1f ' %
+              (np.dot(100, out['varxp']) / out['varx']))
         print()
-        if (not 'complex' in out['xin'].dtype.name):
+        if ('complex' not in out['xin'].dtype.name):
             print('        tidal amplitude and phase with 95 % CI estimates')
-            print(' tide      freq        amp      amp_err    pha      pha_err    snr')
-            for k,fuk in enumerate(out['fu']):
-                outstr=(out['nameu'][k].decode(sys.stdout.encoding), fuk, out['tidecon'][k,0], out['tidecon'][k,1], out['tidecon'][k,2], out['tidecon'][k,3], out['snr'][k])
+            print(' tide      freq        amp      amp_err' +
+                  '   pha      pha_err    snr')
+            for k, fuk in enumerate(out['fu']):
+                outstr = (out['nameu'][k].decode(sys.stdout.encoding), fuk,
+                          out['tidecon'][k, 0], out['tidecon'][k, 1],
+                          out['tidecon'][k, 2], out['tidecon'][k, 3],
+                          out['snr'][k])
                 if out['snr'][k] > out['synth']:
-                    print('* %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' % outstr)
+                    print('* %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' %
+                          outstr)
                 else:
-                    print('  %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' % outstr)
+                    print('  %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' %
+                          outstr)
         else:
-            print('y0= %.3f, x trend= %.3f' % (np.imag(out['z0']), np.imag(out['dz0'])))
-            print('var(y)= %f    var(yp)= %f  var(yres)= %f ' % (out['vary'],out['varyp'],out['varyr']))
+            print('y0= %.3f, x trend= %.3f' %
+                  (np.imag(out['z0']), np.imag(out['dz0'])))
+            print('var(y)= %f    var(yp)= %f  var(yres)= %f ' %
+                  (out['vary'], out['varyp'], out['varyr']))
             print()
-            print('percent var predicted/var original=  %.1f  ' %( np.dot(100, out['varyp']) / out['vary']))
-            print('total var= %f   pred var=  %f ' % (out['varx'] + out['vary'],out['varxp'] + out['varyp']))
-            print('percent total var predicted/var original=  %.1f  ' % ( np.dot(100, (out['varxp'] + out['varyp'])) / (out['varx'] + out['vary'])))
+            print('percent var predicted/var original=  %.1f  ' %
+                  (np.dot(100, out['varyp'])/out['vary']))
+            print('total var= %f   pred var=  %f ' %
+                  (out['varx']+out['vary'], out['varxp']+out['varyp']))
+            print('percent total var predicted/var original=  %.1f  ' %
+                  (100*(out['varxp']+out['varyp'])/(out['varx']+out['vary'])))
             print()
             print('ellipse parameters with 95 % CI estimates')
-            print(' tide     freq        major      emaj      minor      emin     inc      einc      pha       epha      snr')
-            for k,fuk in enumerate(out['fu']):
-                outstr=(out['nameu'][k].decode(sys.stdout.encoding), fuk, out['tidecon'][k,0], out['tidecon'][k,1], out['tidecon'][k,2], out['tidecon'][k,3], out['tidecon'][k,4], out['tidecon'][k,5], out['tidecon'][k,6], out['tidecon'][k,7], out['snr'][k])
+            print(' tide     freq        major      emaj' +
+                  '      minor      emin     inc      einc' +
+                  '      pha       epha      snr')
+            for k, fuk in enumerate(out['fu']):
+                outstr = (out['nameu'][k].decode(sys.stdout.encoding), fuk,
+                          out['tidecon'][k, 0], out['tidecon'][k, 1],
+                          out['tidecon'][k, 2], out['tidecon'][k, 3],
+                          out['tidecon'][k, 4], out['tidecon'][k, 5],
+                          out['tidecon'][k, 6], out['tidecon'][k, 7],
+                          out['snr'][k])
                 if out['snr'][k] > out['synth']:
-                    print('* %s  %9.7f  %9.4f  %8.3f %9.4f  %8.3f %8.2f  %8.2f  %8.2f  %8.2f %8.2g' % outstr)
+                    print(('* %s  %9.7f  %9.4f  %8.3f %9.4f  %8.3f' +
+                          ' %8.2f  %8.2f  %8.2f  %8.2f %8.2g') % outstr)
                 else:
-                    print('  %s  %9.7f  %9.4f  %8.3f %9.4f  %8.3f %8.2f  %8.2f  %8.2f  %8.2f %8.2g' % outstr)
+                    print(('  %s  %9.7f  %9.4f  %8.3f %9.4f  %8.3f' +
+                          ' %8.2f  %8.2f  %8.2f  %8.2f %8.2g') % outstr)
 
 
 def pandas_style(out):
     print
-    if (not 'complex' in out['xin'].dtype.name):
-        print('======================================================================')
+    if ('complex' not in out['xin'].dtype.name):
+        print('===================================' +
+              '===================================')
     else:
-        print('====================================================================================================================')
+        print('==========================================================' +
+              '==========================================================')
 
-    print('Number of observations = %d \nNumber of observations used = %d \nRecord length (days) = %.2f' % (out['nobs'], out['ngood'], np.dot(max(out['xin'].shape), out['dt']) / 24))
+    print('Number of observations = %d' % out['nobs'])
+    print('Number of observations used = %d' % out['ngood'])
+    print('Record length (days) = %.2f' % (out['nobs']*out['dt']/24.0))
+
     if ('stime' in out):
-        print('Start time: %s\n' % dates.num2date(out['stime']).strftime('%Y-%m-%d %H:%M:%S'))
+        print('Start time: %s\n' %
+              dates.num2date(out['stime']).strftime('%Y-%m-%d %H:%M:%S'))
     print('%s\n' % out['nodcor'])
-    print('x0= %.3g, xtrend= %.3g' % ( np.real(out['z0']), np.real(out['dz0'])))
-    print('var(data)= %.2f   var(prediction)= %.2f   var(residual)= %.2f'% (out['varx'],out['varxp'],out['varxr']))
-    print('var(prediction)/var(data) (%%) = %.1f\n' %( 100*(out['varxp']/out['varx'])))
+    print('x0= %.3g, xtrend= %.3g' %
+          (np.real(out['z0']), np.real(out['dz0'])))
+    print('var(data)= %.2f   var(prediction)= %.2f   var(residual)= %.2f' %
+          (out['varx'], out['varxp'], out['varxr']))
+    print('var(prediction)/var(data) (%%) = %.1f\n' %
+          (100*(out['varxp']/out['varx'])))
 
     import pandas as pd
-    if (out['xin'].dtype!=complex):
-        df=pd.DataFrame(np.vstack([out['fu'],out['tidecon'].T,out['snr']]).T,np.array( [name.decode(sys.stdout.encoding) for name in out['nameu']]),['Freq','Amp','Amp Err','Phase','Phase Err','SNR'])
-        df.index.name='Tide'
-        #df=df.sort('Amp')
-        fmt={'Freq':'{:,.6f}'.format,'Amp':'{:,.2f}'.format,'Amp Err':'{:,.2f}'.format,'Phase':'{:,.1f}'.format,'Phase Err':'{:,.1f}'.format,'SNR':'{:,.1g}'.format}
+    if ('complex' not in out['xin'].dtype.name):
+        df = pd.DataFrame(np.vstack([out['fu'], out['tidecon'].T,
+                                     out['snr']]).T,
+                                     np.array([name.decode(sys.stdout.encoding)
+                                               for name in out['nameu']]),
+                                     ['Freq', 'Amp', 'Amp Err',
+                                      'Phase', 'Phase Err', 'SNR'])
+        df.index.name = 'Tide'
+        fmt = {'Freq': '{:,.6f}'.format, 'Amp': '{:,.2f}'.format,
+               'Amp Err': '{:,.2f}'.format, 'Phase': '{:,.1f}'.format,
+               'Phase Err': '{:,.1f}'.format, 'SNR': '{:,.1g}'.format}
         print('            Tidal amplitude and phase with 95 % CI estimates')
-        print(df.to_string(col_space=10,formatters=fmt))
+        print(df.to_string(col_space=10, formatters=fmt))
 
     else:
-        print('y0= %.3g, ytrend= %.3g' % ( np.imag(out['z0']), np.imag(out['dz0'])))
-        print('var(data)= %.2f   var(prediction)= %.2f   var(residual)= %.2f'% (out['vary'],out['varyp'],out['varyr']))
-        print('var(prediction)/var(data) (%%) = %.1f\n' %( 100*(out['varyp']/out['vary'])))
+        print('y0= %.3g, ytrend= %.3g' %
+              (np.imag(out['z0']), np.imag(out['dz0'])))
+        print('var(data)= %.2f   var(prediction)= %.2f   var(residual)= %.2f' %
+              (out['vary'], out['varyp'], out['varyr']))
+        print('var(prediction)/var(data) (%%) = %.1f\n' %
+              (100*(out['varyp']/out['vary'])))
 
-        df=pd.DataFrame(np.vstack([out['fu'],out['tidecon'].T,out['snr']]).T,np.array( [name.decode(sys.stdout.encoding) for name in out['nameu']]),['Freq','Major','Major Err','Minor','Minor Err','Inc','Inc Err','Phase','Phase Err','SNR'])
-        df.index.name='Tide'
-        #df=df.sort('Major')
-        fmt={'Freq':'{:,.6f}'.format,'Major':'{:,.2f}'.format,'Major Err':'{:,.2f}'.format,'Minor':'{:,.2f}'.format,'Minor Err':'{:,.2f}'.format,'Inc':'{:,.1f}'.format,'Inc Err':'{:,.1f}'.format,'Phase':'{:,.1f}'.format,'Phase Err':'{:,.1f}'.format,'SNR':'{:,.1g}'.format}
-        print('                                   Ellipse parameters with 95 % CI estimates')
+        df = pd.DataFrame(np.vstack([out['fu'], out['tidecon'].T,
+                                     out['snr']]).T,
+                                     np.array([name.decode(sys.stdout.encoding)
+                                                for name in out['nameu']]),
+                                     ['Freq', 'Major', 'Major Err', 'Minor',
+                                      'Minor Err', 'Inc', 'Inc Err', 'Phase',
+                                      'Phase Err', 'SNR'])
+        df.index.name = 'Tide'
+        fmt = {'Freq': '{:,.6f}'.format, 'Major': '{:,.2f}'.format,
+               'Major Err': '{:,.2f}'.format, 'Minor': '{:,.2f}'.format,
+               'Minor Err': '{:,.2f}'.format, 'Inc': '{:,.1f}'.format,
+               'Inc Err': '{:,.1f}'.format, 'Phase': '{:,.1f}'.format,
+               'Phase Err': '{:,.1f}'.format, 'SNR': '{:,.1g}'.format}
+        print('                                   ' +
+              'Ellipse parameters with 95 % CI estimates')
 
-        print(df.to_string(col_space=10,formatters=fmt))
+        print(df.to_string(col_space=10, formatters=fmt))
 
     print
-    if (not 'complex' in out['xin'].dtype.name):
-        print('======================================================================')
+    if ('complex' not in out['xin'].dtype.name):
+        print('===================================' +
+              '===================================')
     else:
-        print('====================================================================================================================')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        print('==========================================================' +
+              '==========================================================')
