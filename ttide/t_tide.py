@@ -213,6 +213,7 @@ def t_tide(xin, **kwargs):
     k = 1
     pi = np.pi
     out_style = 'classic'
+    isComplex=False
 
     # Use kargs to set values other then the defaults
     if kwargs is not None:
@@ -240,6 +241,8 @@ def t_tide(xin, **kwargs):
     inn = xin.shape
     if len(inn) != 1:
         error('Input time series is not a vector')
+    if 'complex' in xin.dtype.name:
+        isComplex=True
 
     # Check size of incoming data.
     nobs = max(xin.shape)
@@ -396,18 +399,14 @@ def t_tide(xin, **kwargs):
     # Check variance explained
     # (but do this with the original fit, and the residuals!)
     xres = xin-xout
+    
+    # Real time series
+    varx = np.cov(np.real(xin[(gd)]))
+    varxp = np.cov(np.real(xout[(gd)]))
+    varxr = np.cov(np.real(xres[(gd)]))
 
-    if 'complex' not in xin.dtype.name:
-        # Real time series
-        varx = np.cov(xin[(gd)])
-        varxp = np.cov(xout[(gd)])
-        varxr = np.cov(xres[(gd)])
-    else:
+    if isComplex:        
         # Complex time series
-        varx = np.cov(np.real(xin[(gd)]))
-        varxp = np.cov(np.real(xout[(gd)]))
-        varxr = np.cov(np.real(xres[(gd)]))
-
         vary = np.cov(np.imag(xin[(gd)]))
         varyp = np.cov(np.imag(xout[(gd)]))
         varyr = np.cov(np.imag(xres[(gd)]))
@@ -639,11 +638,11 @@ def t_tide(xin, **kwargs):
         einc = np.dot(1.96, einc)
         epha = np.dot(1.96, epha)
 
-    if 'complex' not in xin.dtype.name:
-        tidecon = np.array([fmaj[:, 0], emaj, pha[:, 0], epha]).T
-    else:
+    if isComplex:
         tidecon = np.array([fmaj[:, 0], emaj, fmin[:, 0], emin,
-                            finc[:, 0], einc, pha[:, 0], epha]).T
+                            finc[:, 0], einc, pha[:, 0], epha]).T        
+    else:
+        tidecon = np.array([fmaj[:, 0], emaj, pha[:, 0], epha]).T
     tideconout = tidecon.copy()
     # Sort results by frequency (needed if anything has been inferred
     # since these are stuck at the end of the list by code above).
@@ -672,21 +671,7 @@ def t_tide(xin, **kwargs):
     # Check variance explained (but now do this
     # with the synthesized fit) and the residuals!
     xres = xin[:] - xout[:]
-
-    if 'complex' not in xin.dtype.name:
-        # Real time series
-        varx = np.cov(xin[gd])
-        varxp = np.cov(xout[gd])
-        varxr = np.cov(xres[gd])
-    else:
-        # Complex time series
-        varx = np.cov(np.real(xin[gd]))
-        varxp = np.cov(np.real(xout[gd]))
-        varxr = np.cov(np.real(xres[gd]))
-        vary = np.cov(np.imag(xin[gd]))
-        varyp = np.cov(np.imag(xout[gd]))
-        varyr = np.cov(np.imag(xres[gd]))
-
+    
     # -----------------Output results-----------------------------------
     if output is not False:
         out = {}
@@ -698,9 +683,10 @@ def t_tide(xin, **kwargs):
         out['nodcor'] = nodcor
         out['z0'] = z0
         out['dz0'] = dz0
-        out['varx'] = varx
-        out['varxp'] = varxp
-        out['varxr'] = varxr
+        out['xingd']=xin[gd]
+        out['xoutgd']=xout[gd]
+        out['xresgd']=xres[gd]
+        out['isComplex']=isComplex
 
         out['fu'] = fu
         out['nameu'] = nameu
@@ -710,10 +696,6 @@ def t_tide(xin, **kwargs):
 
         if stime.size != 0:
             out['stime'] = stime
-        if 'complex' in xin.dtype.name:
-            out['vary'] = vary
-            out['varyp'] = varyp
-            out['varyr'] = varyr
 
         if 'classic' in out_style:
             tu.classic_style(out)

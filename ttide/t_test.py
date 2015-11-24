@@ -21,21 +21,21 @@ uvin = uin+1j*vin
 [nameu, freq, tidecon, xout] = t_tide(ein)
 
 print()
-print('====================================================================')
+print('*' * 80)
 print()
 
 # No output test case
 [nameu, freq, tidecon, xout] = t_tide(ein, output=False)
 
 print()
-print('====================================================================')
+print('*' * 80)
 print()
 
 # Pandas output case
 [nameu, freq, tidecon, xout] = t_tide(ein, out_style='pandas')
 
 print()
-print('====================================================================')
+print('*' * 80)
 print()
 
 # M2 tides only
@@ -43,7 +43,7 @@ print()
 
 
 print()
-print('====================================================================')
+print('*' * 80)
 print()
 
 # 5 tidal constituents (all should basically be zero other then M2)
@@ -51,7 +51,7 @@ print()
 
 
 print()
-print('====================================================================')
+print('*' * 80)
 print()
 
 # M2 tides with a starttime
@@ -59,7 +59,7 @@ print()
 
 
 print()
-print('====================================================================')
+print('*' * 80)
 print()
 
 # M2 tides with a starttime and latitude
@@ -74,21 +74,22 @@ print()
 [nameu, freq, tidecon, xout] = t_tide(uvin)
 
 print()
-print('====================================================================')
+print('*' * 80)
 print()
 
 # No output test case
 [nameu, freq, tidecon, xout] = t_tide(uvin, output=False)
+print('No output test case')
 
 print()
-print('====================================================================')
+print('*' * 80)
 print()
 
 # Pandas output case
 [nameu, freq, tidecon, xout] = t_tide(uvin, out_style='pandas')
 
 print()
-print('====================================================================')
+print('*' * 80)
 print()
 
 # M2 tides only
@@ -96,7 +97,7 @@ print()
 
 
 print()
-print('====================================================================')
+print('*' * 80)
 print()
 
 # 5 tidal constituents (all should basically be zero other then M2)
@@ -104,7 +105,7 @@ print()
 
 
 print()
-print('====================================================================')
+print('*' * 80)
 print()
 
 # M2 tides with a starttime
@@ -112,7 +113,7 @@ print()
 
 
 print()
-print('====================================================================')
+print('*' * 80)
 print()
 
 # M2 tides with a starttime and latitude
