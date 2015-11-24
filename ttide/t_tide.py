@@ -213,7 +213,7 @@ def t_tide(xin, **kwargs):
     k = 1
     pi = np.pi
     out_style = 'classic'
-    isComplex=False
+    isComplex = False
 
     # Use kargs to set values other then the defaults
     if kwargs is not None:
@@ -242,7 +242,7 @@ def t_tide(xin, **kwargs):
     if len(inn) != 1:
         error('Input time series is not a vector')
     if 'complex' in xin.dtype.name:
-        isComplex=True
+        isComplex = True
 
     # Check size of incoming data.
     nobs = max(xin.shape)
@@ -399,13 +399,13 @@ def t_tide(xin, **kwargs):
     # Check variance explained
     # (but do this with the original fit, and the residuals!)
     xres = xin-xout
-    
+
     # Real time series
     varx = np.cov(np.real(xin[(gd)]))
     varxp = np.cov(np.real(xout[(gd)]))
     varxr = np.cov(np.real(xres[(gd)]))
 
-    if isComplex:        
+    if isComplex:
         # Complex time series
         vary = np.cov(np.imag(xin[(gd)]))
         varyp = np.cov(np.imag(xout[(gd)]))
@@ -640,7 +640,7 @@ def t_tide(xin, **kwargs):
 
     if isComplex:
         tidecon = np.array([fmaj[:, 0], emaj, fmin[:, 0], emin,
-                            finc[:, 0], einc, pha[:, 0], epha]).T        
+                            finc[:, 0], einc, pha[:, 0], epha]).T
     else:
         tidecon = np.array([fmaj[:, 0], emaj, pha[:, 0], epha]).T
     tideconout = tidecon.copy()
@@ -671,7 +671,7 @@ def t_tide(xin, **kwargs):
     # Check variance explained (but now do this
     # with the synthesized fit) and the residuals!
     xres = xin[:] - xout[:]
-    
+
     # -----------------Output results-----------------------------------
     if output is not False:
         out = {}
@@ -683,10 +683,10 @@ def t_tide(xin, **kwargs):
         out['nodcor'] = nodcor
         out['z0'] = z0
         out['dz0'] = dz0
-        out['xingd']=xin[gd]
-        out['xoutgd']=xout[gd]
-        out['xresgd']=xres[gd]
-        out['isComplex']=isComplex
+        out['xingd'] = xin[gd]
+        out['xoutgd'] = xout[gd]
+        out['xresgd'] = xres[gd]
+        out['isComplex'] = isComplex
 
         out['fu'] = fu
         out['nameu'] = nameu

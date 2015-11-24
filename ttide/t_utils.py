@@ -10,6 +10,8 @@ from t_vuf import t_vuf
 import matplotlib as mpl
 import matplotlib.dates as dates
 
+# Set encoding and output format
+enc = sys.stdout.encoding
 np.set_printoptions(precision=8, suppress=True)
 
 
@@ -69,7 +71,7 @@ def constituents(minres, constit, shallow, infname, infref, centraltime):
             j1 = np.where(const['name'] == constit[k])[0]
             if (j1.size == 0):
                 print("Can't recognize name " +
-                      constit[k].decode(sys.stdout.encoding) +
+                      constit[k].decode(enc) +
                       ' for forced search')
             else:
                 ju = np.append(ju, j1)
@@ -437,39 +439,37 @@ def style_check(style):
 
 def print_variance(out):
     '''Takes the out dictionary and prints the variance text'''
-    
+
     x = np.cov(np.real(out['xingd']))
     xp = np.cov(np.real(out['xoutgd']))
     xr = np.cov(np.real(out['xresgd']))
     z0r = np.real(out['z0'])
     dz0r = np.real(out['dz0'])
-       
+
     print('x0= %.3g' % z0r, end="  ")
-    print('xtrend= %.3g' % dz0r)    
+    print('xtrend= %.3g' % dz0r)
     print('var(data)= %.2f' % x, end=" " * 4)
     print('var(prediction)= %.2f' % xp, end=" " * 4)
     print('var(residual)= %.2f' % xr)
     print('var(prediction)/var(data) (%%) = %.1f\n' % (100*xp/x))
-          
+
     if ('complex' in out['xin'].dtype.name):
         y = np.cov(np.imag(out['xingd']))
         yp = np.cov(np.imag(out['xoutgd']))
         yr = np.cov(np.imag(out['xresgd']))
         z0r = np.imag(out['z0'])
         dz0r = np.imag(out['dz0'])
-           
+
         print('y0= %.3g' % z0r, end="  ")
-        print('ytrend= %.3g' % dz0r)    
+        print('ytrend= %.3g' % dz0r)
         print('var(data)= %.2f' % y, end=" " * 4)
         print('var(prediction)= %.2f' % yp, end=" " * 4)
         print('var(residual)= %.2f' % yr)
-        print('var(prediction)/var(data) (%%) = %.1f\n' % (100*yp/y))       
-            
-        print('total_var= %f' % (x+y), end=" ") 
+        print('var(prediction)/var(data) (%%) = %.1f\n' % (100*yp/y))
+
+        print('total_var= %f' % (x+y), end=" ")
         print('pred_var=  %f' % (xp+yp))
         print('total_var/pred_var (%%) =  %.1f  ' % (100*(xp+yp)/(x+y)))
-        print()
-
 
 
 def classic_style(out):
@@ -483,31 +483,15 @@ def classic_style(out):
                   dates.num2date(out['stime']).strftime('%Y-%m-%d %H:%M:%S'))
         print('rayleigh criterion = %.1f\n' % out['ray'])
         print('%s' % out['nodcor'])
-
         print_variance(out)
-        
-        if ('complex' not in out['xin'].dtype.name):
-            print('        tidal amplitude and phase with 95 % CI estimates')
-            print(' tide      freq        amp      amp_err' +
-                  '   pha      pha_err    snr')
-            for k, fuk in enumerate(out['fu']):
-                outstr = (out['nameu'][k].decode(sys.stdout.encoding), fuk,
-                          out['tidecon'][k, 0], out['tidecon'][k, 1],
-                          out['tidecon'][k, 2], out['tidecon'][k, 3],
-                          out['snr'][k])
-                if out['snr'][k] > out['synth']:
-                    print('* %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' %
-                          outstr)
-                else:
-                    print('  %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' %
-                          outstr)
-        else:  
+
+        if out['isComplex']:
             print(' ' * 32 + 'ellipse parameters with 95 % CI estimates')
             print(' tide     freq        major      emaj' +
                   '      minor      emin     inc      einc' +
                   '      pha       epha      snr')
             for k, fuk in enumerate(out['fu']):
-                outstr = (out['nameu'][k].decode(sys.stdout.encoding), fuk,
+                outstr = (out['nameu'][k].decode(enc), fuk,
                           out['tidecon'][k, 0], out['tidecon'][k, 1],
                           out['tidecon'][k, 2], out['tidecon'][k, 3],
                           out['tidecon'][k, 4], out['tidecon'][k, 5],
@@ -519,12 +503,27 @@ def classic_style(out):
                 else:
                     print(('  %s  %9.7f  %9.4f  %8.3f %9.4f  %8.3f' +
                           ' %8.2f  %8.2f  %8.2f  %8.2f %8.2g') % outstr)
+        else:
+            print('        tidal amplitude and phase with 95 % CI estimates')
+            print(' tide      freq        amp      amp_err' +
+                  '   pha      pha_err    snr')
+            for k, fuk in enumerate(out['fu']):
+                outstr = (out['nameu'][k].decode(enc), fuk,
+                          out['tidecon'][k, 0], out['tidecon'][k, 1],
+                          out['tidecon'][k, 2], out['tidecon'][k, 3],
+                          out['snr'][k])
+                if out['snr'][k] > out['synth']:
+                    print('* %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' %
+                          outstr)
+                else:
+                    print('  %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' %
+                          outstr)
 
 
 def pandas_style(out):
-    spacer=70
+    spacer = 70
     if out['isComplex']:
-        spacer=116
+        spacer = 116
     print('=' * spacer)
 
     print('Number of observations = %d' % out['nobs'])
@@ -535,29 +534,26 @@ def pandas_style(out):
         print('Start time: %s\n' %
               dates.num2date(out['stime']).strftime('%Y-%m-%d %H:%M:%S'))
     print('%s\n' % out['nodcor'])
-    
     print_variance(out)
 
-    names=np.array([name.decode(sys.stdout.encoding) for name in out['nameu']])
+    names = np.array([name.decode(enc) for name in out['nameu']])
     fmt = {'Freq': '{:,.6f}'.format, 'Major': '{:,.2f}'.format,
-       'Major Err': '{:,.2f}'.format, 'Minor': '{:,.2f}'.format,
-       'Minor Err': '{:,.2f}'.format, 'Inc': '{:,.1f}'.format,
-       'Inc Err': '{:,.1f}'.format, 'Phase': '{:,.1f}'.format,
-       'Phase Err': '{:,.1f}'.format, 'SNR': '{:,.1g}'.format,
-       'Amp': '{:,.2f}'.format, 'Amp Err': '{:,.2f}'.format}
+           'Major Err': '{:,.2f}'.format, 'Minor': '{:,.2f}'.format,
+           'Minor Err': '{:,.2f}'.format, 'Inc': '{:,.1f}'.format,
+           'Inc Err': '{:,.1f}'.format, 'Phase': '{:,.1f}'.format,
+           'Phase Err': '{:,.1f}'.format, 'SNR': '{:,.1g}'.format,
+           'Amp': '{:,.2f}'.format, 'Amp Err': '{:,.2f}'.format}
 
-    if ('complex' not in out['xin'].dtype.name):        
-        colnames=['Freq', 'Amp', 'Amp Err', 'Phase', 'Phase Err', 'SNR']               
-        print(' ' * 12 +'Tidal amplitude and phase with 95 % CI estimates')
-        
-    else:        
-        colnames=['Freq', 'Major', 'Major Err', 'Minor', 'Minor Err',
-                  'Inc', 'Inc Err', 'Phase', 'Phase Err', 'SNR']
+    if out['isComplex']:
+        colnames = ['Freq', 'Major', 'Major Err', 'Minor', 'Minor Err',
+                    'Inc', 'Inc Err', 'Phase', 'Phase Err', 'SNR']
         print(' ' * 35 + 'Ellipse parameters with 95 % CI estimates')
+    else:
+        colnames = ['Freq', 'Amp', 'Amp Err', 'Phase', 'Phase Err', 'SNR']
+        print(' ' * 12 + 'Tidal amplitude and phase with 95 % CI estimates')
 
-
-    import pandas as pd    
-    dfdata=np.vstack([out['fu'], out['tidecon'].T, out['snr']]).T
+    import pandas as pd
+    dfdata = np.vstack([out['fu'], out['tidecon'].T, out['snr']]).T
     df = pd.DataFrame(dfdata, names, colnames)
     df.index.name = 'Tide'
     print(df.to_string(col_space=10, formatters=fmt))
