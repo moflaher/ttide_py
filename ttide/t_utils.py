@@ -522,10 +522,10 @@ def classic_style(out):
 
 
 def pandas_style(out):
-    if ('complex' not in out['xin'].dtype.name):
-        print('=' * 70)
-    else:
-        print('=' * 116)
+    spacer=70
+    if out['isComplex']:
+        spacer=116
+    print('=' * spacer)
 
     print('Number of observations = %d' % out['nobs'])
     print('Number of observations used = %d' % out['ngood'])
@@ -562,7 +562,4 @@ def pandas_style(out):
     df.index.name = 'Tide'
     print(df.to_string(col_space=10, formatters=fmt))
 
-    if ('complex' not in out['xin'].dtype.name):
-        print('=' * 70)
-    else:
-        print('=' * 116)
+    print('=' * spacer)
