@@ -226,6 +226,8 @@ def t_tide(xin, **kwargs):
                 lat = np.array(value)
             if (key == 'constitnames'):
                 constitnames = tu.fourpad(value)
+            if (key == 'shallownames'):
+                shallownames = tu.fourpad(value)
             if (key == 'errcalc'):
                 errcalc = value
             if (key == 'output'):

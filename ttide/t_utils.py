@@ -84,17 +84,15 @@ def constituents(minres, constit, shallow, infname, infref, centraltime):
     # disp(['   number of standard constituents used: ',int2str(length(ju))])
     if shallow.size != 0:
         # Add explictly selected shallow water constituents.
-        for k in range(1, (shallow.shape[0]+1)):
-            j1 = strmatch(shallow[(k-1), :], const['name'])
-            if (0 in j1.shape):
-                disp("Can't recognize name " + shallow[(k-1), :] +
-                     ' for forced search')
+        for k in range(0, (shallow.shape[0])):
+            j1 = np.where(const['name'] == shallow[k])[0]
+            if (j1.size == 0):
+                print("Can't recognize name " +
+                      shallow[k].decode(enc) +
+                      ' for forced search')
             else:
-                if np.isnan(const['ishallow'][j1]):
-                    disp(shallow[(k-1), :] +
-                         ' Not a shallow-water constituent')
-                disp('   Forced fit to ' + shallow[(k-1), :])
-                ju = np.array([ju, j1]).reshape(1, -1)
+                ju = np.append(ju, j1)
+
     nameu = const['name'][ju]
     fu = const['freq'][ju]
 

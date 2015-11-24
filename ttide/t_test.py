@@ -65,6 +65,28 @@ print()
 # M2 tides with a starttime and latitude
 [nameu, freq, tidecon, xout] = t_tide(ein, constitnames=['M2'], stime=768000, lat=45)
 
+print()
+print('*' * 80)
+print()
+
+# M2 tides and shallow
+# Build an M2 tidal series with 5m elevation
+sin = 5*np.cos(((2*np.pi/12.42))*np.arange(1001)) + \
+       1*np.cos(((2*np.pi/2.484120261))*np.arange(1001))
+[nameu, freq, tidecon, xout] = t_tide(sin, constitnames=['M2'], shallownames=['M10'])
+
+print()
+print('*' * 80)
+print()
+
+sin = 5*np.cos(((2*np.pi/12.42))*np.arange(1001)) + \
+        1*np.cos(((2*np.pi/2.484120261))*np.arange(1001))
+[nameu, freq, tidecon, xout] = t_tide(sin, constitnames=['M2'], stime=768000, shallownames=['M10'])
+
+print()
+print('*' * 80)
+print()
+
 
 ########################################################################
 # Current Test Cases
