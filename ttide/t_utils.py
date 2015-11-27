@@ -5,8 +5,8 @@ import scipy.interpolate as spi
 import scipy.signal as sps
 import sys
 import matplotlib.mlab as mplm
-from t_getconsts import t_getconsts
-from t_vuf import t_vuf
+from .t_getconsts import t_getconsts
+from .t_vuf import t_vuf
 import matplotlib as mpl
 import matplotlib.dates as dates
 

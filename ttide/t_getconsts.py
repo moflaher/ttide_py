@@ -1,9 +1,9 @@
-from __future__ import division, absolute_import
+from __future__ import division
 import numpy as np
 import os
 import copy
-from t_astron import t_astron
-from __init__ import _const, _sat, _shallow
+from .t_astron import t_astron
+from .__init__ import _const, _sat, _shallow
 
 
 def t_getconsts(ctime):

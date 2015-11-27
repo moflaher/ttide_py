@@ -1,8 +1,8 @@
 from __future__ import division
 import numpy as np
 import os
-from t_getconsts import t_getconsts
-from t_vuf import t_vuf
+from .t_getconsts import t_getconsts
+from .t_vuf import t_vuf
 
 
 def t_predic(tim, names, freq, tidecon, **kwargs):

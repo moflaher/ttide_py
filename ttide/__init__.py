@@ -44,7 +44,7 @@ if (has_const and has_sat and has_shallow):
                                for arr in _const['kmpr']])
 
 else:
-    print('You do not have t_constituents_*.npy' +
+    print('You do not have t_constituents_*.npy ' +
           'check that package installation is correct.')
     _const = {}
     _sat = {}

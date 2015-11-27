@@ -5,10 +5,10 @@ import scipy.interpolate as spi
 import scipy.signal as sps
 import sys
 import matplotlib.mlab as mplm
-from t_getconsts import t_getconsts
-from t_vuf import t_vuf
-import t_utils as tu
-from t_predic import t_predic
+from .t_getconsts import t_getconsts
+from .t_vuf import t_vuf
+from . import t_utils as tu
+from .t_predic import t_predic
 import matplotlib as mpl
 
 

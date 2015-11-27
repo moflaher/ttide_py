@@ -2,8 +2,8 @@ from __future__ import division
 import numpy as np
 import scipy as sp
 import os
-from t_astron import t_astron
-from t_getconsts import t_getconsts
+from .t_astron import t_astron
+from .t_getconsts import t_getconsts
 
 
 def t_vuf(ltype, ctime, ju, lat=None):

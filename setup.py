@@ -14,5 +14,5 @@ setup(name='ttide',
       author_email='073208o@acadiau.ca',
       license='MIT',
       packages=['ttide'],
-      package_data={'ttide': ['data/*.npy']},
+      package_data={'ttide': ['data/*.nc']},
       zip_safe=False)
