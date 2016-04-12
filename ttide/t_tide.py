@@ -238,6 +238,8 @@ def t_tide(xin, **kwargs):
                 out_style = tu.style_check(value)
             if (key == 'secular'):
                 secular = value
+            if (key == 'rayleigh'):
+                ray = value
 
     # Check to make sure that incoming data is a vector.
     inn = xin.shape
