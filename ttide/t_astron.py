@@ -66,12 +66,13 @@ def t_astron(jd):
         reprinted in International Hydrographic Review, Appendix to
         Circular Letter 4-H, 1954) mean lunar time is taken to begin at
         "lunar midnight".
-     B. Beardsley  12/29/98, 1/11/98
-     R. Pawlowicz  9/1/01
-     Version 1.0
      Compute number of days from epoch of 12:00 UT Dec 31, 1899.
      (January 0.5 1900 ET)
     """
+    # ## Matlab version info
+    # B. Beardsley  12/29/98, 1/11/98
+    # R. Pawlowicz  9/1/01
+    # Version 1.0
 
     d = jd - dates.datestr2num('Dec 31 1899, 12:0:0')
     D = d / 10000

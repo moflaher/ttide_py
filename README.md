@@ -3,8 +3,6 @@ ttide_py
 
 A direct conversion of T_Tide to Python.
 
-
-
 This is a work in progress. It is not done.
 
 It is now mostly functional.
@@ -12,6 +10,16 @@ Any help with finishing the conversion is welcome.
 
 All credit for T_Tide goes to Rich Pawlowicz, the original creator of T_Tide. 
 It is available at http://www2.ocgy.ubc.ca/~rich/.
+
+A description of the theoretical basis of the analysis and some
+implementation details of the Matlab version can be found in:
+
+> Pawlowicz, R., B. Beardsley, and S. Lentz, "Classical Tidal
+    "Harmonic Analysis Including Error Estimates in MATLAB
+    using T_TIDE", Computers and Geosciences, 28, 929-937 (2002).
+
+Citation of this article would be appreciated if you find the toolbox
+useful (either the Matlab version, or this Python one).
 
 
 

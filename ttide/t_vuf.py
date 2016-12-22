@@ -30,11 +30,6 @@ def t_vuf(ltype, ctime, ju, lat=None):
      by saying that since the forcing of tides can occur at latitudes
      other than where they are observed, the idea that observations have
      the equilibrium latitude-dependence is possibly bogus anyway).
-     R. Pawlowicz 11/8/99
-                   1/5/00 - Changed to allow for no LAT setting.
-                  11/8/00 - Added the LAT=NaN option.
-                  10/02/03 - Suuport for 18-year (full) constituent set.
-     Version 1.2
      Get all the info about constituents.
      Calculate astronomical arguments at mid-point of data time series.
     """

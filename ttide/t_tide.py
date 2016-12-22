@@ -150,42 +150,6 @@ def t_tide(xin, **kwargs):
            input time series.  The Rayleigh criterion is applied to
            frequency intervals calculated as the inverse of the input
            series length.
-
-     A description of the theoretical basis of the analysis and some
-     implementation details can be found in:
-
-     Pawlowicz, R., B. Beardsley, and S. Lentz, "Classical Tidal
-       "Harmonic Analysis Including Error Estimates in MATLAB
-        using T_TIDE", Computers and Geosciences, 28, 929-937 (2002).
-
-     (citation of this article would be appreciated if you find the
-      toolbox useful).
-    R. Pawlowicz
-    11/8/99 -  Completely rewritten from the transliterated-
-                to-matlab IOS/Foreman fortran code by S. Lentz
-                and B. Beardsley.
-    3/3/00  -   Redid errors to take into account covariances
-                between u and v errors.
-    7/21/00 -   Found that annoying bug in error calc!
-    11/1/00 -   Added linear error analysis.
-    8/29/01 -   Made synth=1 default, also changed behavior
-                when no lat/time given so that phases are raw
-                at central time.
-    9/1/01  -   Moved some SNR code to t_predic.
-    9/28/01 -   made sure you can't choose Z0 as constituent.
-    6/12/01 -   better explanation for variance calcs, fixed
-                bug in typed output (thanks Mike Cook).
-    8/2/03 -    Added block processing for long time series (thanks
-                to Derek Goring).
-    9/2/03 -    Beta version of 18.6 year series handling
-    12/2/03 -   Bug (x should be xin) fixed thanks to Mike Cook (again!)
-    4/3/11 -    Changed (old) psd to (new) pwelch calls, also
-                isfinite for finite.
-    23/3/11 -   Corrected my conversion from psd to pwelch, thanks
-                to Dan Codiga and (especially) Evan Haug!
-
-     Version 1.3
-     ----------------------Parse inputs-----------------------------------
     """
 
     dt = 1

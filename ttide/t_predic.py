@@ -50,11 +50,6 @@ def t_predic(tim, names, freq, tidecon, **kwargs):
 
       This is in fact the recommended calling procedure (and required
       when the analysis results are from series>18.6 years in length)
-     R. Pawlowicz 11/8/99
-     Version 1.0
-     8/2/03 - Added block processing to generate prediction (to
-              avoid memory overflows for long time series).
-     29/9/04 - small bug with undefined ltype fixed
     """
 
     longseries = 0
