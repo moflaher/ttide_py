@@ -1,6 +1,5 @@
 from __future__ import division
 import numpy as np
-import os
 from .t_getconsts import t_getconsts
 from .t_vuf import t_vuf
 
@@ -88,8 +87,8 @@ def t_predic(tim, names, freq, tidecon, **kwargs):
         freq = freq[I]
     if tidecon.shape[1] == 4:
         # Real time series
-        ap = np.multiply(tidecon[:, 0]/2.0,
-                         np.exp(-1j*tidecon[:, 2]*np.pi/180))
+        ap = np.multiply(tidecon[:, 0] / 2.0,
+                         np.exp(-1j * tidecon[:, 2] * np.pi / 180))
         am = np.conj(ap)
     else:
         ap = np.multiply((tidecon[:, 0] + tidecon[:, 2]) / 2.0,
@@ -102,18 +101,18 @@ def t_predic(tim, names, freq, tidecon, **kwargs):
 
     # Mean at central point (get rid of one point at end to
     # take mean of odd number of points if necessary).
-    jdmid = np.mean(tim[0:np.dot(2, np.fix((max(tim.shape) - 1) / 2)) + 1])
+    jdmid = np.mean(tim[0:((2 * int((max(tim.shape) - 1) / 2)) + 1)])
     if longseries:
         const = t_get18consts
         ju = np.zeros(shape=(freq.shape, freq.shape), dtype='float64')
-        for k in range(1, (names.shape[0]+1)):
-            inam = strmatch(names[(k-1), :], const.name)
+        for k in range(1, (names.shape[0] + 1)):
+            inam = strmatch(names[(k - 1), :], const.name)
             if max(inam.shape) == 1:
-                ju[(k-1)] = inam
+                ju[(k - 1)] = inam
             else:
                 if max(inam.shape) > 1:
-                    minf, iminf = np.min(abs(freq[(k-1)] - const.freq(inam)))
-                    ju[(k-1)] = inam[(iminf-1)]
+                    minf, iminf = np.min(abs(freq[(k - 1)] - const.freq(inam)))
+                    ju[(k - 1)] = inam[(iminf - 1)]
     else:
         const, sat, cshallow = t_getconsts(np.array([]))
         ju = np.zeros((len(freq),), dtype='int32')
@@ -135,23 +134,23 @@ def t_predic(tim, names, freq, tidecon, **kwargs):
             u = v
             f = np.ones((len(ju),), dtype='float64')
 
-    ap = ap * f * np.exp(+1j*2*np.pi*(u + v))
-    am = am * f * np.exp(-1j*2*np.pi*(u + v))
+    ap = ap * f * np.exp(+1j * 2 * np.pi * (u + v))
+    am = am * f * np.exp(-1j * 2 * np.pi * (u + v))
     tim = tim - jdmid
 
     n, m = tim.shape
     ntim = max(tim.shape)
     nsub = 10000
-    yout = np.zeros([n*m, ], dtype='complex128')
+    yout = np.zeros([n * m, ], dtype='complex128')
 
     # longer than one year hourly.
     for j1 in np.arange(0, ntim, nsub):
         j1 = j1.astype(int)
         j2 = np.min([j1 + nsub, ntim]).astype(int)
-        tap = np.repeat(ap, j2-j1).reshape(len(ap), j2-j1)
-        tam = np.repeat(am, j2-j1).reshape(len(am), j2-j1)
+        tap = np.repeat(ap, j2 - j1).reshape(len(ap), j2 - j1)
+        tam = np.repeat(am, j2 - j1).reshape(len(am), j2 - j1)
 
-        touter = np.outer(24*1j*2*np.pi*freq, tim[j1:j2])
+        touter = np.outer(24 * 1j * 2 * np.pi * freq, tim[j1:j2])
         yout[j1:j2] = np.sum(np.multiply(np.exp(touter), tap), axis=0) +\
             np.sum(np.multiply(np.exp(-touter), tam), axis=0)
 

@@ -1,15 +1,9 @@
 from __future__ import division
 import numpy as np
-import os
 import scipy.interpolate as spi
-import scipy.signal as sps
-import sys
-import matplotlib.mlab as mplm
-from .t_getconsts import t_getconsts
 from .t_vuf import t_vuf
 from . import t_utils as tu
 from .t_predic import t_predic
-import matplotlib as mpl
 
 
 np.set_printoptions(precision=8, suppress=True)
@@ -244,7 +238,7 @@ def t_tide(xin, **kwargs):
     # Check to make sure that incoming data is a vector.
     inn = xin.shape
     if len(inn) != 1:
-        error('Input time series is not a vector')
+        raise ValueError('Input time series is not a vector')
     if 'complex' in xin.dtype.name:
         isComplex = True
 
@@ -262,25 +256,25 @@ def t_tide(xin, **kwargs):
             lsq = 'direct'
 
     # Check to see if timeseries spans 18.6 years.
-    if nobs*dt > 18.6*365.25*24:
+    if nobs * dt > 18.6 * 365.25 * 24:
         longseries = 1
         ltype = 'full'
     else:
         longseries = 0
         ltype = 'nodal'
-    nobsu = nobs - np.remainder(nobs-1, 2)
+    nobsu = nobs - np.remainder(nobs - 1, 2)
 
     # Make series odd to give a center point
     # Time vector for entire time series centered at series midpoint.
-    t = (dt*(np.arange(nobs)+1-np.ceil(nobsu/2)))
+    t = (dt * (np.arange(nobs) + 1 - np.ceil(nobsu / 2)))
 
     if stime.size != 0:
-        centraltime = stime + np.dot(np.floor(nobsu/2)/24.0, dt)
+        centraltime = stime + np.dot(np.floor(nobsu / 2) / 24.0, dt)
     else:
         centraltime = np.array([])
 
     # -------Get the frequencies to use in the harmonic analysis-----------
-    tmptuple = tu.constituents(ray/(np.dot(dt, nobsu)),
+    tmptuple = tu.constituents(ray / (np.dot(dt, nobsu)),
                                constitnames, shallownames,
                                infiname, infirefname,
                                centraltime)
@@ -310,20 +304,20 @@ def t_tide(xin, **kwargs):
     if lsq[0:3] == 'dir':
         if secular[0:3] == 'lin':
             tc = np.hstack([np.ones((len(t), 1)),
-                            np.cos(2*pi*np.outer(t, fu)),
-                            np.sin(2*pi*np.outer(t, fu)),
-                            t.reshape(-1, 1)*(2/dt/nobsu)])
+                            np.cos(2 * pi * np.outer(t, fu)),
+                            np.sin(2 * pi * np.outer(t, fu)),
+                            t.reshape(-1, 1) * (2 / dt / nobsu)])
         else:
             tc = np.hstack([np.ones((len(t), 1)),
-                            np.cos(2*pi*np.outer(t, fu)),
-                            np.sin(2*pi*np.outer(t, fu))])
+                            np.cos(2 * pi * np.outer(t, fu)),
+                            np.sin(2 * pi * np.outer(t, fu))])
 
         coef = np.linalg.lstsq(tc[gd, :], xin[gd])[0].T
 
         # z0 a+ and a- amplitudes
         z0 = coef[0]
-        ap = (coef[1:mu+1]-1j*coef[(1+mu):(mu*2)+1])/2
-        am = (coef[1:mu+1]+1j*coef[(1+mu):(mu*2)+1])/2
+        ap = (coef[1:mu + 1] - 1j * coef[(1 + mu):(mu * 2) + 1]) / 2
+        am = (coef[1:mu + 1] + 1j * coef[(1 + mu):(mu * 2) + 1]) / 2
 
         if secular[0:3] == 'lin':
             dz0 = coef[-1]
@@ -346,34 +340,34 @@ def t_tide(xin, **kwargs):
         # Block length - doesn't matter really but should be small enough to
         # get allocated quickly
         if secular[0:3] == 'lin':
-            lhs = np.zeros(shape=(2*mu+2, 2*mu+2), dtype='float64')
-            rhs = np.zeros(shape=(2*mu+2, ), dtype='float64')
-            for j1 in range(1, (ngood+1), nsub):
-                j2 = np.min([j1+nsub-1, ngood])
-                tslice = t[gd[(j1-1):j2]-1]
-                E = np.hstack([np.ones((j2-j1+1, 1)),
-                               np.cos(2*pi*np.outer(tslice, fu)),
-                               np.sin(2*pi*np.outer(tslice, fu)),
-                               tslice.reshape(-1, 1)*(2/dt/nobsu)])
-                rhs = rhs + np.dot(E.T, xin[(gd[(j1-1):j2]-1)])
+            lhs = np.zeros(shape=(2 * mu + 2, 2 * mu + 2), dtype='float64')
+            rhs = np.zeros(shape=(2 * mu + 2, ), dtype='float64')
+            for j1 in range(1, (ngood + 1), nsub):
+                j2 = np.min([j1 + nsub - 1, ngood])
+                tslice = t[gd[(j1 - 1):j2] - 1]
+                E = np.hstack([np.ones((j2 - j1 + 1, 1)),
+                               np.cos(2 * pi * np.outer(tslice, fu)),
+                               np.sin(2 * pi * np.outer(tslice, fu)),
+                               tslice.reshape(-1, 1) * (2 / dt / nobsu)])
+                rhs = rhs + np.dot(E.T, xin[(gd[(j1 - 1):j2] - 1)])
                 lhs = lhs + np.dot(E.T, E)
         else:
-            lhs = np.zeros(shape=(2*mu+1, 2*mu+1), dtype='float64')
-            rhs = np.zeros(shape=(2*mu+1, ), dtype='float64')
-            for j1 in range(1, (ngood+1), nsub):
-                j2 = np.min([j1+nsub-1, ngood])
-                tslice = t[gd[(j1-1):j2]-1]
-                E = np.hstack([np.ones((j2-j1+1, 1)),
-                               np.cos(2*pi*np.outer(tslice, fu)),
-                               np.sin(2*pi*np.outer(tslice, fu))])
-                rhs = rhs + np.dot(E.T, xin[(gd[(j1-1):j2]-1)])
+            lhs = np.zeros(shape=(2 * mu + 1, 2 * mu + 1), dtype='float64')
+            rhs = np.zeros(shape=(2 * mu + 1, ), dtype='float64')
+            for j1 in range(1, (ngood + 1), nsub):
+                j2 = np.min([j1 + nsub - 1, ngood])
+                tslice = t[gd[(j1 - 1):j2] - 1]
+                E = np.hstack([np.ones((j2 - j1 + 1, 1)),
+                               np.cos(2 * pi * np.outer(tslice, fu)),
+                               np.sin(2 * pi * np.outer(tslice, fu))])
+                rhs = rhs + np.dot(E.T, xin[(gd[(j1 - 1):j2] - 1)])
                 lhs = lhs + np.dot(E.T, E)
         coef = np.linalg.lstsq(lhs, rhs)[0].T
 
         # z0 a+ and a- amplitudes
         z0 = coef[0]
-        ap = (coef[1:mu+1]-1j*coef[(1+mu):(mu*2)+1])/2
-        am = (coef[1:mu+1]+1j*coef[(1+mu):(mu*2)+1])/2
+        ap = (coef[1:mu + 1] - 1j * coef[(1 + mu):(mu * 2) + 1]) / 2
+        am = (coef[1:mu + 1] + 1j * coef[(1 + mu):(mu * 2) + 1]) / 2
 
         if secular[0:3] == 'lin':
             dz0 = coef[-1]
@@ -383,26 +377,26 @@ def t_tide(xin, **kwargs):
         xout = xin.copy()
         # Copies over NaN
         if secular[0:3] == 'lin':
-            for j1 in range(1, (nobs+1), nsub):
-                j2 = np.min([j1+nsub-1, nobs])
-                tslice = t[(j1-1):j2]
-                E = np.hstack([np.ones((j2-j1+1, 1)),
-                               np.cos(2*pi*np.outer(tslice, fu)),
-                               np.sin(2*pi*np.outer(tslice, fu)),
-                               np.dot(tslice, (2/dt/nobsu)).reshape(-1, 1)])
-                xout[(j1-1):j2] = np.dot(E, coef)
+            for j1 in range(1, (nobs + 1), nsub):
+                j2 = np.min([j1 + nsub - 1, nobs])
+                tslice = t[(j1 - 1):j2]
+                E = np.hstack([np.ones((j2 - j1 + 1, 1)),
+                               np.cos(2 * pi * np.outer(tslice, fu)),
+                               np.sin(2 * pi * np.outer(tslice, fu)),
+                               np.dot(tslice, (2 / dt / nobsu)).reshape(-1, 1)])
+                xout[(j1 - 1):j2] = np.dot(E, coef)
         else:
-            for j1 in range(1, (nobs+1), nsub):
-                j2 = np.min([j1+nsub-1, nobs])
-                tslice = t[(j1-1):j2]
-                E = np.hstack([np.ones((j2-j1+1, 1)),
-                               np.cos(2*pi*np.outer(tslice, fu)),
-                               np.sin(2*pi*np.outer(tslice, fu))])
-                xout[(j1-1):j2] = np.dot(E, coef)
+            for j1 in range(1, (nobs + 1), nsub):
+                j2 = np.min([j1 + nsub - 1, nobs])
+                tslice = t[(j1 - 1):j2]
+                E = np.hstack([np.ones((j2 - j1 + 1, 1)),
+                               np.cos(2 * pi * np.outer(tslice, fu)),
+                               np.sin(2 * pi * np.outer(tslice, fu))])
+                xout[(j1 - 1):j2] = np.dot(E, coef)
 
     # Check variance explained
     # (but do this with the original fit, and the residuals!)
-    xres = xin-xout
+    xres = xin - xout
 
     # Real time series
     varx = np.cov(np.real(xin[(gd)]))
@@ -423,7 +417,7 @@ def t_tide(xin, **kwargs):
     corrfac[corrfac > 100] = 1
     corrfac[corrfac < 0.01] = 1
     corrfac[np.isnan(corrfac)] = 1
-    ap = ap*np.squeeze(corrfac)
+    ap = ap * np.squeeze(corrfac)
     am = am * np.squeeze(np.conj(corrfac))
 
     ####################################################################
@@ -453,7 +447,7 @@ def t_tide(xin, **kwargs):
         nodcor = 'Greenwich phase computed, no nodal corrections'
     else:
         # No time, no latitude
-        nshape = (len(ju)+len(jinf), 1)
+        nshape = (len(ju) + len(jinf), 1)
         vu = np.zeros(nshape, dtype='float64')
         f = np.ones(nshape, dtype='float64')
         nodcor = 'Phases at central time'
@@ -466,43 +460,44 @@ def t_tide(xin, **kwargs):
     ii = np.flatnonzero(np.isfinite(jref))
     if ii:
         print('   Do inference corrections\\n')
-        snarg = np.dot(np.dot(nobsu*pi, (fi[(ii-1)]-fu[(jref[(ii-1)]-1)])), dt)
+        snarg = np.dot(
+            np.dot(nobsu * pi, (fi[(ii - 1)] - fu[(jref[(ii - 1)] - 1)])), dt)
         scarg = sin(snarg) / snarg
         if infamprat.shape[1] == 1:
             # For real time series
-            pearg = np.dot(2*pi,
-                           (vu[(mu+ii-1)] -
-                            vu[(jref[(ii-1)]-1)] +
-                            infph[(ii-1)]))/360
-            pcfac = infamprat[(ii-1)]*f[(mu+ii-1)] / \
-                f[(jref[(ii-1)]-1)]*exp(np.dot(i, pearg))
+            pearg = np.dot(2 * pi,
+                           (vu[(mu + ii - 1)] -
+                            vu[(jref[(ii - 1)] - 1)] +
+                            infph[(ii - 1)])) / 360
+            pcfac = infamprat[(ii - 1)] * f[(mu + ii - 1)] / \
+                f[(jref[(ii - 1)] - 1)] * exp(np.dot(i, pearg))
             pcorr = 1 + pcfac * scarg
             mcfac = conj(pcfac)
             mcorr = conj(pcorr)
         else:
             # For complex time series
-            pearg = np.dot(2*pi,
-                           (vu[(mu+ii-1)] -
-                            vu[(jref[(ii-1)]-1)] +
-                            infph[(ii-1), 0]))/360
-            pcfac = infamprat[(ii-1), 0]*f[(mu+ii-1)] / \
-                f[(jref[(ii-1)]-1)]*exp(np.dot(i, pearg))
+            pearg = np.dot(2 * pi,
+                           (vu[(mu + ii - 1)] -
+                            vu[(jref[(ii - 1)] - 1)] +
+                            infph[(ii - 1), 0])) / 360
+            pcfac = infamprat[(ii - 1), 0] * f[(mu + ii - 1)] / \
+                f[(jref[(ii - 1)] - 1)] * exp(np.dot(i, pearg))
             pcorr = 1 + pcfac * scarg
-            mearg = np.dot(-2*pi,
-                           (vu[(mu+ii-1)] -
-                            vu[(jref[(ii-1)]-1)] +
-                            infph[(ii-1), 1]))/360
-            mcfac = infamprat[(ii-1), 1]*f[(mu+ii-1)] / \
-                f[(jref[(ii-1)]-1)]*exp(np.dot(i, mearg))
-            mcorr = 1+mcfac*scarg
-        ap[(jref[(ii-1)]-1)] = ap[(jref[(ii-1)]-1)] / pcorr
+            mearg = np.dot(-2 * pi,
+                           (vu[(mu + ii - 1)] -
+                            vu[(jref[(ii - 1)] - 1)] +
+                            infph[(ii - 1), 1])) / 360
+            mcfac = infamprat[(ii - 1), 1] * f[(mu + ii - 1)] / \
+                f[(jref[(ii - 1)] - 1)] * exp(np.dot(i, mearg))
+            mcorr = 1 + mcfac * scarg
+        ap[(jref[(ii - 1)] - 1)] = ap[(jref[(ii - 1)] - 1)] / pcorr
         # Changes to existing constituents
-        ap = np.array([ap, ap[(jref[(ii-1)]-1)]*pcfac]).reshape(1, -1)
+        ap = np.array([ap, ap[(jref[(ii - 1)] - 1)] * pcfac]).reshape(1, -1)
         # Inferred constituents
-        am[(jref[(ii-1)]-1)] = am[(jref[(ii-1)]-1)] / mcorr
-        am = np.array([am, am[(jref[(ii-1)]-1)]*mcfac]).reshape(1, -1)
-        fu = np.array([fu, fi[(ii-1)]]).reshape(1, -1)
-        nameu = np.array([nameu, namei[(ii-1), :]]).reshape(1, -1)
+        am[(jref[(ii - 1)] - 1)] = am[(jref[(ii - 1)] - 1)] / mcorr
+        am = np.array([am, am[(jref[(ii - 1)] - 1)] * mcfac]).reshape(1, -1)
+        fu = np.array([fu, fi[(ii - 1)]]).reshape(1, -1)
+        nameu = np.array([nameu, namei[(ii - 1), :]]).reshape(1, -1)
 
     ####################################################################
     # --------------Error Bar Calculations------------------------------
@@ -553,8 +548,8 @@ def t_tide(xin, **kwargs):
         # so first column of AP/M holds ap/m).
 
         # Angle/magnitude form:
-        epsp = np.angle(AP)*180/pi
-        epsm = np.angle(AM)*180/pi
+        epsp = np.angle(AP) * 180 / pi
+        epsm = np.angle(AM) * 180 / pi
 
         ap = np.absolute(AP)
         am = np.absolute(AM)
@@ -581,7 +576,7 @@ def t_tide(xin, **kwargs):
             # a factor of 2 here somewhere but it only works this way!
             # <shrug>
 
-            emaj, emin, einc, epha = errell(ap+am, np.dot(1j, (ap-am)),
+            emaj, emin, einc, epha = errell(ap + am, np.dot(1j, (ap - am)),
                                             ercx, ercx, eicx, eicx)
             epsp = np.dot(np.angle(ap), 180) / pi
             epsm = np.dot(np.angle(am), 180) / pi
@@ -600,9 +595,9 @@ def t_tide(xin, **kwargs):
     fmin = aap - aam
     # minor axis
 
-    gp = np.mod(np.repeat(vu, nreal).reshape(vu.shape[0], nreal)-epsp, 360)
+    gp = np.mod(np.repeat(vu, nreal).reshape(vu.shape[0], nreal) - epsp, 360)
     # pos. Greenwich phase in deg.
-    gm = np.mod(np.repeat(vu, nreal).reshape(vu.shape[0], nreal)+epsm, 360)
+    gm = np.mod(np.repeat(vu, nreal).reshape(vu.shape[0], nreal) + epsm, 360)
     # neg. Greenwich phase in deg.
     finc = ((epsp + epsm) / 2)
     finc[:, 0] = np.mod(finc[:, 0], 180)
@@ -623,10 +618,10 @@ def t_tide(xin, **kwargs):
     if errcalc.endswith('boot'):
         def booterrcalc(para, nreal):
             errval = np.multiply(
-                      np.median(
-                       np.absolute(
-                        para-(np.median(para, 1).reshape(-1, 1) *
-                              np.ones([1, nreal]))), 1)/0.6375, 1.96)
+                np.median(
+                    np.absolute(
+                        para - (np.median(para, 1).reshape(-1, 1) *
+                                np.ones([1, nreal]))), 1) / 0.6375, 1.96)
             return errval
 
         emaj = booterrcalc(fmaj, nreal)
@@ -651,9 +646,9 @@ def t_tide(xin, **kwargs):
     # Sort results by frequency (needed if anything has been inferred
     # since these are stuck at the end of the list by code above).
     if any(np.isfinite(jref)):
-        fu, I = sort(fu)
-        nameu = nameu[(I-1), :]
-        tidecon = tidecon[(I-1), :]
+        fu, I = np.sort(fu)
+        nameu = nameu[(I - 1), :]
+        tidecon = tidecon[(I - 1), :]
     snr = (tidecon[:, 0] / tidecon[:, 1]) ** 2
     # signal to noise ratio
     # --------Generate a 'prediction' using significant constituents----
@@ -662,10 +657,10 @@ def t_tide(xin, **kwargs):
         if lat.size != 0 & stime.size != 0:
             # This does not account for latitude,
             # functionality not added to t_predic yet.
-            xout = t_predic(stime + np.array([range(nobs)])*dt/24.0,
+            xout = t_predic(stime + np.array([range(nobs)]) * dt / 24.0,
                             nameu, fu, tidecon, synth=synth)
         elif (stime.size != 0):
-            xout = t_predic(stime + np.array([range(nobs)])*dt/24.0,
+            xout = t_predic(stime + np.array([range(nobs)]) * dt / 24.0,
                             nameu, fu, tidecon, synth=synth)
         else:
             xout = t_predic(t / 24.0, nameu, fu, tidecon, synth=synth)

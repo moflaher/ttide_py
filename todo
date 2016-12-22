@@ -1,0 +1,5 @@
+* Add <Filename> support to 'out_style' of t_tide.
+* Add functionality to specify the Rayleigh criteria as a list of
+        strings. The docstring should be updated.
+* Clarify what infiname and infirefname are in the docstring.
+* tests should compare results to known values (i.e. from Matlab version)
