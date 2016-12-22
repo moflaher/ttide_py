@@ -71,7 +71,7 @@ def constituents(minres, constit, shallow, infname, infref, centraltime):
 # const.name(ju[(jrm[(ick -1)] -1)], :))
                 ju[(jrm-1)] = np.array([])
 
-    if constit.size != 0:
+    if constit.size:
         # Selected if constituents are specified in input.
         ju = np.array([], dtype=int)
         for k in range(0, (constit.shape[0])):

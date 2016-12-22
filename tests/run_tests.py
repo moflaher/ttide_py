@@ -44,7 +44,7 @@ def run_tests():
     print()
 
     # No output test case
-    [nameu, freq, tidecon, xout] = t_tide(ein, output=False)
+    [nameu, freq, tidecon, xout] = t_tide(ein, out_style=None)
 
     print()
     print('*' * 80)
@@ -114,7 +114,7 @@ def run_tests():
     print()
 
     # No output test case
-    [nameu, freq, tidecon, xout] = t_tide(uvin, output=False)
+    [nameu, freq, tidecon, xout] = t_tide(uvin, out_style=None)
     print('No output test case')
 
     print()

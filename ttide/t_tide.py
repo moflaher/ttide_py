@@ -5,199 +5,192 @@ from .t_vuf import t_vuf
 from . import t_utils as tu
 from .t_predic import t_predic
 
+pi = np.pi
+
 
 np.set_printoptions(precision=8, suppress=True)
 
 
-def t_tide(xin, **kwargs):
-    """T_TIDE Harmonic analysis of a time series
-     [NAME,FREQ,TIDECON,XOUT]=T_TIDE(XIN) computes the tidal analysis
-     of the (possibly complex) time series XIN.
+def t_tide(xin, dt=1, stime=[], lat=[],
+           out_style='classic',
+           corr_fs=[0, 1e6], corr_fac=[1, 1],
+           secular='mean',
+           infiname=[], infirefname=[],
+           ray=1,
+           shallownames=[], constitnames=[],
+           errcalc='cboot', synth=2,
+           lsq='best'):
+    """T_TIDE Harmonic analysis of a time series.
 
-     [TIDESTRUC,XOUT]=T_TIDE(XIN) returns the analysis information in
-     a structure formed of NAME, FREQ, and TIDECON.
+    Parameters
+    ----------
+    xin : array_like
+       can be real (e.g. for elevations), or complex (U + 1j * V)
+       for eastward velocity U and northward velocity V.
 
-     XIN can be scalar (e.g. for elevations), or complex ( =U+sqrt(-1)*V
-     for eastward velocity U and northward velocity V.
+    dt : float
+       Sampling interval in hours, default = 1.
 
-     Further inputs are optional, and are specified as property/value pairs
-     [...]=T_TIDE(XIN,property,value,property,value,...,etc.)
+    stime : float (mpl_datenum)
+       The start time of the series, in matplotlib_datenum format (default empty).
 
-     These properties are:
+    lat : array_like? of float (floats?)
+       decimal degrees (+north) (default: none).
 
-           'interval'       Sampling interval (hours), default = 1.
+    out_style : {None, 'classic', 'pandas'}
+       where to send printed output
+         None      - no printed output
+         'classic' - to screen in classic-mode (default)
+         'pandas'  - to screen in pandas-like mode.
 
-       The next two are required if nodal corrections are to be computed,
-       otherwise not necessary. If they are not included then the reported
-       phases are raw constituent phases at the central time.
+    corr_fs : array_like
+        frequencies of the pre-filter transfer function (see note on
+        pre-filtering)
+    corr_fac : array_like (possible complex)
+        correction factor magnitudes (see note on pre-filtering)
 
-       If your time series is longer than 18.6 years then nodal corrections
-       are not made -instead we fit directly to all satellites (start time
-       is then just used to generate Greenwich phases).
+    secular : {'mean', 'linear'}
+      Adjustment for long-term behavior ("secular" behavior).
+           'mean'    - assume constant offset (default).
+           'linear'  - get linear trend.
 
-           'start time'     [year,month,day,hour,min,sec]
-                            - min,sec are optional OR
-                            decimal day (matlab DATENUM scalar)
-           'latitude'       decimal degrees (+north) (default: none).
+    infiname : list-like of names of consituents to be inferred
+        Unclear what a more specific docstring should be. Clarify docs here.
 
-       Where to send the output.
-           'output'         where to send printed output:
-                            'none'    (no printed output)
-                            'screen'  (to screen) - default
-                            FILENAME   (to a file)
+    infirefname : list-like of names of references
+        Unclear what a more specific docstring should be. Clarify docs here.
 
-       Correction factor for prefiltering.
-           'prefilt'        FS,CORR
-                            If the time series has been passed through
-                            a pre-filter of some kind (say, to reduce the
-                            low-frequency variability), then the analyzed
-                            constituents will have to be corrected for
-                            this. The correction transfer function
-                            (1/filter transfer function) has (possibly
-                            complex) magnitude CORR at frequency FS (cph).
-                            Corrections of more than a factor of 100 are
-                            not applied; it is assumed these refer to tidal
-                            constituents that were intentionally filtered
-                            out, e.g., the fortnightly components.
+    ray : float
+        The Rayleigh criteria (default: 1)
 
-       Adjustment for long-term behavior ("secular" behavior).
-           'secular'        'mean'   - assume constant offset (default).
-                            'linear' - get linear trend.
+    shallownames : list-like of strings
+        The names of shallow-water constituents to analyze.
 
-       Inference of constituents.
-           'inference'      NAME,REFERENCE,AMPRAT,PHASE_OFFSET
-                            where NAME is an array of the names of
-                            constituents to be inferred, REFERENCE is an
-                            array of the names of references, and AMPRAT
-                            and PHASE_OFFSET are the amplitude factor and
-                            phase offset (in degrees)from the references.
-                            NAME and REFERENCE are Nx4 (max 4 characters
-                            in name), and AMPRAT and PHASE_OFFSET are Nx1
-                            (for scalar time series) and Nx2 for vector
-                            time series (column 1 is for + frequencies and
-                            column 2 for - frequencies).
-                            NB - you can only infer ONE unknown constituent
-                            per known constituent (i.e. REFERENCE must not
-                            contain multiple instances of the same name).
+    errcalc : string
+        Method to use for calculation of confidence limits:
+            'wboot' - Boostrapped confidence intervals based on a
+                      correlated bivariate white-noise model.
+            'cboot' - Boostrapped confidence intervals based on an
+                      uncorrelated bivariate coloured-noise model
+                      (default).'
+           'linear' - Linearized error analysis that assumes an
+                      uncorrelated bivariate coloured noise model.
 
-       Shallow water constituents
-           'shallow'        NAME
-                            A matrix whose rows contain the names of
-                            shallow-water constituents to analyze.
+    synth : float
+        The signal-to-noise ratio of constituents to use for the
+        "predicted" tide (passed to t_predic, but note that the
+        default value is different).
+            0 - use all selected constituents
+           >0 - use only those constituents with a SNR greater than
+                that given (1 or 2 are good choices, 2 is the
+                default).
+           <0 - return result of least-squares fit (should be the same
+                as using '0', except that NaN-holes in original time
+                series will remain and mean/trend are included).
 
-       Resolution criterions for least-squares fit.
-           'rayleigh'       scalar - Rayleigh criteria, default = 1.
-                            Matrix of strings - names of constituents to
-                                       use (useful for testing purposes).
+    lsq : string
+        'direct'  - use A\ x fit
+        'normal'  - use (A'A)\(A'x) (may be necessary for very large
+                  input vectors since A'A is much smaller than A)
+          'best'  - automatically choose based on length of series
+                  (default).
 
-       Calculation of confidence limits.
-           'error'          'wboot'  - Boostrapped confidence intervals
-                                       based on a correlated bivariate
-                                       white-noise model.
-                            'cboot'  - Boostrapped confidence intervals
-                                       based on an uncorrelated bivariate
-                                       coloured-noise model (default).
-                            'linear' - Linearized error analysis that
-                                       assumes an uncorrelated bivariate
-                                       coloured noise model.
+    Returns
+    -------
 
-       Computation of "predicted" tide (passed to t_predic, but note that
-                                        the default value is different).
-           'synthesis'      0 - use all selected constituents
-                            scalar>0 - use only those constituents with a
-                                       SNR greater than that given (1 or 2
-                                       are good choices, 2 is the default).
-                                  <0 - return result of least-squares fit
-                                       (should be the same as using '0',
-                                       except that NaN-holes in original
-                                       time series will remain and mean/trend
-                                       are included).
+    nameu : list-like of strings
+        The constituents used
 
-       Least squares soln computational efficiency parameter
-        'lsq'        'direct'  - use A\ x fit
-                'normal'  - use (A'A)\(A'x) (may be necessary
-                        for very large input vectors since
-                                       A'A is much smaller than A)
-                'best'      - automatically choose based on
-                        length of series (default).
+    fu : array_like (float)
+        frequency of tidal constituents (cycles/hr)
 
-           It is possible to call t_tide without using property names,
-           in which case the assumed calling sequence is
+    tidecon : array_like
+        If xin is complex (vector), the columns are:
+          [fmaj, emaj, fmin, emin, finc, einc, pha, epha]
+        If xin is real (scalar), the columns are:
+          [fmaj, emaj, pha, epha]
+        These variables are:
+           fmaj, fmin - amplitudes of the constituent major
+                        and minor axes (same units as xin)
+           emaj, emin - 95 confidence intervals for fmaj, fmin
+           finc       - ellipse orientations (degrees)
+           einc       - 95 confidence intervals for finc
+           pha        - constituent phases (degrees relative to Greenwich)
+           epha       - 95 confidence intervals for pha
 
-              T_TIDE(XIN,INTERVAL,START_TIME,LATITUDE,RAYLEIGH)
+    xout : array_like
+        The tidal prediction (same size as xin)
 
+    Notes
+    -----
 
-      OUTPUT:
+    This function is based on the Matlab T_TIDE toolbox by Rich Pawlowicz [1]_.
 
-        nameu=list of constituents used
-        fu=frequency of tidal constituents (cycles/hr)
-        tidecon=[fmaj,emaj,fmin,emin,finc,einc,pha,epha] for vector xin
-               =[fmaj,emaj,pha,epha] for scalar (real) xin
-           fmaj,fmin - constituent major and minor axes (same units as xin)
-           emaj,emin - 95
-     confidence intervals for fmaj,fmin
-           finc - ellipse orientations (degrees)
-           einc - 95
-     confidence intervals for finc
-           pha - constituent phases (degrees relative to Greenwich)
-           epha - 95
-     confidence intervals for pha
-        xout=tidal prediction
+    `stime` and `lat` are required if nodal corrections are to be computed,
+    otherwise not necessary. If they are not included then the reported
+    phases are raw constituent phases at the central time.
 
-     Note: Although missing data can be handled with NaN, it is wise not
-           to have too many of them. If your time series has a lot of
-           missing data at the beginning and/or end, then truncate the
-           input time series.  The Rayleigh criterion is applied to
-           frequency intervals calculated as the inverse of the input
-           series length.
+    Currently, timeseries longer than 18.6 years are not
+    supported. (The Matlab version does support this.)
+
+    PRE-FILTERING
+    .............
+    If the time series has been passed through a pre-filter of some
+    kind (say, to reduce the low-frequency variability), then the
+    analyzed constituents will have to be corrected for this. The
+    correction transfer function (1/filter transfer function) has
+    (possibly complex) magnitude `corr_fac` at frequency `corr_fs`
+    (cph).  Corrections of more than a factor of 100 are not applied;
+    it is assumed these refer to tidal constituents that were
+    intentionally filtered out, e.g., the fortnightly components.
+
+    NaN-Values
+    ..........
+    Although missing data can be handled with NaN, it is wise not to
+    have too many of them. If your time series has a lot of missing
+    data at the beginning and/or end, then truncate the input time
+    series.  The Rayleigh criterion is applied to frequency intervals
+    calculated as the inverse of the input series length.
+
+    .. [1] Pawlowicz, R., B. Beardsley, and S. Lentz, "Classical Tidal
+       "Harmonic Analysis Including Error Estimates in MATLAB
+       using T_TIDE", Computers and Geosciences, 28, 929-937 (2002).
+
     """
 
-    dt = 1
-    stime = np.array([])
-    lat = np.array([])
-    output = True
-    ray = 1
-    fid = 1
-    corr_fs = np.array([0, 1000000.0])
-    corr_fac = np.array([1, 1])
-    secular = 'mean'
-    infiname = np.array([])
-    infirefname = np.array([])
-    shallownames = np.array([])
-    constitnames = np.array([])
-    errcalc = 'cboot'
-    synth = 2
-    lsq = 'best'
-    k = 1
-    pi = np.pi
-    out_style = 'classic'
-    isComplex = False
+    # ### This text needs to be re-included in the docstring once this
+    # ### is supported.
+    # If your time series is longer than 18.6 years then nodal corrections
+    # are not made -instead we fit directly to all satellites (start time
+    # is then just used to generate Greenwich phases).
 
-    # Use kargs to set values other then the defaults
-    if kwargs is not None:
-        for key, value in kwargs.items():
-            if (key == 'dt'):
-                dt = value
-            if (key == 'stime'):
-                stime = np.array(value)
-            if (key == 'lat'):
-                lat = np.array(value)
-            if (key == 'constitnames'):
-                constitnames = tu.fourpad(value)
-            if (key == 'shallownames'):
-                shallownames = tu.fourpad(value)
-            if (key == 'errcalc'):
-                errcalc = value
-            if (key == 'output'):
-                output = value
-            if (key == 'synth'):
-                synth = value
-            if (key == 'out_style'):
-                out_style = tu.style_check(value)
-            if (key == 'secular'):
-                secular = value
-            if (key == 'rayleigh'):
-                ray = value
+    # ### This text came from the docstring on `infiname` and `infirefname`
+    # Inference of constituents.
+    #        'inference'      NAME,REFERENCE,AMPRAT,PHASE_OFFSET
+    #                         where NAME is an array of the names of
+    #                         constituents to be inferred, REFERENCE is an
+    #                         array of the names of references, and AMPRAT
+    #                         and PHASE_OFFSET are the amplitude factor and
+    #                         phase offset (in degrees)from the references.
+    #                         NAME and REFERENCE are Nx4 (max 4 characters
+    #                         in name), and AMPRAT and PHASE_OFFSET are Nx1
+    #                         (for scalar time series) and Nx2 for vector
+    #                         time series (column 1 is for + frequencies and
+    #                         column 2 for - frequencies).
+    #                         NB - you can only infer ONE unknown constituent
+    #                         per known constituent (i.e. REFERENCE must not
+    #                         contain multiple instances of the same name).
+
+    stime = np.array(stime)
+    lat = np.array(lat)
+    corr_fs = np.array(corr_fs)
+    corr_fac = np.array(corr_fac)
+    infiname = np.array(infiname)
+    infirefname = np.array(infirefname)
+    shallownames = tu.fourpad(np.array(shallownames))
+    constitnames = tu.fourpad(np.array(constitnames))
+
+    isComplex = False
 
     # Check to make sure that incoming data is a vector.
     inn = xin.shape
@@ -628,15 +621,13 @@ def t_tide(xin, **kwargs):
                             nameu, fu, tidecon, synth=synth)
         else:
             xout = t_predic(t / 24.0, nameu, fu, tidecon, synth=synth)
-    elif output:
-        print('   Returning fitted prediction\n')
 
     # Check variance explained (but now do this
     # with the synthesized fit) and the residuals!
     xres = xin[:] - xout[:]
 
     # -----------------Output results-----------------------------------
-    if output is not False:
+    if out_style:
         out = {}
         out['nobs'] = nobs
         out['ngood'] = ngood

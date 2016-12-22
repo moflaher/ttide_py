@@ -3,3 +3,6 @@
         strings. The docstring should be updated.
 * Clarify what infiname and infirefname are in the docstring.
 * tests should compare results to known values (i.e. from Matlab version)
+* Why is `lat` an array? Isn't this just a single value?
+* Add examples to docstrings?
+* Are 'names' required in t_predic? Why not use 'names' or 'freq'?
