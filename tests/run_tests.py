@@ -27,10 +27,12 @@ vin = 0.5 * np.cos(m2_freq * t)
 uvin = uin + 1j * vin
 
 
-def run_tests():
+def run_tests(test=True):
 
-    # Redirect stdout to a StringIO instance
-    sys.stdout = stdout = StringIO()
+    if test:
+        out_old = sys.stdout
+        # Redirect stdout to a StringIO instance
+        sys.stdout = stdout = StringIO()
 
     ########################################################################
     # Elevation Test Cases
@@ -154,7 +156,12 @@ def run_tests():
     # M2 tides with a starttime and latitude
     [nameu, freq, tidecon, xout] = t_tide(uvin, constitnames=['M2'], stime=768000, lat=45)
 
-    # Reassign sys.stdout to original value.
-    sys.stdout = sys.__stdout__
+    if test:
+        # Reassign sys.stdout to original value.
+        sys.stdout = out_old
+        assert tdata == stdout.getvalue()
 
-    assert tdata == stdout.getvalue()
+
+if __name__ == '__main__':
+    # I just want to print the output to stdout
+    run_tests(test=False)

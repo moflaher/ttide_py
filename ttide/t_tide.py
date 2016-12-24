@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division, print_function
 import numpy as np
 import scipy.interpolate as spi
 from .t_vuf import t_vuf
@@ -13,6 +13,7 @@ np.set_printoptions(precision=8, suppress=True)
 
 def t_tide(xin, dt=1, stime=[], lat=[],
            out_style='classic',
+           outfile=None,
            corr_fs=[0, 1e6], corr_fac=[1, 1],
            secular='mean',
            infiname=[], infirefname=[],
@@ -42,6 +43,11 @@ def t_tide(xin, dt=1, stime=[], lat=[],
          None      - no printed output
          'classic' - to screen in classic-mode (default)
          'pandas'  - to screen in pandas-like mode.
+
+    outfile : str or None
+       The filename to write to (default: None, do not write to a
+       file). This writes in format `out_style` ('classic' if
+       `out_style` is None).
 
     corr_fs : array_like
         frequencies of the pre-filter transfer function (see note on
@@ -627,7 +633,11 @@ def t_tide(xin, dt=1, stime=[], lat=[],
     xres = xin[:] - xout[:]
 
     # -----------------Output results-----------------------------------
-    if out_style:
+    if out_style or outfile:
+        if out_style:
+            outfunc = getattr(tu, out_style + '_style')
+        else:
+            outfunc = tu.classic_style
         out = {}
         out['nobs'] = nobs
         out['ngood'] = ngood
@@ -651,10 +661,11 @@ def t_tide(xin, dt=1, stime=[], lat=[],
         if stime.size != 0:
             out['stime'] = stime
 
-        if 'classic' in out_style:
-            tu.classic_style(out)
-        if 'pandas' in out_style:
-            tu.pandas_style(out)
+        if outfile:
+            with open(outfile, 'w') as fl:
+                fl.write(outfunc(out))
+        elif out_style:
+            print(outfunc(out), end='')
 
     xout = xout.reshape(inn[0], 1)
 

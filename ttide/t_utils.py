@@ -1,14 +1,16 @@
 from __future__ import division, print_function
 import numpy as np
-import os
-import scipy.interpolate as spi
 import scipy.signal as sps
 import sys
 import matplotlib.mlab as mplm
 from .t_getconsts import t_getconsts
-from .t_vuf import t_vuf
-import matplotlib as mpl
 import matplotlib.dates as dates
+
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
+
 
 np.set_printoptions(precision=8, suppress=True)
 
@@ -45,7 +47,7 @@ def constituents(minres, constit, shallow, infname, infref, centraltime):
         19/1/02 - typo fixed (thanks to  Zhigang Xu)
      Compute frequencies from astronomical considerations.
     """
-    if minres > 1 / (18.6*365.25*24):
+    if minres > 1 / (18.6 * 365.25 * 24):
         # Choose only resolveable pairs for short
         const, sat, cshallow = t_getconsts(centraltime)
         # Time series
@@ -55,21 +57,21 @@ def constituents(minres, constit, shallow, infname, infref, centraltime):
         const, sat, cshallow = t_get18consts(centraltime)
 
         ju = np.array([range(2,
-                             (max(const['freq'].shape)+1))]).reshape(1, -1).T
+                             (max(const['freq'].shape) + 1))]).reshape(1, -1).T
         # Skip Z0
         for ff in range(1, 3):
             # loop twice to make sure of neightbouring pairs
-            jck = np.flatnonzero(diff(const['freq'][ju]) < minres)
+            jck = np.flatnonzero(np.diff(const['freq'][ju]) < minres)
             if (max(jck.shape) > 0):
                 jrm = jck
-                jrm = jrm + (abs(const['doodsonamp'][ju[(jck+1-1)]]) <
-                             abs(const['doodsonamp'][ju[(jck-1)]]))
+                jrm = jrm + (abs(const['doodsonamp'][ju[(jck + 1 - 1)]]) <
+                             abs(const['doodsonamp'][ju[(jck - 1)]]))
 # disp('  Warning! Following constituent pairs violate Rayleigh criterion')
 #               for ick in range(1, (max(jck.shape) +1)):
 #                    disp('     ' + const.name(ju[(jck[(ick -1)] -1)], :)
 # + ' vs ' + const.name(ju[(jck[(ick -1)] + 1 -1)], :) + ' - not using ' +
 # const.name(ju[(jrm[(ick -1)] -1)], :))
-                ju[(jrm-1)] = np.array([])
+                ju[(jrm - 1)] = np.array([])
 
     if constit.size:
         # Selected if constituents are specified in input.
@@ -121,26 +123,26 @@ def constituents(minres, constit, shallow, infname, infref, centraltime):
     if infname.size != 0:
         fi = np.zeros(shape=(infname.shape[0], 1), dtype='float64')
         namei = np.zeros(shape=(infname.shape[0], 4), dtype='float64')
-        jinf = np.zeros(shape=(infname.shape[0], 1), dtype='float64') + NaN
-        jref = np.zeros(shape=(infname.shape[0], 1), dtype='float64') + NaN
-        for k in range(1, (infname.shape[0]+1)):
-            j1 = strmatch(infname[(k-1), :], const.name)
+        jinf = np.zeros(shape=(infname.shape[0], 1), dtype='float64') + np.NaN
+        jref = np.zeros(shape=(infname.shape[0], 1), dtype='float64') + np.NaN
+        for k in range(1, (infname.shape[0] + 1)):
+            j1 = strmatch(infname[(k - 1), :], const.name)
             if (0 in j1.shape):
-                disp("Can't recognize name" +
-                     infname[(k-1), :] + ' for inference')
+                print("Can't recognize name" +
+                      infname[(k - 1), :] + ' for inference')
             else:
-                jinf[(k-1)] = j1
-                fi[(k-1)] = const['freq'][j1]
-                namei[(k-1), :] = const['name'][j1, :]
-                j1 = strmatch(infref[(k-1), :], nameu)
+                jinf[(k - 1)] = j1
+                fi[(k - 1)] = const['freq'][j1]
+                namei[(k - 1), :] = const['name'][j1, :]
+                j1 = strmatch(infref[(k - 1), :], nameu)
                 if (0 in j1.shape):
-                    disp("Can't recognize name " + infref[(k-1), :] +
-                         ' for as a reference for inference')
+                    print("Can't recognize name " + infref[(k - 1), :] +
+                          ' for as a reference for inference')
                 else:
-                    jref[(k-1)] = j1
-                    print('   Inference of ' + namei[(k-1), :] +
-                          ' using ' + nameu[(j1-1), :] + '\\n')
-        jinf[(isnan(jref)-1)] = NaN
+                    jref[(k - 1)] = j1
+                    print('   Inference of ' + namei[(k - 1), :] +
+                          ' using ' + nameu[(j1 - 1), :] + '\\n')
+        jinf[(isnan(jref) - 1)] = np.NaN
     return nameu, fu, ju, namei, fi, jinf, jref
 
 
@@ -154,11 +156,11 @@ def fixgaps(x):
     y = x
     bd = np.isnan(x)
     gd = np.flatnonzero(~bd)
-    idx = np.array([range(1, ((np.min(gd)-1)+1)),
-                    range((np.max(gd) + 1), (len(gd)))]).reshape(1, -1)-1
+    idx = np.array([range(1, ((np.min(gd) - 1) + 1)),
+                    range((np.max(gd) + 1), (len(gd)))]).reshape(1, -1) - 1
     if idx.size != 0:
         bd[idx] = 0
-        y[(bd-1)] = interp1(gd, x[(gd-1)], np.flatnonzero(bd))
+        y[(bd - 1)] = interp1(gd, x[(gd - 1)], np.flatnonzero(bd))
 
     return y
 
@@ -170,11 +172,11 @@ def cluster(ain, clusang):
     """
 
     makearray = (ain - np.repeat(ain[:, 0],
-                 ain.shape[1]).reshape(ain.shape[0], ain.shape[1]))
+                                 ain.shape[1]).reshape(ain.shape[0], ain.shape[1]))
     ii = makearray > clusang / 2
     ain[(ii)] = ain[(ii)] - clusang
     ii = (ain - np.repeat(ain[:, 0],
-          ain.shape[1]).reshape(ain.shape[0], ain.shape[1])) < - clusang / 2
+                          ain.shape[1]).reshape(ain.shape[0], ain.shape[1])) < - clusang / 2
     ain[(ii)] = ain[(ii)] + clusang
     return ain
 
@@ -206,7 +208,7 @@ def noise_realizations(xres, fu, dt, nreal, errcalc):
 
     nfband = fband.shape[0]
     Mat = np.zeros(shape=(4, 4, nfband), dtype='float64')
-    for k in range(1, (nfband+1)):
+    for k in range(1, (nfband + 1)):
         # The B matrix represents the covariance matrix for the vector
         # [Re{ap} Im{ap} Re{am} Im{am}]' where Re{} and Im{} are real and
         # imaginary parts, and ap/m represent the complex constituent
@@ -216,9 +218,9 @@ def noise_realizations(xres, fu, dt, nreal, errcalc):
         # This is adapted here for "locally white" conditions, but I'm still
         # not sure how to handle a complex sxy, so this is set to zero
         # right now.
-        p = (Pxrave[(k-1)] + Pxiave[(k-1)]) / 2
-        d = (Pxrave[(k-1)] - Pxiave[(k-1)]) / 2
-        sxy = Pxcave[(k-1)]
+        p = (Pxrave[(k - 1)] + Pxiave[(k - 1)]) / 2
+        d = (Pxrave[(k - 1)] - Pxiave[(k - 1)]) / 2
+        sxy = Pxcave[(k - 1)]
         B = np.hstack([p, 0, d, sxy,
                        0, p, sxy, -d,
                        d, sxy, p, 0,
@@ -236,7 +238,7 @@ def noise_realizations(xres, fu, dt, nreal, errcalc):
         # total cludge to deal with bad zeroing in eigh
         D[((D < 0) & (D > -0.00000000001))] = 0
 
-        Mat[:, :, (k-1)] = np.dot(V, np.diag(np.sqrt(D)))
+        Mat[:, :, (k - 1)] = np.dot(V, np.diag(np.sqrt(D)))
         # print Mat
     # Generate realizations for the different analyzed constituents.
     N = np.zeros(shape=(4, nreal), dtype='float64')
@@ -248,9 +250,9 @@ def noise_realizations(xres, fu, dt, nreal, errcalc):
                                               fu[k] < fband[:, 1]], axis=0)))
         N = np.hstack([np.zeros(4,).reshape(-1, 1),
                        np.dot(np.squeeze(Mat[:, :, l]),
-                       np.random.randn(4, nreal-1))])
-        NP[(k), :] = (N[0, :]+1j*N[1, :])
-        NM[(k), :] = (N[2, :]+1j*N[3, :])
+                              np.random.randn(4, nreal - 1))])
+        NP[(k), :] = (N[0, :] + 1j * N[1, :])
+        NM[(k), :] = (N[2, :] + 1j * N[3, :])
 
     return NP, NM
 
@@ -287,12 +289,12 @@ def residual_spectrum(xres, fu, dt):
 
     # Spectral estimate (takes real time series only).
     fx, Pxr = sps.welch(np.real(xres), window=np.hanning(nx),
-                        noverlap=np.ceil(nx / 2), nfft=nx, fs=1/dt, nperseg=nx)
+                        noverlap=np.ceil(nx / 2), nfft=nx, fs=1 / dt, nperseg=nx)
     Pxr = Pxr / 2 / dt
     fx, Pxi = sps.welch(np.imag(xres), window=np.hanning(nx),
-                        noverlap=np.ceil(nx / 2), nfft=nx, fs=1/dt, nperseg=nx)
+                        noverlap=np.ceil(nx / 2), nfft=nx, fs=1 / dt, nperseg=nx)
     Pxi = Pxi / 2 / dt
-    Pxc, fx = mplm.csd(np.real(xres), np.imag(xres), nx, 1/dt)
+    Pxc, fx = mplm.csd(np.real(xres), np.imag(xres), nx, 1 / dt)
 
     # matlab cpsd returns only reals when given a real xres have to
     # test for complex and maybe change to ifstatement
@@ -314,10 +316,10 @@ def residual_spectrum(xres, fu, dt):
     # problem with no data in lowest band).
     # Divide by nx to get power per frequency bin, and multiply by 2
     # to account for positive and negative frequencies.
-    for k in range(nfband-1, -1, - 1):
+    for k in range(nfband - 1, -1, - 1):
         jband = np.flatnonzero(np.all(np.vstack([fx >= fband[(k), 0],
                                                  fx <= fband[(k), 1],
-                                                np.isfinite(Pxr)]).T, axis=1))
+                                                 np.isfinite(Pxr)]).T, axis=1))
         if any(jband):
             Pxrave[k] = np.dot(np.mean(Pxr[(jband)]), 2) / nx
             Pxiave[k] = np.dot(np.mean(Pxi[(jband)]), 2) / nx
@@ -430,116 +432,112 @@ def errell(cxi, sxi, ercx, ersx, ercy, ersy):
     return emaj, emin, einc, epha
 
 
-def style_check(style):
-
-    if (style == 'pandas'):
-        try:
-            import pandas as pd
-        except ImportError:
-            print('Cannot import pandas using classic output.')
-            style = 'classic'
-
-    return style
-
-
-def print_variance(out):
+def variance_str(out):
     '''Takes the out dictionary and prints the variance text'''
 
-    x = np.cov(np.real(out['xingd']))
-    xp = np.cov(np.real(out['xoutgd']))
-    xr = np.cov(np.real(out['xresgd']))
-    z0r = np.real(out['z0'])
-    dz0r = np.real(out['dz0'])
+    x = np.var(out['xingd'].real, ddof=1)
+    xp = np.var(out['xoutgd'].real, ddof=1)
+    xr = np.var(out['xresgd'].real, ddof=1)
+    z0r = out['z0'].real
+    dz0r = out['dz0'].real
 
-    print('x0= %.3g' % z0r, end="  ")
-    print('xtrend= %.3g' % dz0r)
-    print('var(data)= %.2f' % x, end=" " * 4)
-    print('var(prediction)= %.2f' % xp, end=" " * 4)
-    print('var(residual)= %.2f' % xr)
-    print('var(prediction)/var(data) (%%) = %.1f\n' % (100*xp/x))
+    outstr = 'x0= {:.3g}  xtrend= {:.3g}\n'.format(z0r, dz0r)
+    outstr += ('var(data)= {:.2f}' + ' ' * 4 +
+               'var(prediction)= {:.2f}' + ' ' * 4 +
+               'var(residual)= {:.2f}\n').format(x, xp, xr)
+    outstr += 'var(prediction)/var(data) (%%) = %.1f\n\n' % (100 * xp / x)
 
-    if ('complex' in out['xin'].dtype.name):
-        y = np.cov(np.imag(out['xingd']))
-        yp = np.cov(np.imag(out['xoutgd']))
-        yr = np.cov(np.imag(out['xresgd']))
-        z0r = np.imag(out['z0'])
-        dz0r = np.imag(out['dz0'])
+    if np.iscomplexobj(out['xin']):
+        y = np.var(out['xingd'].imag, ddof=1)
+        yp = np.var(out['xoutgd'].imag, ddof=1)
+        yr = np.var(out['xresgd'].imag, ddof=1)
+        z0r = out['z0'].imag
+        dz0r = out['dz0'].imag
 
-        print('y0= %.3g' % z0r, end="  ")
-        print('ytrend= %.3g' % dz0r)
-        print('var(data)= %.2f' % y, end=" " * 4)
-        print('var(prediction)= %.2f' % yp, end=" " * 4)
-        print('var(residual)= %.2f' % yr)
-        print('var(prediction)/var(data) (%%) = %.1f\n' % (100*yp/y))
+        outstr += 'y0= {:.3g}  ytrend= {:.3g}\n'.format(z0r, dz0r)
+        outstr += ('var(data)= {:.2f}' + ' ' * 4 +
+                   'var(prediction)= {:.2f}' + ' ' * 4 +
+                   'var(residual)= {:.2f}\n').format(y, yp, yr)
+        outstr += 'var(prediction)/var(data) (%) = {:.1f}\n\n'.format(
+            100 * yp / y)
 
-        print('total_var= %f' % (x+y), end=" ")
-        print('pred_var=  %f' % (xp+yp))
-        print('total_var/pred_var (%%) =  %.1f  ' % (100*(xp+yp)/(x+y)))
+        outstr += 'total_var= {:f} pred_var=  {:f}\n'.format(
+            (x + y), (xp + yp))
+        outstr += 'total_var/pred_var (%) =  {:.1f}  \n'.format(
+            100 * (xp + yp) / (x + y))
+    return outstr
 
 
 def classic_style(out):
-        print('-' * 35)
+    outstr = '-' * 35 + '\n'
+    outstr += ('nobs = %d \nngood = %d \nrecord length (days) = %.2f' %
+               (out['nobs'], out['ngood'],
+                np.dot(max(out['xin'].shape), out['dt']) / 24)) + '\n'
+    if ('stime' in out):
+        outstr += 'start time: {}\n'.format(
+            dates.num2date(out['stime']).strftime('%Y-%m-%d %H:%M:%S'))
+    outstr += ('rayleigh criterion = %.1f\n\n' % out['ray'])
+    outstr += ('%s\n' % out['nodcor'])
+    outstr += variance_str(out)
 
-        print('nobs = %d \nngood = %d \nrecord length (days) = %.2f' %
-              (out['nobs'], out['ngood'],
-               np.dot(max(out['xin'].shape), out['dt']) / 24))
-        if ('stime' in out):
-            print('start time: %s' %
-                  dates.num2date(out['stime']).strftime('%Y-%m-%d %H:%M:%S'))
-        print('rayleigh criterion = %.1f\n' % out['ray'])
-        print('%s' % out['nodcor'])
-        print_variance(out)
-
-        if out['isComplex']:
-            print(' ' * 32 + 'ellipse parameters with 95 % CI estimates')
-            print(' tide     freq        major      emaj' +
-                  '      minor      emin     inc      einc' +
-                  '      pha       epha      snr')
-            for k, fuk in enumerate(out['fu']):
-                outstr = (out['nameu'][k].decode(enc), fuk,
-                          out['tidecon'][k, 0], out['tidecon'][k, 1],
-                          out['tidecon'][k, 2], out['tidecon'][k, 3],
-                          out['tidecon'][k, 4], out['tidecon'][k, 5],
-                          out['tidecon'][k, 6], out['tidecon'][k, 7],
-                          out['snr'][k])
-                if out['snr'][k] > out['synth']:
-                    print(('* %s  %9.7f  %9.4f  %8.3f %9.4f  %8.3f' +
-                          ' %8.2f  %8.2f  %8.2f  %8.2f %8.2g') % outstr)
-                else:
-                    print(('  %s  %9.7f  %9.4f  %8.3f %9.4f  %8.3f' +
-                          ' %8.2f  %8.2f  %8.2f  %8.2f %8.2g') % outstr)
-        else:
-            print('        tidal amplitude and phase with 95 % CI estimates')
-            print(' tide      freq        amp      amp_err' +
-                  '   pha      pha_err    snr')
-            for k, fuk in enumerate(out['fu']):
-                outstr = (out['nameu'][k].decode(enc), fuk,
-                          out['tidecon'][k, 0], out['tidecon'][k, 1],
-                          out['tidecon'][k, 2], out['tidecon'][k, 3],
-                          out['snr'][k])
-                if out['snr'][k] > out['synth']:
-                    print('* %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' %
-                          outstr)
-                else:
-                    print('  %s  %9.7f  %9.4f  %8.3f  %8.2f  %8.2f  %8.2g' %
-                          outstr)
+    if out['isComplex']:
+        outstr += (' ' * 32 + 'ellipse parameters with 95 % CI estimates\n')
+        outstr += (' tide     freq        major      emaj' +
+                   '      minor      emin     inc      einc' +
+                   '      pha       epha      snr\n')
+        fmt = ('{star} {name}  {fuk:9.7f}  '
+               '{c[0]:9.4f}  {c[1]:8.3f} {c[2]:9.4f}  {c[3]:8.3f} '
+               '{c[4]:8.2f}  {c[5]:8.2f}  {c[6]:8.2f}  {c[7]:8.2f} '
+               '{snr:8.2g}\n')
+        for k, fuk in enumerate(out['fu']):
+            if out['snr'][k] > out['synth']:
+                star = '*'
+            else:
+                star = ' '
+            outstr += fmt.format(star=star,
+                                 name=out['nameu'][k].decode(enc),
+                                 fuk=fuk,
+                                 c=out['tidecon'][k],
+                                 snr=out['snr'][k])
+    else:
+        outstr += '        tidal amplitude and phase with 95 % CI estimates\n'
+        outstr += (' tide      freq        amp      amp_err' +
+                   '   pha      pha_err    snr\n')
+        fmt = ('{star} {name}  {fuk:9.7f}  '
+               '{c[0]:9.4f}  {c[1]:8.3f}  {c[2]:8.2f}  {c[3]:8.2f}  '
+               '{snr:8.2g}\n')
+        for k, fuk in enumerate(out['fu']):
+            if out['snr'][k] > out['synth']:
+                star = '*'
+            else:
+                star = ' '
+            outstr += fmt.format(star=star,
+                                 name=out['nameu'][k].decode(enc),
+                                 fuk=fuk,
+                                 c=out['tidecon'][k],
+                                 snr=out['snr'][k])
+    return outstr
 
 
 def pandas_style(out):
+    if pd is None:
+        # Unable to import pandas.
+        print("pandas is not available, falling back to out_style='classic'.")
+        return classic_style(out)
     spacer = 70
     if out['isComplex']:
         spacer = 116
-    print('=' * spacer)
+    outstr = '=' * spacer + '\n'
 
-    print('Number of observations = %d' % out['nobs'])
-    print('Number of observations used = %d' % out['ngood'])
-    print('Record length (days) = %.2f' % (out['nobs']*out['dt']/24.0))
+    outstr += ('Number of observations = %d' % out['nobs']) + '\n'
+    outstr += ('Number of observations used = %d' % out['ngood']) + '\n'
+    outstr += ('Record length (days) = %.2f' % (out['nobs'] * out['dt'] / 24.0)) + '\n'
 
     if ('stime' in out):
-        print('Start time: %s\n' %
-              dates.num2date(out['stime']).strftime('%Y-%m-%d %H:%M:%S'))
-    print('%s\n' % out['nodcor'])
-    print_variance(out)
+        outstr += ('Start time: %s\n' %
+                   dates.num2date(out['stime']).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
+    outstr += ('%s\n' % out['nodcor']) + '\n'
+    outstr += variance_str(out)
 
     names = np.array([name.decode(enc) for name in out['nameu']])
     fmt = {'Freq': '{:,.6f}'.format, 'Major': '{:,.2f}'.format,
@@ -552,15 +550,15 @@ def pandas_style(out):
     if out['isComplex']:
         colnames = ['Freq', 'Major', 'Major Err', 'Minor', 'Minor Err',
                     'Inc', 'Inc Err', 'Phase', 'Phase Err', 'SNR']
-        print(' ' * 35 + 'Ellipse parameters with 95 % CI estimates')
+        outstr += (' ' * 35 + 'Ellipse parameters with 95 % CI estimates') + '\n'
     else:
         colnames = ['Freq', 'Amp', 'Amp Err', 'Phase', 'Phase Err', 'SNR']
-        print(' ' * 12 + 'Tidal amplitude and phase with 95 % CI estimates')
+        outstr += (' ' * 12 + 'Tidal amplitude and phase with 95 % CI estimates') + '\n'
 
-    import pandas as pd
     dfdata = np.vstack([out['fu'], out['tidecon'].T, out['snr']]).T
     df = pd.DataFrame(dfdata, names, colnames)
     df.index.name = 'Tide'
-    print(df.to_string(col_space=10, formatters=fmt))
+    outstr += (df.to_string(col_space=10, formatters=fmt)) + '\n'
 
-    print('=' * spacer)
+    outstr += ('=' * spacer) + '\n'
+    return outstr
