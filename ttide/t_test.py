@@ -3,6 +3,9 @@ import numpy as np
 import os
 from .t_tide import t_tide
 
+# Initialize the pRNG so that it the results will always be identical.
+np.random.seed(29034230)
+
 # Build an M2 tidal series with 5m elevation
 ein = 5*np.cos(((2*np.pi/12.42))*np.arange(1001))
 
