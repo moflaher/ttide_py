@@ -14,6 +14,10 @@ import matplotlib.dates as dates
 enc = sys.stdout.encoding
 np.set_printoptions(precision=8, suppress=True)
 
+if enc is None:
+    # This is for piping/writing stdout to file, e.g. using '>'
+    enc = 'UTF-8'
+
 
 def fourpad(conin):
     conin = np.array(conin, dtype='|S4')
