@@ -10,9 +10,12 @@ from .t_vuf import t_vuf
 import matplotlib as mpl
 import matplotlib.dates as dates
 
-# Set encoding and output format
-enc = sys.stdout.encoding
 np.set_printoptions(precision=8, suppress=True)
+
+try:
+    enc = sys.stdout.encoding
+except AttributeError:
+    enc = 'UTF-8'
 
 if enc is None:
     # This is for piping/writing stdout to file, e.g. using '>'
