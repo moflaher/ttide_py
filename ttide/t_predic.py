@@ -5,7 +5,7 @@ from .t_vuf import t_vuf
 
 
 def t_predic(time, names, freq, tidecon,
-             lat=[], ltype='nodal', synth=0, **kwargs):
+             lat=[], ltype='nodal', synth=0):
     """T_PREDIC Tidal prediction from tidal consituents.
 
     Parameters

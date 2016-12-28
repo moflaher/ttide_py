@@ -361,17 +361,6 @@ def t_tide(xin, dt=1, stime=[], lat=[],
     # (but do this with the original fit, and the residuals!)
     xres = xin - xout
 
-    # Real time series
-    varx = np.cov(np.real(xin[(gd)]))
-    varxp = np.cov(np.real(xout[(gd)]))
-    varxr = np.cov(np.real(xres[(gd)]))
-
-    if isComplex:
-        # Complex time series
-        vary = np.cov(np.imag(xin[(gd)]))
-        varyp = np.cov(np.imag(xout[(gd)]))
-        varyr = np.cov(np.imag(xres[(gd)]))
-
     ####################################################################
     # ---------- Correct for prefiltering--------------------------------
     ####################################################################
@@ -425,7 +414,7 @@ def t_tide(xin, dt=1, stime=[], lat=[],
         print('   Do inference corrections\\n')
         snarg = np.dot(
             np.dot(nobsu * pi, (fi[(ii - 1)] - fu[(jref[(ii - 1)] - 1)])), dt)
-        scarg = sin(snarg) / snarg
+        scarg = np.sin(snarg) / snarg
         if infamprat.shape[1] == 1:
             # For real time series
             pearg = np.dot(2 * pi,
@@ -433,10 +422,10 @@ def t_tide(xin, dt=1, stime=[], lat=[],
                             vu[(jref[(ii - 1)] - 1)] +
                             infph[(ii - 1)])) / 360
             pcfac = infamprat[(ii - 1)] * f[(mu + ii - 1)] / \
-                f[(jref[(ii - 1)] - 1)] * exp(np.dot(i, pearg))
+                f[(jref[(ii - 1)] - 1)] * np.exp(np.dot(i, pearg))
             pcorr = 1 + pcfac * scarg
-            mcfac = conj(pcfac)
-            mcorr = conj(pcorr)
+            mcfac = np.conj(pcfac)
+            mcorr = np.conj(pcorr)
         else:
             # For complex time series
             pearg = np.dot(2 * pi,
@@ -444,14 +433,14 @@ def t_tide(xin, dt=1, stime=[], lat=[],
                             vu[(jref[(ii - 1)] - 1)] +
                             infph[(ii - 1), 0])) / 360
             pcfac = infamprat[(ii - 1), 0] * f[(mu + ii - 1)] / \
-                f[(jref[(ii - 1)] - 1)] * exp(np.dot(i, pearg))
+                f[(jref[(ii - 1)] - 1)] * np.exp(np.dot(i, pearg))
             pcorr = 1 + pcfac * scarg
             mearg = np.dot(-2 * pi,
                            (vu[(mu + ii - 1)] -
                             vu[(jref[(ii - 1)] - 1)] +
                             infph[(ii - 1), 1])) / 360
             mcfac = infamprat[(ii - 1), 1] * f[(mu + ii - 1)] / \
-                f[(jref[(ii - 1)] - 1)] * exp(np.dot(i, mearg))
+                f[(jref[(ii - 1)] - 1)] * np.exp(np.dot(i, mearg))
             mcorr = 1 + mcfac * scarg
         ap[(jref[(ii - 1)] - 1)] = ap[(jref[(ii - 1)] - 1)] / pcorr
         # Changes to existing constituents
