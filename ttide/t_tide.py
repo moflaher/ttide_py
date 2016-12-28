@@ -4,6 +4,7 @@ import scipy.interpolate as spi
 from .t_vuf import t_vuf
 from . import t_utils as tu
 from .base import TTideCon, t_predic
+import time
 
 
 pi = np.pi
@@ -12,7 +13,7 @@ pi = np.pi
 np.set_printoptions(precision=8, suppress=True)
 
 
-def t_tide(xin, dt=1, stime=[], lat=[],
+def t_tide(xin, dt=1, stime=None, lat=None,
            out_style='classic',
            outfile=None,
            corr_fs=[0, 1e6], corr_fac=[1, 1],
@@ -33,10 +34,10 @@ def t_tide(xin, dt=1, stime=[], lat=[],
     dt : float
        Sampling interval in hours, default = 1.
 
-    stime : float (mpl_datenum)
+    stime : float (mpl_datenum) or python datetime
        The start time of the series, in matplotlib_datenum format (default empty).
 
-    lat : array_like? of float (floats?)
+    lat : float
        decimal degrees (+north) (default: none).
 
     out_style : {None, 'classic', 'pandas'}
@@ -188,8 +189,9 @@ def t_tide(xin, dt=1, stime=[], lat=[],
     #                         per known constituent (i.e. REFERENCE must not
     #                         contain multiple instances of the same name).
 
-    stime = np.array(stime)
-    lat = np.array(lat)
+    if isinstance(stime, time.datetime):
+        stime = time.date2num(stime)
+
     corr_fs = np.array(corr_fs)
     corr_fac = np.array(corr_fac)
     infiname = np.array(infiname)
@@ -232,8 +234,8 @@ def t_tide(xin, dt=1, stime=[], lat=[],
     # Time vector for entire time series centered at series midpoint.
     t = (dt * (np.arange(nobs) + 1 - np.ceil(nobsu / 2)))
 
-    if stime.size != 0:
-        centraltime = stime + np.dot(np.floor(nobsu / 2) / 24.0, dt)
+    if stime is not None:
+        centraltime = stime + np.floor(nobsu / 2) * dt / 24.0
     else:
         centraltime = np.array([])
 
@@ -380,7 +382,7 @@ def t_tide(xin, dt=1, stime=[], lat=[],
     # corrections, but is 'traditional'. The "right" way would be to
     # change the basis functions used in the least-squares fit above.
     ####################################################################
-    if ((lat.size != 0) & (stime.size != 0)):
+    if lat is not None and stime is not None:
         # Time and latitude
         # Get nodal corrections at midpoint time.
         v, u, f = t_vuf(ltype, centraltime,
@@ -390,7 +392,7 @@ def t_tide(xin, dt=1, stime=[], lat=[],
         nodcor = 'Greenwich phase computed with nodal\n \
                   corrections applied to amplitude\n \
                   and phase relative to center time\n'
-    elif (stime.size != 0):
+    elif stime is not None:
         # Time only
         # Get nodal corrections at midpoint time
         v, u, f = t_vuf(ltype, centraltime,
@@ -607,12 +609,12 @@ def t_tide(xin, dt=1, stime=[], lat=[],
     # --------Generate a 'prediction' using significant constituents----
     xoutOLD = xout
     if synth >= 0:
-        if lat.size != 0 & stime.size != 0:
+        if lat is not None and stime is not None:
             # This does not account for latitude,
             # functionality not added to t_predic yet.
             xout = t_predic(stime + np.array([range(nobs)]) * dt / 24.0,
                             nameu, fu, tidecon, synth=synth)
-        elif (stime.size != 0):
+        elif stime is not None:
             xout = t_predic(stime + np.array([range(nobs)]) * dt / 24.0,
                             nameu, fu, tidecon, synth=synth)
         else:
@@ -646,7 +648,7 @@ def t_tide(xin, dt=1, stime=[], lat=[],
     out['synth'] = synth
     out['lat'] = lat
     out['ltype'] = ltype
-    if stime.size != 0:
+    if stime is not None:
         out['stime'] = stime
 
     # -----------------Output results-----------------------------------

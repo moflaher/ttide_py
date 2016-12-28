@@ -2,9 +2,8 @@ from __future__ import division, print_function
 import numpy as np
 import scipy.signal as sps
 import sys
-import matplotlib.mlab as mplm
 from .t_getconsts import t_getconsts
-import matplotlib.dates as dates
+from . import time
 
 try:
     import pandas as pd
@@ -294,7 +293,8 @@ def residual_spectrum(xres, fu, dt):
     fx, Pxi = sps.welch(np.imag(xres), window=np.hanning(nx),
                         noverlap=np.ceil(nx / 2), nfft=nx, fs=1 / dt, nperseg=nx)
     Pxi = Pxi / 2 / dt
-    Pxc, fx = mplm.csd(np.real(xres), np.imag(xres), nx, 1 / dt)
+    #Pxc, fx = mplm.csd(np.real(xres), np.imag(xres), nx, 1 / dt)
+    fx, Pxc = sps.csd(np.real(xres), np.imag(xres), fs=1 / dt, nperseg=nx, nfft=nx, )
 
     # matlab cpsd returns only reals when given a real xres have to
     # test for complex and maybe change to ifstatement
@@ -475,7 +475,7 @@ def classic_style(out):
                 np.dot(max(out['xin'].shape), out['dt']) / 24)) + '\n'
     if ('stime' in out):
         outstr += 'start time: {}\n'.format(
-            dates.num2date(out['stime']).strftime('%Y-%m-%d %H:%M:%S'))
+            time.num2date(out['stime']).strftime('%Y-%m-%d %H:%M:%S'))
     outstr += ('rayleigh criterion = %.1f\n\n' % out['ray'])
     outstr += ('%s\n' % out['nodcor'])
     outstr += variance_str(out)
@@ -535,7 +535,7 @@ def pandas_style(out):
 
     if ('stime' in out):
         outstr += ('Start time: %s\n' %
-                   dates.num2date(out['stime']).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
+                   time.num2date(out['stime']).strftime('%Y-%m-%d %H:%M:%S')) + '\n'
     outstr += ('%s\n' % out['nodcor']) + '\n'
     outstr += variance_str(out)
 

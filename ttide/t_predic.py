@@ -5,7 +5,7 @@ from .t_vuf import t_vuf
 
 
 def t_predic(time, names, freq, tidecon,
-             lat=[], ltype='nodal', synth=0):
+             lat=None, ltype='nodal', synth=0):
     """T_PREDIC Tidal prediction from tidal consituents.
 
     Parameters
@@ -19,8 +19,8 @@ def t_predic(time, names, freq, tidecon,
     tidecon : array_like (M, P)
         The tidal constituent amplitudes, phases, and orientations. P
         is either 4 (for real output), or 8 (for complex output).
-    lat : array_like? of float (floats?)
-        decimal degrees (+north) (default: none)
+    lat : flaot
+        decimal degrees (+north) (default: None)
         In the simplest case, the tidal analysis was done without nodal
         corrections, and thus neither will the prediction. If nodal
         corrections were used in the analysis, then it is likely we will
@@ -47,7 +47,6 @@ def t_predic(time, names, freq, tidecon,
     """
 
     longseries = 0  # Currently only timeseries <18.6 years are supported.
-    lat = np.array(lat)
     time = time.reshape(-1, 1)
 
     # Do the synthesis.
@@ -101,7 +100,7 @@ def t_predic(time, names, freq, tidecon,
         # error('Frequencies do not match names in input');
         # end;
     # Get the astronical argument with or without nodal corrections.
-    if ((lat.size != 0) & (np.absolute(jdmid) > 1)):
+    if lat is not None and np.absolute(jdmid) > 1:
         v, u, f = t_vuf(ltype, jdmid, ju, lat)
     else:
         if np.fabs(jdmid) > 1:

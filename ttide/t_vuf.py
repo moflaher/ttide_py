@@ -1,7 +1,6 @@
 from __future__ import division
 import numpy as np
 import scipy as sp
-import os
 from .t_astron import t_astron
 from .t_getconsts import t_getconsts
 
@@ -62,8 +61,8 @@ def t_vuf(ltype, ctime, ju, lat=None):
             # equator, from about the 5 degree location. Latitudes are
             # hence (somewhat arbitrarily) forced to be no closer than
             # 5 deg to the equator, as per note in Foreman.
-            if ((np.isfinite(lat)) & (abs(lat) < 5)):
-                lat = sign(lat) * 5
+            if abs(lat) < 5:
+                lat = np.sign(lat) * 5
             slat = np.sin(np.pi * lat / 180)
             # Satellite amplitude ratio adjustment for latitude.
             rr = sat['amprat']

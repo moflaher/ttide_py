@@ -1,7 +1,6 @@
 from __future__ import division
 import numpy as np
-import os
-import matplotlib.dates as dates
+from . import time
 
 
 def t_astron(jd):
@@ -74,7 +73,7 @@ def t_astron(jd):
     # R. Pawlowicz  9/1/01
     # Version 1.0
 
-    d = jd - dates.datestr2num('Dec 31 1899, 12:0:0')
+    d = jd - time.date2num(time.datetime(1899, 12, 31, 12, 0, 0))
     D = d / 10000
 
     # Compute astronomical constants at time d1.
