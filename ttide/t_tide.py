@@ -3,7 +3,8 @@ import numpy as np
 import scipy.interpolate as spi
 from .t_vuf import t_vuf
 from . import t_utils as tu
-from .t_predic import t_predic
+from .base import TTideCon, t_predic
+
 
 pi = np.pi
 
@@ -621,41 +622,43 @@ def t_tide(xin, dt=1, stime=[], lat=[],
     # with the synthesized fit) and the residuals!
     xres = xin[:] - xout[:]
 
+    xout = xout.reshape(inn[0], 1)
+
+    out = TTideCon()
+    out['nobs'] = nobs
+    out['ngood'] = ngood
+    out['dt'] = dt
+    out['xin'] = xin
+    out['ray'] = ray
+    out['nodcor'] = nodcor
+    out['z0'] = z0
+    out['dz0'] = dz0
+    out['xingd'] = xin[gd]
+    out['xoutgd'] = xout[gd]
+    out['xresgd'] = xres[gd]
+    out['xout'] = xout
+    out['isComplex'] = isComplex
+
+    out['fu'] = fu
+    out['nameu'] = nameu
+    out['tidecon'] = tideconout
+    out['snr'] = snr
+    out['synth'] = synth
+    out['lat'] = lat
+    out['ltype'] = ltype
+    if stime.size != 0:
+        out['stime'] = stime
+
     # -----------------Output results-----------------------------------
     if out_style or outfile:
         if out_style:
-            outfunc = getattr(tu, out_style + '_style')
+            method = out_style + '_style'
         else:
-            outfunc = tu.classic_style
-        out = {}
-        out['nobs'] = nobs
-        out['ngood'] = ngood
-        out['dt'] = dt
-        out['xin'] = xin
-        out['ray'] = ray
-        out['nodcor'] = nodcor
-        out['z0'] = z0
-        out['dz0'] = dz0
-        out['xingd'] = xin[gd]
-        out['xoutgd'] = xout[gd]
-        out['xresgd'] = xres[gd]
-        out['isComplex'] = isComplex
-
-        out['fu'] = fu
-        out['nameu'] = nameu
-        out['tidecon'] = tidecon
-        out['snr'] = snr
-        out['synth'] = synth
-
-        if stime.size != 0:
-            out['stime'] = stime
+            method = 'classic_style'
 
         if outfile:
-            with open(outfile, 'w') as fl:
-                fl.write(outfunc(out))
-        elif out_style:
-            print(outfunc(out), end='')
+            getattr(out, method)(fname=outfile)
+        else:
+            print(getattr(out, method)(), end='')
 
-    xout = xout.reshape(inn[0], 1)
-
-    return nameu, fu, tideconout, xout
+    return out
