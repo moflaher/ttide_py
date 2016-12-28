@@ -1,11 +1,10 @@
 from __future__ import print_function
 import os.path as path
-import sys
 import numpy as np
 from scipy.io.netcdf import netcdf_file as nopen
 
 
-__version__ = '0.3'
+__version__ = '0.3lfk'
 
 
 _base_dir = path.join(path.dirname(__file__), 'data')

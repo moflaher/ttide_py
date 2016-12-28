@@ -240,7 +240,7 @@ def t_tide(xin, dt=1, stime=None, lat=None,
         centraltime = np.array([])
 
     # -------Get the frequencies to use in the harmonic analysis-----------
-    tmptuple = tu.constituents(ray / (np.dot(dt, nobsu)),
+    tmptuple = tu.constituents(ray / (dt * nobsu),
                                constitnames, shallownames,
                                infiname, infirefname,
                                centraltime)
@@ -387,7 +387,7 @@ def t_tide(xin, dt=1, stime=None, lat=None,
         # Get nodal corrections at midpoint time.
         v, u, f = t_vuf(ltype, centraltime,
                         np.hstack([ju, jinf]).astype(int), lat)
-        vu = np.dot((v + u), 360)
+        vu = (v + u) * 360
         # total phase correction (degrees)
         nodcor = 'Greenwich phase computed with nodal\n \
                   corrections applied to amplitude\n \
@@ -397,7 +397,7 @@ def t_tide(xin, dt=1, stime=None, lat=None,
         # Get nodal corrections at midpoint time
         v, u, f = t_vuf(ltype, centraltime,
                         np.hstack([ju, jinf]).astype(int))
-        vu = np.dot((v + u), 360)
+        vu = (v + u) * 360
         # total phase correction (degrees)
         nodcor = 'Greenwich phase computed, no nodal corrections'
     else:
@@ -415,17 +415,16 @@ def t_tide(xin, dt=1, stime=None, lat=None,
     ii = np.flatnonzero(np.isfinite(jref))
     if ii:
         print('   Do inference corrections\\n')
-        snarg = np.dot(
-            np.dot(nobsu * pi, (fi[(ii - 1)] - fu[(jref[(ii - 1)] - 1)])), dt)
+        snarg = nobsu * pi * dt * (fi[(ii - 1)] - fu[(jref[(ii - 1)] - 1)])
         scarg = np.sin(snarg) / snarg
         if infamprat.shape[1] == 1:
             # For real time series
-            pearg = np.dot(2 * pi,
+            pearg = np.dot(2 * pi,ii
                            (vu[(mu + ii - 1)] -
                             vu[(jref[(ii - 1)] - 1)] +
                             infph[(ii - 1)])) / 360
             pcfac = infamprat[(ii - 1)] * f[(mu + ii - 1)] / \
-                f[(jref[(ii - 1)] - 1)] * np.exp(np.dot(i, pearg))
+                f[(jref[(ii - 1)] - 1)] * np.exp(np.dot(ii, pearg))
             pcorr = 1 + pcfac * scarg
             mcfac = np.conj(pcfac)
             mcorr = np.conj(pcorr)
@@ -531,10 +530,10 @@ def t_tide(xin, dt=1, stime=None, lat=None,
             # a factor of 2 here somewhere but it only works this way!
             # <shrug>
 
-            emaj, emin, einc, epha = errell(ap + am, np.dot(1j, (ap - am)),
+            emaj, emin, einc, epha = errell(ap + am, 1j * (ap - am),
                                             ercx, ercx, eicx, eicx)
-            epsp = np.dot(np.angle(ap), 180) / pi
-            epsm = np.dot(np.angle(am), 180) / pi
+            epsp = 180 / np.pi * np.angle(ap)
+            epsm = 180 / np.pi * np.angle(am)
             ap = np.absolute(ap)
             am = np.absolute(am)
         else:
@@ -587,10 +586,10 @@ def t_tide(xin, dt=1, stime=None, lat=None,
     else:
         # In the linear analysis, the 95 CI are computed from the sigmas
         # by this fudge factor (infinite degrees of freedom).
-        emaj = np.dot(1.96, emaj)
-        emin = np.dot(1.96, emin)
-        einc = np.dot(1.96, einc)
-        epha = np.dot(1.96, epha)
+        emaj = 1.96 * emaj
+        emin = 1.96 * emin
+        einc = 1.96 * einc
+        epha = 1.96 * epha
 
     if isComplex:
         tidecon = np.array([fmaj[:, 0], emaj, fmin[:, 0], emin,

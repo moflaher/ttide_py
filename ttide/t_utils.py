@@ -321,9 +321,9 @@ def residual_spectrum(xres, fu, dt):
                                                  fx <= fband[(k), 1],
                                                  np.isfinite(Pxr)]).T, axis=1))
         if any(jband):
-            Pxrave[k] = np.dot(np.mean(Pxr[(jband)]), 2) / nx
-            Pxiave[k] = np.dot(np.mean(Pxi[(jband)]), 2) / nx
-            Pxcave[k] = np.dot(np.mean(Pxc[(jband)]), 2) / nx
+            Pxrave[k] = 2 * np.mean(Pxr[(jband)]) / nx
+            Pxiave[k] = 2 * np.mean(Pxi[(jband)]) / nx
+            Pxcave[k] = 2 * np.mean(Pxc[(jband)]) / nx
         else:
             if k < nfband:
                 Pxrave[k] = Pxrave[(k + 1)]
@@ -409,7 +409,7 @@ def errell(cxi, sxi, ercx, ersx, ercy, ersy):
     emin = np.sqrt(dcx2 * ercx2 + dsx2 * ersx2 +
                    dcy2 * ercy2 + dsy2 * ersy2)
     # inclination error
-    rn = np.dot(2.0, (cx * cy + sx * sy))
+    rn = 2.0 * (cx * cy + sx * sy)
     rd = cx ** 2 + sx ** 2 - (cy ** 2 + sy ** 2)
     den = rn ** 2 + rd ** 2
     dcx2 = ((rd * cy - rn * cx) / den) ** 2
@@ -419,7 +419,7 @@ def errell(cxi, sxi, ercx, ersx, ercy, ersy):
     einc = r2d * np.sqrt(dcx2 * ercx2 + dsx2 * ersx2 +
                          dcy2 * ercy2 + dsy2 * ersy2)
     # phase error
-    rn = np.dot(2.0, (cx * sx + cy * sy))
+    rn = 2.0 * (cx * sx + cy * sy)
     rd = cx ** 2 - sx ** 2 + cy ** 2 - sy ** 2
     den = rn ** 2 + rd ** 2
     dcx2 = ((rd * sx - rn * cx) / den) ** 2

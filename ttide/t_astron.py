@@ -77,7 +77,7 @@ def t_astron(jd):
     D = d / 10000
 
     # Compute astronomical constants at time d1.
-    args = np.array([1, d, D*D, D**3])
+    args = np.array([1, d, D * D, D ** 3])
 
     # These are the coefficients of the formulas in the Explan. Suppl.
     sc = np.array([270.434164, 13.1763965268, - 8.5e-05, 3.9e-08])

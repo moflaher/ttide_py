@@ -39,7 +39,7 @@ def t_vuf(ltype, ctime, ju, lat=None):
         const = t_get18consts(ctime)
         # Phase relative to Greenwich (in units of cycles).
         v = rem(np.dot(const.doodson, astro) + const.semi, 1)
-        v = v[(ju-1)]
+        v = v[(ju - 1)]
         u = np.zeros(shape=(v.shape, v.shape), dtype='float64')
         f = np.ones(shape=(v.shape, v.shape), dtype='float64')
     else:
@@ -77,7 +77,8 @@ def t_vuf(ltype, ctime, ju, lat=None):
             else:
                 rr[sat['ilatfac'] > 0] = 0
             # Calculate nodal amplitude and phase corrections.
-            uu = np.fmod(np.dot(sat['deldood'], astro.T[3:6])+sat['phcorr'], 1)
+            uu = np.fmod(np.dot(sat['deldood'], astro.T[
+                         3:6]) + sat['phcorr'], 1)
             # uu=uudbl-round(uudbl);  <_ I think this was wrong.
             # The original
             #                         FORTRAN code is:  IUU=UUDBL
@@ -87,20 +88,20 @@ def t_vuf(ltype, ctime, ju, lat=None):
             nsat = np.max(sat['iconst'].shape)
             nfreq = np.max(const['isat'].shape)
 
-            fsum = np.array(1+sp.sparse.csr_matrix(
-                (np.squeeze(rr*np.exp(1j*2*np.pi*uu)),
-                 (np.arange(0, nsat), np.squeeze(sat['iconst']-1))),
+            fsum = np.array(1 + sp.sparse.csr_matrix(
+                (np.squeeze(rr * np.exp(1j * 2 * np.pi * uu)),
+                 (np.arange(0, nsat), np.squeeze(sat['iconst'] - 1))),
                 shape=(nsat, nfreq)).sum(axis=0)).flatten()
 
             f = np.absolute(fsum)
-            u = np.angle(fsum)/(2*np.pi)
+            u = np.angle(fsum) / (2 * np.pi)
 
             # Compute amplitude and phase corrections
             # for shallow water constituents.
             for k in np.flatnonzero(np.isfinite(const['ishallow'])):
-                ik = ((const['ishallow'][k]-1 +
+                ik = ((const['ishallow'][k] - 1 +
                        np.array(range(0, const['nshallow'][k]))).astype(int))
-                iname = shallow['iname'][ik]-1
+                iname = shallow['iname'][ik] - 1
                 coef = shallow['coef'][ik]
                 f[k] = np.prod(np.power(f[iname], coef))
                 u[k] = np.dot(u[iname], coef)
@@ -114,9 +115,9 @@ def t_vuf(ltype, ctime, ju, lat=None):
             # Astronomical arguments only, no nodal corrections.
             # Compute phases for shallow water constituents.
             for k in np.flatnonzero(np.isfinite(const['ishallow'])):
-                ik = ((const['ishallow'][k]-1 +
+                ik = ((const['ishallow'][k] - 1 +
                        np.array(range(0, const['nshallow'][k]))).astype(int))
-                v[k] = np.dot(v[shallow['iname'][ik]-1], shallow['coef'][ik])
+                v[k] = np.dot(v[shallow['iname'][ik] - 1], shallow['coef'][ik])
 
             v = v[ju]
             f = np.ones(len(v))

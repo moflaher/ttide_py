@@ -69,12 +69,10 @@ def t_predic(time, names, freq, tidecon,
         am = np.conj(ap)
     else:
         ap = np.multiply((tidecon[:, 0] + tidecon[:, 2]) / 2.0,
-                         np.exp(np.dot(np.dot(1j, np.pi) / 180,
-                                       (tidecon[:, 4] - tidecon[:, 6]))))
+                         np.exp(1j * np.pi / 180 * (tidecon[:, 4] - tidecon[:, 6])))
 
         am = np.multiply((tidecon[:, 0] - tidecon[:, 2]) / 2.0,
-                         np.exp(np.dot(np.dot(1j, np.pi) / 180,
-                                       (tidecon[:, 4] + tidecon[:, 6]))))
+                         np.exp(1j * np.pi / 180 * (tidecon[:, 4] + tidecon[:, 6])))
 
     # Mean at central point (get rid of one point at end to
     # take mean of odd number of points if necessary).

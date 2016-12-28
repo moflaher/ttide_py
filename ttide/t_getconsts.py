@@ -34,12 +34,12 @@ def t_getconsts(ctime):
         astro, ader = t_astron(ctime)
 
         ii = np.isfinite(const['ishallow'])
-        const['freq'][~ii] = np.dot(const['doodson'][~ii, :], ader)/24
+        const['freq'][~ii] = np.dot(const['doodson'][~ii, :], ader) / 24
 
         for k in np.flatnonzero(ii):
-            ik = ((const['ishallow'][k]-1 +
+            ik = ((const['ishallow'][k] - 1 +
                    np.array(range(0, const['nshallow'][k]))).astype(int))
-            const['freq'][k] = np.dot(const['freq'][shallow['iname'][ik]-1],
+            const['freq'][k] = np.dot(const['freq'][shallow['iname'][ik] - 1],
                                       shallow['coef'][ik])
 
     return const, sat, shallow
