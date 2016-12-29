@@ -2,6 +2,7 @@ from ..t_tide import t_tide
 from . import base as bmod
 from cStringIO import StringIO
 import sys
+import numpy as np
 
 
 def compare_string2file(string, fname):
@@ -19,6 +20,7 @@ def gen_print_tests(make_data=False):
     If make_data=True, this will write out the data files.
     """
     out_old = sys.stdout
+    np.random.seed(29034230)
     for kwargs, fname in bmod.cases:
         # Redirect stdout to a StringIO instance
         sys.stdout = stdout = StringIO()

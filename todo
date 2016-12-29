@@ -1,5 +1,3 @@
-* Use multiple tests (rather than 1)
-* Add t_predic tests.
 * Remove MPL dependence?
 * Add functionality to specify the Rayleigh criteria as a list of
         strings. The docstring should be updated.
