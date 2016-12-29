@@ -18,4 +18,4 @@ total_var= 2.129597 pred_var=  2.129491
 total_var/pred_var (%) =  100.0  
                                 ellipse parameters with 95 % CI estimates
  tide     freq        major      emaj      minor      emin     inc      einc      pha       epha      snr
-* M2    0.0805114     2.0615     0.004    0.0000     0.001    14.04      0.03    324.64      0.08  3.2e+05
+* M2    0.0805114     2.0615     0.003    0.0000     0.001    14.04      0.03    324.64      0.08  3.7e+05

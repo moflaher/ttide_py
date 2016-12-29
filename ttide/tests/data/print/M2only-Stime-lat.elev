@@ -15,4 +15,4 @@ var(prediction)/var(data) (%) = 100.9
 
         tidal amplitude and phase with 95 % CI estimates
  tide      freq        amp      amp_err   pha      pha_err    snr
-* M2    0.0805114     5.0219     0.008    326.60      0.10   4.1e+05
+* M2    0.0805114     5.0219     0.009    326.60      0.09   3.5e+05

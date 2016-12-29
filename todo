@@ -5,4 +5,3 @@
 * Add examples to docstrings?
 * Are 'names' required in t_predic? Why not use 'names' or 'freq'?
 * What is the __init__.py file used for? Shouldn't most of this stuff be in a package?
-* Reorganize tests to use individual np.random.seed (so they aren't dependent on one another!!!)

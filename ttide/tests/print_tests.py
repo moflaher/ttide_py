@@ -1,5 +1,5 @@
-from ..t_tide import t_tide
-from . import base as bmod
+from ttide.t_tide import t_tide
+import ttide.tests.base as bmod
 from cStringIO import StringIO
 import sys
 import numpy as np
@@ -20,8 +20,8 @@ def gen_print_tests(make_data=False):
     If make_data=True, this will write out the data files.
     """
     out_old = sys.stdout
-    np.random.seed(29034230)
     for kwargs, fname in bmod.cases:
+        np.random.seed(29034230)
         # Redirect stdout to a StringIO instance
         sys.stdout = stdout = StringIO()
         t_tide(**kwargs)

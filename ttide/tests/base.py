@@ -6,9 +6,6 @@ try:
 except NameError:
     testdir = 'tests/'
 
-# Initialize the pRNG so that the results will always be identical.
-np.random.seed(29034230)
-
 t = np.arange(1001)
 m2_freq = 2 * np.pi / 12.42
 shallow_freq = 2 * np.pi / 2.484120261
