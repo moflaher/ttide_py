@@ -189,7 +189,7 @@ def t_tide(xin, dt=1, stime=None, lat=None,
     #                         per known constituent (i.e. REFERENCE must not
     #                         contain multiple instances of the same name).
 
-    if isinstance(stime, time.datetime):
+    if isinstance(stime, (time.datetime, np.datetime64)):
         stime = time.date2num(stime)
 
     corr_fs = np.array(corr_fs)

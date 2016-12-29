@@ -25,7 +25,9 @@ def num2date(mpltime):
 
 
 def date2num(dt):
-    if np.ndarray in dt.__class__.__mro__:
+    if isinstance(dt, np.ndarray):
+        if dt.dtype.name.startswith('datetime64'):
+            dt = dt.astype('O')
         out = np.empty(len(dt), dtype=np.float64)
         for idx, val in enumerate(dt.flat):
             out[idx] = date2num(val)

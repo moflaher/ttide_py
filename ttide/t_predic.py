@@ -2,6 +2,7 @@ from __future__ import division
 import numpy as np
 from .t_getconsts import t_getconsts
 from .t_vuf import t_vuf
+import time as tm
 
 
 def t_predic(time, names, freq, tidecon,
@@ -47,6 +48,9 @@ def t_predic(time, names, freq, tidecon,
     """
 
     longseries = 0  # Currently only timeseries <18.6 years are supported.
+    if time.dtype.name.startswith('datetime64') or time.dtype is np.dtype("O"):
+        time = tm.date2num(time)
+
     time = time.reshape(-1, 1)
 
     # Do the synthesis.
