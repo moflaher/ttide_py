@@ -2,8 +2,7 @@
         strings. The docstring should be updated.
 * Clarify what infiname and infirefname are in the docstring.
 * tests should compare results to known values (i.e. from Matlab version)
-* Add examples to docstrings?
 * Are 'names' required in t_predic? Why not use 'names' or 'freq'?
 * What is the __init__.py file used for? Shouldn't most of this stuff be in a package?
 * Add tests for datetime64 and datetime inputs.
-* Update README to indicate updated usage suggestions (class-based output).
+* TTideCon needs a save method (and a load function somewhere). Or do we just pickle it? JSON?

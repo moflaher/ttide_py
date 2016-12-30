@@ -106,28 +106,13 @@ def t_tide(xin, dt=1, stime=None, lat=None,
     Returns
     -------
 
-    nameu : list-like of strings
-        The constituents used
-
-    fu : array_like (float)
-        frequency of tidal constituents (cycles/hr)
-
-    tidecon : array_like
-        If xin is complex (vector), the columns are:
-          [fmaj, emaj, fmin, emin, finc, einc, pha, epha]
-        If xin is real (scalar), the columns are:
-          [fmaj, emaj, pha, epha]
-        These variables are:
-           fmaj, fmin - amplitudes of the constituent major
-                        and minor axes (same units as xin)
-           emaj, emin - 95 confidence intervals for fmaj, fmin
-           finc       - ellipse orientations (degrees)
-           einc       - 95 confidence intervals for finc
-           pha        - constituent phases (degrees relative to Greenwich)
-           epha       - 95 confidence intervals for pha
-
-    xout : array_like
-        The tidal prediction (same size as xin)
+    out : `TTideCon` instance
+        This class is based on dict. The dictionary contains all of
+        the relavent data of the fit. It also includes a `t_predic`
+        method that can be used to create tidal predictions
+        (extrapolation) based on the fit. This `t_predic` method is
+        also duplicated as the `__call__` method. See the TTideCon
+        docstring for more info.
 
     Notes
     -----
@@ -163,6 +148,34 @@ def t_tide(xin, dt=1, stime=None, lat=None,
     .. [1] Pawlowicz, R., B. Beardsley, and S. Lentz, "Classical Tidal
        "Harmonic Analysis Including Error Estimates in MATLAB
        using T_TIDE", Computers and Geosciences, 28, 929-937 (2002).
+
+    Examples
+    --------
+
+    import numpy as np
+    from ttide.t_tide import t_tide
+
+    t = np.arange(1001)
+    m2_freq = 2 * np.pi / 12.42
+
+    ####
+    # Here is an example 'real' dataset:
+    elev = 5 * np.cos(m2_freq * t)
+
+    # Compute the tidal fit:
+    tfit_e = t_tide(elev)
+
+    # Construct the fitted time-series:
+    elev_fit = tfit_e(t)
+
+    # Or extrapolate the fit to other times:
+    extrap_fit = tfit_e(np.arange(2000,2500))
+
+    ####
+    # Here is an example 'complex' (vector) dataset:
+    vel = 0.8 * elev + 1j * 2 * np.sin(m2_freq * t)
+
+    tfit_v = t_tide(vel)
 
     """
 

@@ -4,6 +4,21 @@ from .t_predic import t_predic
 
 class TTideCon(dict):
     """The ttide consituents class.
+
+    This class is based on a dictionary, and has key-value pairs of
+    the relavent data from the tidal fit, and for tidal prediction
+    (extrapolation).  These include:
+
+    dt : The sampling interval of the fit data.
+
+    nameu : The names of the tidal constituents.
+
+    fu : The frequencies of the tidal constituents.
+
+    tidecon : The tidal constituent amplitudes.
+
+    snr : The signal to noise ratio of the constituent fits.
+
     """
 
     def t_predic(self, time):

@@ -8,7 +8,7 @@ This is a work in progress. It is not done.
 It is now mostly functional.
 Any help with finishing the conversion is welcome.
 
-All credit for T_Tide goes to Rich Pawlowicz, the original creator of T_Tide. 
+Credit for T\_Tide goes to Rich Pawlowicz, the original creator of T\_Tide. 
 It is available at http://www2.ocgy.ubc.ca/~rich/.
 
 A description of the theoretical basis of the analysis and some
@@ -26,56 +26,54 @@ useful (either the Matlab version, or this Python one).
 Installation
 ============
 
-This has little to no testing. Use at your own risk.
+This has little to no testing. Use at your own risk. To install, run:
 
-Run,
-
-python setup.py install
+    python setup.py install
 
 
+Example Usage
+=============
 
-Usage
-=====
+Imports and define some variables:
 
-from ttide.t_tide import t_tide
+    from ttide.t_tide import t_tide
+    import numpy as np
 
-[name, freq, tidecon, xout]=t_tide(xin)
+    t = np.arange(1001)
+    m2_freq = 2 * np.pi / 12.42
 
+Here is an example 'real' (scalar) dataset:
 
+    elev = 5 * np.cos(m2_freq * t)
 
+Compute the tidal fit:
 
-All other input is optional.
-Currently dt,stime,lat,constitnames,output,errcalc,synth,out_style, and secular can be specified. To do so use key=value (ex dt=0.5).
+    tfit_e = t_tide(elev)
 
+All other input is optional. Currently `dt`, `stime`, `lat`, `constitnames`, `output`, `errcalc`, `synth`, `out_style`, and `secular` can be specified. Take a look at the t\_tide docstring for more info on these variables. 
 
-dt -              Sampling interval (hours)   default = 1
+`tfit_e` is an instance of the TTideCon ("TTide Constituents") class. It includes a `t_predic` method that is also availabe as the special `__call__` method. This makes it possible to construct the fitted time-series by simply doing:
 
-stime -           Start time as number of days. using mpl.dates rather then datetime because it handles fractional days   default = empty
+    elev_fit = tfit_e(t)
 
-lat -             Decimal degress (+north)    default = empty
+Or extrapolate the fit to other times:
 
-errcalc -         Method for calculation of confidence limits. (cboot,wboot,linear(not finished)) default = 'cboot'
+    extrap_fit = tfit_e(np.arange(2000,2500))
 
-constitnames -    Names of constituents to use. default = empty
+And here is an example 'complex' (vector) dataset:
 
-output -          Flag to disable output. default = True
+    vel = 0.8 * elev + 1j * 2 * np.sin(m2_freq * t)
 
-synth -           Synthesis value for tidal prediction. default = 2
+    tfit_v = t_tide(vel)
 
-out_style -       Output format. (classic,pandas) default='classic'
-
-secular -         Adjustment for long-term behavior. (mean,linear) default='linear'
-
-
+And so on...
 
 Notes
 =====
 
-1) The code to handle timeseries longer then 18.6 years has not been converted yet.
+1. The code to handle timeseries longer then 18.6 years has not been converted yet.
 
-2) t_predic is working. Call it with [xout]=t_predic(time_in,names,freq,tidecon)
-
-3) The code is a little messy and they are a few hacky bits that probably will need to be fixed. The most notable is in noise_realizations. It swaps eig vectors around to match Matlab's output.
+2. The code is a little messy and they are a few hacky bits that probably will need to be fixed. The most notable is in noise_realizations. It swaps eig vectors around to match Matlab's output.
 Also, the returned diagonal array would sometimes be a negative on the order of 10^-10. Values between (-0.00000000001,0) are forced to 0. 
 
-4) ttide_py was initially converted to python with SMOP. Available at, https://github.com/victorlei/smop.git.
+3. ttide_py was initially converted to python with SMOP. Available at, https://github.com/victorlei/smop.git.
