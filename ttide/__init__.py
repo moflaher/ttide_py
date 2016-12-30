@@ -1,50 +1,16 @@
-from __future__ import print_function
-import os.path as path
-import numpy as np
-from scipy.io.netcdf import netcdf_file as nopen
+"""This package now holds the ttide_py API.
 
+The included functions are:
+
+t_tide : The t_tide harmonic analysis function.
+
+t_predic : The t_tide harmonic fit function.
+
+TTideCon : The t_tide constituents class (returned by t_tide).
+
+"""
+from .t_tide import t_tide
+from .t_predic import t_predic
+from base import TTideCon
 
 __version__ = '0.3lfk'
-
-
-_base_dir = path.join(path.dirname(__file__), 'data')
-has_const = path.exists(path.join(_base_dir, 't_constituents_const.nc'))
-has_sat = path.exists(path.join(_base_dir, 't_constituents_sat.nc'))
-has_shallow = path.exists(path.join(_base_dir, 't_constituents_shallow.nc'))
-
-if (has_const and has_sat and has_shallow):
-    _const = {}
-    _sat = {}
-    _shallow = {}
-
-    ncid = nopen(path.join(_base_dir,
-                           't_constituents_const.nc'), 'r', mmap=False)
-    for key in ncid.variables.keys():
-        _const[key] = ncid.variables[key].data
-    ncid.close()
-
-    ncid = nopen(path.join(_base_dir,
-                           't_constituents_sat.nc'), 'r', mmap=False)
-    for key in ncid.variables.keys():
-        _sat[key] = ncid.variables[key].data
-    ncid.close()
-
-    ncid = nopen(path.join(_base_dir,
-                           't_constituents_shallow.nc'), 'r', mmap=False)
-    for key in ncid.variables.keys():
-        _shallow[key] = ncid.variables[key].data
-    ncid.close()
-
-    # Correct issues with name strings
-    _const['name'] = np.array([b''.join([s for s in arr])
-                               for arr in _const['name']])
-
-    _const['kmpr'] = np.array([b''.join([s for s in arr])
-                               for arr in _const['kmpr']])
-
-else:
-    print('You do not have t_constituents_*.npy ' +
-          'check that package installation is correct.')
-    _const = {}
-    _sat = {}
-    _shallow = {}

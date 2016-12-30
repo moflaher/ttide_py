@@ -36,7 +36,7 @@ Example Usage
 
 Imports and define some variables:
 
-    from ttide.t_tide import t_tide
+    import ttide as tt
     import numpy as np
 
     t = np.arange(1001)
@@ -48,7 +48,7 @@ Here is an example 'real' (scalar) dataset:
 
 Compute the tidal fit:
 
-    tfit_e = t_tide(elev)
+    tfit_e = tt.t_tide(elev)
 
 All other input is optional. Currently `dt`, `stime`, `lat`, `constitnames`, `output`, `errcalc`, `synth`, `out_style`, and `secular` can be specified. Take a look at the t\_tide docstring for more info on these variables. 
 
@@ -64,7 +64,7 @@ And here is an example 'complex' (vector) dataset:
 
     vel = 0.8 * elev + 1j * 2 * np.sin(m2_freq * t)
 
-    tfit_v = t_tide(vel)
+    tfit_v = tt.t_tide(vel)
 
 And so on...
 

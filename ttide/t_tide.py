@@ -153,7 +153,7 @@ def t_tide(xin, dt=1, stime=None, lat=None,
     --------
 
     import numpy as np
-    from ttide.t_tide import t_tide
+    import ttide as tt
 
     t = np.arange(1001)
     m2_freq = 2 * np.pi / 12.42
@@ -163,7 +163,7 @@ def t_tide(xin, dt=1, stime=None, lat=None,
     elev = 5 * np.cos(m2_freq * t)
 
     # Compute the tidal fit:
-    tfit_e = t_tide(elev)
+    tfit_e = tt.t_tide(elev)
 
     # Construct the fitted time-series:
     elev_fit = tfit_e(t)
@@ -175,7 +175,7 @@ def t_tide(xin, dt=1, stime=None, lat=None,
     # Here is an example 'complex' (vector) dataset:
     vel = 0.8 * elev + 1j * 2 * np.sin(m2_freq * t)
 
-    tfit_v = t_tide(vel)
+    tfit_v = tt.t_tide(vel)
 
     """
 
