@@ -51,3 +51,10 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
+
+# Emacs temporary files
+.#*
+\#*#
+
+# Ignore flymake files
+*flymake.py

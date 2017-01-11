@@ -1,0 +1,7 @@
+* Add functionality to specify the Rayleigh criteria as a list of
+        strings. The docstring should be updated.
+* Clarify what infiname and infirefname are in the docstring.
+* tests should compare results to known values (i.e. from Matlab version)
+* Are 'names' required in t_predic? Why not use 'names' or 'freq'?
+* Add tests for datetime64 and datetime inputs.
+* TTideCon needs a save method (and a load function somewhere). Or do we just pickle it? JSON?

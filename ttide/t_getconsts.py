@@ -1,9 +1,51 @@
 from __future__ import division
 import numpy as np
-import os
 import copy
 from .t_astron import t_astron
-from .__init__ import _const, _sat, _shallow
+import os.path as path
+from scipy.io.netcdf import netcdf_file as nopen
+
+_base_dir = path.join(path.dirname(__file__), 'data')
+has_const = path.exists(path.join(_base_dir, 't_constituents_const.nc'))
+has_sat = path.exists(path.join(_base_dir, 't_constituents_sat.nc'))
+has_shallow = path.exists(path.join(_base_dir, 't_constituents_shallow.nc'))
+
+if (has_const and has_sat and has_shallow):
+    _const = {}
+    _sat = {}
+    _shallow = {}
+
+    ncid = nopen(path.join(_base_dir,
+                           't_constituents_const.nc'), 'r', mmap=False)
+    for key in ncid.variables.keys():
+        _const[key] = ncid.variables[key].data
+    ncid.close()
+
+    ncid = nopen(path.join(_base_dir,
+                           't_constituents_sat.nc'), 'r', mmap=False)
+    for key in ncid.variables.keys():
+        _sat[key] = ncid.variables[key].data
+    ncid.close()
+
+    ncid = nopen(path.join(_base_dir,
+                           't_constituents_shallow.nc'), 'r', mmap=False)
+    for key in ncid.variables.keys():
+        _shallow[key] = ncid.variables[key].data
+    ncid.close()
+
+    # Correct issues with name strings
+    _const['name'] = np.array([b''.join([s for s in arr])
+                               for arr in _const['name']])
+
+    _const['kmpr'] = np.array([b''.join([s for s in arr])
+                               for arr in _const['kmpr']])
+
+else:
+    print('You do not have t_constituents_*.npy ' +
+          'check that package installation is correct.')
+    _const = {}
+    _sat = {}
+    _shallow = {}
 
 
 def t_getconsts(ctime):
@@ -34,12 +76,12 @@ def t_getconsts(ctime):
         astro, ader = t_astron(ctime)
 
         ii = np.isfinite(const['ishallow'])
-        const['freq'][~ii] = np.dot(const['doodson'][~ii, :], ader)/24
+        const['freq'][~ii] = np.dot(const['doodson'][~ii, :], ader) / 24
 
         for k in np.flatnonzero(ii):
-            ik = ((const['ishallow'][k]-1 +
+            ik = ((const['ishallow'][k] - 1 +
                    np.array(range(0, const['nshallow'][k]))).astype(int))
-            const['freq'][k] = np.dot(const['freq'][shallow['iname'][ik]-1],
+            const['freq'][k] = np.dot(const['freq'][shallow['iname'][ik] - 1],
                                       shallow['coef'][ik])
 
     return const, sat, shallow

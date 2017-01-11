@@ -1,0 +1,24 @@
+-----------------------------------
+nobs = 1001 
+ngood = 1001 
+record length (days) = 41.71
+start time: 2103-09-18 00:00:00
+rayleigh criterion = 1.0
+
+Greenwich phase computed with nodal
+                   corrections applied to amplitude
+                   and phase relative to center time
+
+x0= 1.37e-06  xtrend= 0
+var(data)= 2.00    var(prediction)= 2.02    var(residual)= 0.00
+var(prediction)/var(data) (%) = 100.9
+
+y0= 3.42e-07  ytrend= 0
+var(data)= 0.13    var(prediction)= 0.13    var(residual)= 0.00
+var(prediction)/var(data) (%) = 100.9
+
+total_var= 2.129597 pred_var=  2.148228
+total_var/pred_var (%) =  100.9  
+                                ellipse parameters with 95 % CI estimates
+ tide     freq        major      emaj      minor      emin     inc      einc      pha       epha      snr
+* M2    0.0805114     2.0706     0.003    0.0000     0.001    14.04      0.03    326.60      0.08  3.7e+05

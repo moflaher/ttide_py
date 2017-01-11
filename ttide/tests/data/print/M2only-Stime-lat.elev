@@ -1,0 +1,18 @@
+-----------------------------------
+nobs = 1001 
+ngood = 1001 
+record length (days) = 41.71
+start time: 2103-09-18 00:00:00
+rayleigh criterion = 1.0
+
+Greenwich phase computed with nodal
+                   corrections applied to amplitude
+                   and phase relative to center time
+
+x0= 3.42e-06  xtrend= 0
+var(data)= 12.53    var(prediction)= 12.64    var(residual)= 0.02
+var(prediction)/var(data) (%) = 100.9
+
+        tidal amplitude and phase with 95 % CI estimates
+ tide      freq        amp      amp_err   pha      pha_err    snr
+* M2    0.0805114     5.0219     0.009    326.60      0.09   3.5e+05

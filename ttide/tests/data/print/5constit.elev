@@ -1,0 +1,18 @@
+-----------------------------------
+nobs = 1001 
+ngood = 1001 
+record length (days) = 41.71
+rayleigh criterion = 1.0
+
+Phases at central time
+x0= 2.34e-06  xtrend= 0
+var(data)= 12.53    var(prediction)= 12.53    var(residual)= 0.00
+var(prediction)/var(data) (%) = 100.0
+
+        tidal amplitude and phase with 95 % CI estimates
+ tide      freq        amp      amp_err   pha      pha_err    snr
+* O1    0.0387307     0.0004     0.000    268.21     23.81       5.2
+* K1    0.0417807     0.0004     0.000     87.97     27.03       5.3
+  N2    0.0789992     0.0029     0.006    267.20    155.00      0.28
+* M2    0.0805114     5.0002     0.009    267.25      0.09   3.2e+05
+  S2    0.0833333     0.0060     0.008    267.14     75.90      0.55

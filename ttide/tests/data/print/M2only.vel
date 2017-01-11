@@ -1,0 +1,20 @@
+-----------------------------------
+nobs = 1001 
+ngood = 1001 
+record length (days) = 41.71
+rayleigh criterion = 1.0
+
+Phases at central time
+x0= 1.37e-06  xtrend= 0
+var(data)= 2.00    var(prediction)= 2.00    var(residual)= 0.00
+var(prediction)/var(data) (%) = 100.0
+
+y0= 3.42e-07  ytrend= 0
+var(data)= 0.13    var(prediction)= 0.13    var(residual)= 0.00
+var(prediction)/var(data) (%) = 100.0
+
+total_var= 2.129597 pred_var=  2.129491
+total_var/pred_var (%) =  100.0  
+                                ellipse parameters with 95 % CI estimates
+ tide     freq        major      emaj      minor      emin     inc      einc      pha       epha      snr
+* M2    0.0805114     2.0615     0.003    0.0000     0.001    14.04      0.03    267.25      0.08  3.7e+05

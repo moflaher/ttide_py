@@ -1,7 +1,6 @@
 from __future__ import division
 import numpy as np
-import os
-import matplotlib.dates as dates
+from . import time
 
 
 def t_astron(jd):
@@ -66,18 +65,19 @@ def t_astron(jd):
         reprinted in International Hydrographic Review, Appendix to
         Circular Letter 4-H, 1954) mean lunar time is taken to begin at
         "lunar midnight".
-     B. Beardsley  12/29/98, 1/11/98
-     R. Pawlowicz  9/1/01
-     Version 1.0
      Compute number of days from epoch of 12:00 UT Dec 31, 1899.
      (January 0.5 1900 ET)
     """
+    # ## Matlab version info
+    # B. Beardsley  12/29/98, 1/11/98
+    # R. Pawlowicz  9/1/01
+    # Version 1.0
 
-    d = jd - dates.datestr2num('Dec 31 1899, 12:0:0')
+    d = jd - time.date2num(time.datetime(1899, 12, 31, 12, 0, 0))
     D = d / 10000
 
     # Compute astronomical constants at time d1.
-    args = np.array([1, d, D*D, D**3])
+    args = np.array([1, d, D * D, D ** 3])
 
     # These are the coefficients of the formulas in the Explan. Suppl.
     sc = np.array([270.434164, 13.1763965268, - 8.5e-05, 3.9e-08])
