@@ -11,6 +11,6 @@ TTideCon : The t_tide constituents class (returned by t_tide).
 """
 from .t_tide import t_tide
 from .t_predic import t_predic
-from base import TTideCon
+from .base import TTideCon
 
 __version__ = '0.3lfk'
