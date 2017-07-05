@@ -5,7 +5,7 @@ from .t_vuf import t_vuf
 from . import t_utils as tu
 from .base import TTideCon, t_predic
 import datetime
-import time
+from . import time
 
 
 pi = np.pi
