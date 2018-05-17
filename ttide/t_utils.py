@@ -152,17 +152,25 @@ def fixgaps(x):
      R. Pawlowicz 11/6/99
      Version 1.0
     """
-    y = x
+
+    #find nans
     bd = np.isnan(x)
+    
+    #early exit if there are no nans  
+    if not bd.any():
+        return x
+    
+    #find nonnans index numbers
     gd = np.flatnonzero(~bd)
-    idx = np.array([range(1, ((np.min(gd) - 1) + 1)),
-                    range((np.max(gd) + 1), (len(gd)))]).reshape(1, -1) - 1
-    if idx.size != 0:
-        bd[idx] = 0
-        y[(bd - 1)] = interp1(gd, x[(gd - 1)], np.flatnonzero(bd))
+    
+    #ignore leading and trailing nans
+    bd[:gd.min()]=False
+    bd[(gd.max()+1):]=False
+    
+    #interpolate nans
+    x[bd] = np.interp(np.flatnonzero(bd),gd,x[gd])
 
-    return y
-
+    return x
 
 def cluster(ain, clusang):
     """CLUSTER: Clusters angles in rows around the angles in the first
