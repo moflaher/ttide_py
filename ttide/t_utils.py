@@ -152,17 +152,18 @@ def fixgaps(x):
      R. Pawlowicz 11/6/99
      Version 1.0
     """
+    
 
     #find nans
     bd = np.isnan(x)
-    
+
     #early exit if there are no nans  
     if not bd.any():
         return x
     
     #find nonnans index numbers
     gd = np.flatnonzero(~bd)
-    
+
     #ignore leading and trailing nans
     bd[:gd.min()]=False
     bd[(gd.max()+1):]=False
@@ -527,7 +528,7 @@ def classic_style(out):
     return outstr
 
 
-def pandas_style(out):
+def pandas_style(out, dfTF=False):
     if pd is None:
         # Unable to import pandas.
         print("pandas is not available, falling back to out_style='classic'.")
@@ -569,4 +570,7 @@ def pandas_style(out):
     outstr += (df.to_string(col_space=10, formatters=fmt)) + '\n'
 
     outstr += ('=' * spacer) + '\n'
-    return outstr
+    if dfTF:
+        return outstr, df
+    else:
+        return outstr

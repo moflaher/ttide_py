@@ -229,7 +229,7 @@ def t_tide(xin, dt=1, stime=None, lat=None,
     # 100,000 uses a reasonable amount of ram for current systems.
     # Kept as is for the time being to stay true to Matlab version.
     if lsq[0:3] == 'bes':
-        if nobs > 10000:
+        if nobs > 1000000:
             lsq = 'normal'
         else:
             lsq = 'direct'
@@ -643,15 +643,16 @@ def t_tide(xin, dt=1, stime=None, lat=None,
     out['ngood'] = ngood
     out['dt'] = dt
     out['xin'] = xin
+    out['xout'] = xout
+    out['xres'] = xres
+    out['xingd'] = xin[gd]
+    out['xoutgd'] = xout[gd]
+    out['xresgd'] = xres[gd]
+    out['isComplex'] = isComplex
     out['ray'] = ray
     out['nodcor'] = nodcor
     out['z0'] = z0
     out['dz0'] = dz0
-    out['xingd'] = xin[gd]
-    out['xoutgd'] = xout[gd]
-    out['xresgd'] = xres[gd]
-    out['xout'] = xout
-    out['isComplex'] = isComplex
 
     out['fu'] = fu
     out['nameu'] = nameu

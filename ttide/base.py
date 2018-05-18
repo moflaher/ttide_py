@@ -29,8 +29,13 @@ class TTideCon(dict):
 
     __call__ = t_predic
 
-    def pandas_style(self, to_file=None):
-        outstr = tu.pandas_style(self)
+    def pandas_style(self, to_file=None, to_file_df=None):
+        if to_file_df is None:
+            outstr = tu.pandas_style(self)            
+        else:
+            outstr, df = tu.pandas_style(self, True)
+            df.to_csv(to_file_df)
+            
         if to_file is None:
             return outstr
         elif isinstance(to_file, file):
