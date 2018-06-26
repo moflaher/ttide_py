@@ -4,7 +4,8 @@ import scipy.interpolate as spi
 from .t_vuf import t_vuf
 from . import t_utils as tu
 from .base import TTideCon, t_predic
-import time
+import datetime
+from . import time
 
 
 pi = np.pi
@@ -202,7 +203,7 @@ def t_tide(xin, dt=1, stime=None, lat=None,
     #                         per known constituent (i.e. REFERENCE must not
     #                         contain multiple instances of the same name).
 
-    if isinstance(stime, (time.datetime, np.datetime64)):
+    if isinstance(stime, (datetime.datetime, np.datetime64)):
         stime = time.date2num(stime)
 
     corr_fs = np.array(corr_fs)

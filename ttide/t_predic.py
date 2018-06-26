@@ -2,7 +2,7 @@ from __future__ import division
 import numpy as np
 from .t_getconsts import t_getconsts
 from .t_vuf import t_vuf
-import time as tm
+from . import time as tm
 
 
 def t_predic(time, names, freq, tidecon,
