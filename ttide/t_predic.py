@@ -2,10 +2,10 @@ from __future__ import division
 import numpy as np
 from .t_getconsts import t_getconsts
 from .t_vuf import t_vuf
-import time as tm
+from . import time as tm
 
 
-def t_predic(time, names, freq, tidecon,
+def t_predic(t_time, names, freq, tidecon,
              lat=None, ltype='nodal', synth=0):
     """T_PREDIC Tidal prediction from tidal consituents.
 
@@ -48,10 +48,10 @@ def t_predic(time, names, freq, tidecon,
     """
 
     longseries = 0  # Currently only timeseries <18.6 years are supported.
-    if time.dtype.name.startswith('datetime64') or time.dtype is np.dtype("O"):
-        time = tm.date2num(time)
+    if t_time.dtype.name.startswith('datetime64') or t_time.dtype is np.dtype("O"):
+        t_time = tm.date2num(t_time)
 
-    time = time.reshape(-1, 1)
+    t_time = t_time.reshape(-1, 1)
 
     # Do the synthesis.
     snr = (tidecon[:, 0] / tidecon[:, 1]) ** 2
@@ -60,7 +60,7 @@ def t_predic(time, names, freq, tidecon,
         I = snr > synth
         if not any(I):
             print('No predictions with this SNR')
-            yout = np.nan + np.zeros(shape=(time.shape, time.shape),
+            yout = np.nan + np.zeros(shape=(t_time.shape, t_time.shape),
                                      dtype='float64')
             return yout
         tidecon = tidecon[I, :]
@@ -80,7 +80,7 @@ def t_predic(time, names, freq, tidecon,
 
     # Mean at central point (get rid of one point at end to
     # take mean of odd number of points if necessary).
-    jdmid = np.mean(time[0:((2 * int((max(time.shape) - 1) / 2)) + 1)])
+    jdmid = np.mean(t_time[0:((2 * int((max(t_time.shape) - 1) / 2)) + 1)])
     if longseries:
         const = t_get18consts
         ju = np.zeros(shape=(freq.shape, freq.shape), dtype='float64')
@@ -115,10 +115,10 @@ def t_predic(time, names, freq, tidecon,
 
     ap = ap * f * np.exp(+1j * 2 * np.pi * (u + v))
     am = am * f * np.exp(-1j * 2 * np.pi * (u + v))
-    time = time - jdmid
+    t_time = t_time - jdmid
 
-    n, m = time.shape
-    ntime = max(time.shape)
+    n, m = t_time.shape
+    ntime = max(t_time.shape)
     nsub = 10000
     yout = np.zeros([n * m, ], dtype='complex128')
 
@@ -129,7 +129,7 @@ def t_predic(time, names, freq, tidecon,
         tap = np.repeat(ap, j2 - j1).reshape(len(ap), j2 - j1)
         tam = np.repeat(am, j2 - j1).reshape(len(am), j2 - j1)
 
-        touter = np.outer(24 * 1j * 2 * np.pi * freq, time[j1:j2])
+        touter = np.outer(24 * 1j * 2 * np.pi * freq, t_time[j1:j2])
         yout[j1:j2] = np.sum(np.multiply(np.exp(touter), tap), axis=0) +\
             np.sum(np.multiply(np.exp(-touter), tam), axis=0)
 
