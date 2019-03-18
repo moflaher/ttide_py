@@ -7,9 +7,7 @@ from .base import TTideCon, t_predic
 import datetime
 from . import time as tm
 
-
 pi = np.pi
-
 
 np.set_printoptions(precision=8, suppress=True)
 
@@ -321,7 +319,7 @@ def t_tide(xin, dt=1, stime=None, lat=None,
         # get allocated quickly
         if secular[0:3] == 'lin':
             lhs = np.zeros(shape=(2 * mu + 2, 2 * mu + 2), dtype='float64')
-            rhs = np.zeros(shape=(2 * mu + 2, ), dtype='float64')
+            rhs = np.zeros(shape=(2 * mu + 2,), dtype='float64')
             for j1 in range(1, (ngood + 1), nsub):
                 j2 = np.min([j1 + nsub - 1, ngood])
                 tslice = t[gd[(j1 - 1):j2] - 1]
@@ -333,7 +331,7 @@ def t_tide(xin, dt=1, stime=None, lat=None,
                 lhs = lhs + np.dot(E.T, E)
         else:
             lhs = np.zeros(shape=(2 * mu + 1, 2 * mu + 1), dtype='float64')
-            rhs = np.zeros(shape=(2 * mu + 1, ), dtype='float64')
+            rhs = np.zeros(shape=(2 * mu + 1,), dtype='float64')
             for j1 in range(1, (ngood + 1), nsub):
                 j2 = np.min([j1 + nsub - 1, ngood])
                 tslice = t[gd[(j1 - 1):j2] - 1]
@@ -433,12 +431,12 @@ def t_tide(xin, dt=1, stime=None, lat=None,
         scarg = np.sin(snarg) / snarg
         if infamprat.shape[1] == 1:
             # For real time series
-            pearg = np.dot(2 * pi,ii
-                           (vu[(mu + ii - 1)] -
-                            vu[(jref[(ii - 1)] - 1)] +
-                            infph[(ii - 1)])) / 360
+            pearg = np.dot(2 * pi, ii
+            (vu[(mu + ii - 1)] -
+             vu[(jref[(ii - 1)] - 1)] +
+             infph[(ii - 1)])) / 360
             pcfac = infamprat[(ii - 1)] * f[(mu + ii - 1)] / \
-                f[(jref[(ii - 1)] - 1)] * np.exp(np.dot(ii, pearg))
+                    f[(jref[(ii - 1)] - 1)] * np.exp(np.dot(ii, pearg))
             pcorr = 1 + pcfac * scarg
             mcfac = np.conj(pcfac)
             mcorr = np.conj(pcorr)
@@ -449,14 +447,14 @@ def t_tide(xin, dt=1, stime=None, lat=None,
                             vu[(jref[(ii - 1)] - 1)] +
                             infph[(ii - 1), 0])) / 360
             pcfac = infamprat[(ii - 1), 0] * f[(mu + ii - 1)] / \
-                f[(jref[(ii - 1)] - 1)] * np.exp(np.dot(i, pearg))
+                    f[(jref[(ii - 1)] - 1)] * np.exp(np.dot(i, pearg))
             pcorr = 1 + pcfac * scarg
             mearg = np.dot(-2 * pi,
                            (vu[(mu + ii - 1)] -
                             vu[(jref[(ii - 1)] - 1)] +
                             infph[(ii - 1), 1])) / 360
             mcfac = infamprat[(ii - 1), 1] * f[(mu + ii - 1)] / \
-                f[(jref[(ii - 1)] - 1)] * np.exp(np.dot(i, mearg))
+                    f[(jref[(ii - 1)] - 1)] * np.exp(np.dot(i, mearg))
             mcorr = 1 + mcfac * scarg
         ap[(jref[(ii - 1)] - 1)] = ap[(jref[(ii - 1)] - 1)] / pcorr
         # Changes to existing constituents
@@ -493,6 +491,10 @@ def t_tide(xin, dt=1, stime=None, lat=None,
     xr = tu.fixgaps(xres)
 
     nreal = 1
+
+    # initialize epsp and epsm
+    epsp = np.zeros(ap.shape, dtype=np.float)
+    epsm = np.zeros(ap.shape, dtype=np.float)
 
     if errcalc.endswith('boot'):
         # print('Using nonlinear bootstrapped error estimates.');
@@ -551,6 +553,12 @@ def t_tide(xin, dt=1, stime=None, lat=None,
             ap = np.absolute(ap)
             am = np.absolute(am)
         else:
+            shape = ap.shape + (1,)
+            emaj = np.zeros(shape)
+            emin = np.zeros(shape)
+            einc = np.zeros(shape)
+            epha = np.zeros(shape)
+
             print("Unrecognized type of error analysis: " +
                   errcalc + " specified!")
     # -----Convert complex amplitudes to standard ellipse parameters----
@@ -567,7 +575,13 @@ def t_tide(xin, dt=1, stime=None, lat=None,
     # pos. Greenwich phase in deg.
     gm = np.mod(np.repeat(vu, nreal).reshape(vu.shape[0], nreal) + epsm, 360)
     # neg. Greenwich phase in deg.
-    finc = ((epsp + epsm) / 2)
+    finc = np.asarray((epsp + epsm) / 2)
+
+    if finc.ndim == 0:
+        finc.shape = (1, 1)
+    elif finc.ndim == 1:
+        finc.shape = finc.shape + (1, )
+
     finc[:, 0] = np.mod(finc[:, 0], 180)
 
     # Ellipse inclination in degrees
@@ -600,10 +614,10 @@ def t_tide(xin, dt=1, stime=None, lat=None,
     else:
         # In the linear analysis, the 95 CI are computed from the sigmas
         # by this fudge factor (infinite degrees of freedom).
-        emaj = 1.96 * emaj
-        emin = 1.96 * emin
-        einc = 1.96 * einc
-        epha = 1.96 * epha
+        emaj = 1.96 * emaj[:, 0]
+        emin = 1.96 * emin[:, 0]
+        einc = 1.96 * einc[:, 0]
+        epha = 1.96 * epha[:, 0]
 
     if isComplex:
         tidecon = np.array([fmaj[:, 0], emaj, fmin[:, 0], emin,
@@ -678,3 +692,94 @@ def t_tide(xin, dt=1, stime=None, lat=None,
             print(getattr(out, method)(), end='')
 
     return out
+
+
+def errell(cxi, sxi, ercx, ersx, ercy, ersy):
+    """
+
+    :param cxi:
+    :param sxi:
+    :param ercx:
+    :param ersx:
+    :param ercy:
+    :param ersy:
+    :return:
+
+
+    From the MATLAB version:
+
+    % [emaj,emin,einc,epha]=errell(cx,sx,cy,sy,ercx,ersx,ercy,ersy) computes
+    % the uncertainities in the ellipse parameters based on the
+    % uncertainities in the least square fit cos,sin coefficients.
+    %
+    %  INPUT:  cx,sx=cos,sin coefficients for x
+    %          cy,sy=cos,sin coefficients for y
+    %          ercx,ersx=errors in x cos,sin coefficients
+    %          ercy,ersy=errors in y cos,sin coefficients
+    %
+    %  OUTPUT: emaj=major axis error
+    %          emin=minor axis error
+    %          einc=inclination error (deg)
+    %          epha=pha error (deg)
+
+    % based on linear error propagation, with errors in the coefficients
+    % cx,sx,cy,sy uncorrelated.
+
+    % B. Beardsley  1/15/99; 1/20/99
+    % Version 1.0
+
+
+    """
+
+    r2d = 180. / pi
+    cx = np.real(cxi)
+    sx = np.real(sxi)
+    cy = np.imag(cxi)
+    sy = np.imag(sxi)
+
+    rp = .5 * np.sqrt((cx + sy) ** 2 + (cy - sx) ** 2)
+    rm = .5 * np.sqrt((cx - sy) ** 2 + (cy + sx) ** 2)
+    ercx2 = ercx ** 2
+    ersx2 = ersx ** 2
+    ercy2 = ercy ** 2
+    ersy2 = ersy ** 2
+
+    # major axis error
+    ex = (cx + sy) / rp
+    fx = (cx - sy) / rm
+    gx = (sx - cy) / rp
+    hx = (sx + cy) / rm
+    dcx2 = (.25 * (ex + fx)) ** 2
+    dsx2 = (.25 * (gx + hx)) ** 2
+    dcy2 = (.25 * (hx - gx)) ** 2
+    dsy2 = (.25 * (ex - fx)) ** 2
+    emaj = np.sqrt(dcx2 * ercx2 + dsx2 * ersx2 + dcy2 * ercy2 + dsy2 * ersy2)
+
+    # minor axis error
+    dcx2 = (.25 * (ex - fx)) ** 2
+    dsx2 = (.25 * (gx - hx)) ** 2
+    dcy2 = (.25 * (hx + gx)) ** 2
+    dsy2 = (.25 * (ex + fx)) ** 2
+    emin = np.sqrt(dcx2 * ercx2 + dsx2 * ersx2 + dcy2 * ercy2 + dsy2 * ersy2)
+
+    # inclination error
+    rn = 2. * (cx * cy + sx * sy)
+    rd = cx ** 2 + sx ** 2 - (cy ** 2 + sy ** 2)
+    den = rn ** 2 + rd ** 2
+    dcx2 = ((rd * cy - rn * cx) / den) ** 2
+    dsx2 = ((rd * sy - rn * sx) / den) ** 2
+    dcy2 = ((rd * cx + rn * cy) / den) ** 2
+    dsy2 = ((rd * sx + rn * sy) / den) ** 2
+    einc = r2d * np.sqrt(dcx2 * ercx2 + dsx2 * ersx2 + dcy2 * ercy2 + dsy2 * ersy2)
+
+    # phase error
+    rn = 2. * (cx * sx + cy * sy)
+    rd = cx ** 2 - sx ** 2 + cy ** 2 - sy ** 2
+    den = rn ** 2 + rd ** 2
+    dcx2 = ((rd * sx - rn * cx) / den) ** 2
+    dsx2 = ((rd * cx + rn * sx) / den) ** 2
+    dcy2 = ((rd * sy - rn * cy) / den) ** 2
+    dsy2 = ((rd * cy + rn * sy) / den) ** 2
+    epha = r2d * np.sqrt(dcx2 * ercx2 + dsx2 * ersx2 + dcy2 * ercy2 + dsy2 * ersy2)
+
+    return emaj, emin, einc, epha
