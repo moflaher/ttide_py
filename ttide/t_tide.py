@@ -623,10 +623,8 @@ def t_tide(xin, dt=1, stime=None, lat=None,
     xoutOLD = xout
     if synth >= 0:
         if lat is not None and stime is not None:
-            # This does not account for latitude,
-            # functionality not added to t_predic yet.
             xout = t_predic(stime + np.array([range(nobs)]) * dt / 24.0,
-                            nameu, fu, tidecon, synth=synth)
+                            nameu, fu, tidecon, synth=synth, lat=lat)
         elif stime is not None:
             xout = t_predic(stime + np.array([range(nobs)]) * dt / 24.0,
                             nameu, fu, tidecon, synth=synth)
