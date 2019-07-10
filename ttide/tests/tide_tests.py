@@ -1,5 +1,9 @@
 from ttide.tests import base
 import ttide as tt
+import logging
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 def test_errcalc():
@@ -48,7 +52,23 @@ def test_errcalc():
             assert pha_mean == pha_mean_cboot, msg
 
 
+def test_errcalc_same():
+    """
+    Make sure constituents are the same for different errcalc_opts
+    """
+
+    errcalc_opts = ("cboot", "linear", "none")
+
+    for errcalc in errcalc_opts:
+        tc = tt.t_tide(base.ein, dt=1., synth=0, ray=0.5, errcalc=errcalc)
+
+        logger.debug(tc)
+
+        raise Exception
+
+
 def test_all():
+    test_errcalc_same()
     test_errcalc()
 
 
