@@ -292,7 +292,7 @@ def t_tide(xin, dt=1, stime=None, lat=None,
                             np.cos(2 * pi * np.outer(t, fu)),
                             np.sin(2 * pi * np.outer(t, fu))])
 
-        coef = np.linalg.lstsq(tc[gd, :], xin[gd])[0].T
+        coef = np.linalg.lstsq(tc[gd, :], xin[gd], rcond=None)[0].T
 
         # z0 a+ and a- amplitudes
         z0 = coef[0]
@@ -342,7 +342,7 @@ def t_tide(xin, dt=1, stime=None, lat=None,
                                np.sin(2 * pi * np.outer(tslice, fu))])
                 rhs = rhs + np.dot(E.T, xin[(gd[(j1 - 1):j2] - 1)])
                 lhs = lhs + np.dot(E.T, E)
-        coef = np.linalg.lstsq(lhs, rhs)[0].T
+        coef = np.linalg.lstsq(lhs, rhs, rcond=None)[0].T
 
         # z0 a+ and a- amplitudes
         z0 = coef[0]
