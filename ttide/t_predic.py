@@ -48,7 +48,7 @@ def t_predic(t_time, names, freq, tidecon,
     """
 
     longseries = 0  # Currently only timeseries <18.6 years are supported.
-    if t_time.dtype.name.startswith('datetime64') or t_time.dtype is np.dtype("O"):
+    if t_time.dtype.name.startswith('datetime64') or t_time.dtype == np.dtype("O"):
         t_time = tm.date2num(t_time)
 
     t_time = t_time.reshape(-1, 1)
