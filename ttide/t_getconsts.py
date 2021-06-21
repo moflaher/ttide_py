@@ -78,10 +78,11 @@ def t_getconsts(ctime):
         ii = np.isfinite(const['ishallow'])
         const['freq'][~ii] = np.dot(const['doodson'][~ii, :], ader) / 24
 
+        shallow_m1 = const['ishallow'].astype(int) -1
+        iname_m1 = shallow['iname'].astype(int) -1
+        range_cache = {n:np.arange(n) for n in range(const['nshallow'].max()+1)}
         for k in np.flatnonzero(ii):
-            ik = ((const['ishallow'][k] - 1 +
-                   np.array(range(0, const['nshallow'][k]))).astype(int))
-            const['freq'][k] = np.dot(const['freq'][shallow['iname'][ik] - 1],
-                                      shallow['coef'][ik])
+            ik = shallow_m1[k] + range_cache[const['nshallow'][k]]
+            const['freq'][k] = const['freq'][iname_m1[ik]].dot(shallow['coef'][ik])
 
     return const, sat, shallow
