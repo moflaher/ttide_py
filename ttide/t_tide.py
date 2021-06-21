@@ -671,7 +671,7 @@ def t_tide(xin, dt=1, stime=None, lat=None,
             method = 'classic_style'
 
         if outfile:
-            getattr(out, method)(fname=outfile)
+            getattr(out, method)(to_file=outfile)
         else:
             print(getattr(out, method)(), end='')
 
