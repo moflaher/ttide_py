@@ -1,5 +1,13 @@
+import sys
+import io
 from . import t_utils as tu
 from .t_predic import t_predic
+
+# file object depending on Python version
+if sys.version_info[0] < 3:
+    FILE_OBJ = file  # Python 2
+else:
+    FILE_OBJ = io.IOBase  # Python 3
 
 
 class TTideCon(dict):
@@ -38,7 +46,7 @@ class TTideCon(dict):
             
         if to_file is None:
             return outstr
-        elif isinstance(to_file, file):
+        elif isinstance(to_file, FILE_OBJ):
             to_file.write(outstr)
         else:
             with open(to_file, 'w') as fl:
@@ -48,7 +56,7 @@ class TTideCon(dict):
         outstr = tu.classic_style(self)
         if to_file is None:
             return outstr
-        elif isinstance(to_file, file):
+        elif isinstance(to_file, FILE_OBJ):
             to_file.write(outstr)
         else:
             with open(to_file, 'w') as fl:
