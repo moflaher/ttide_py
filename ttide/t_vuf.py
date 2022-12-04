@@ -38,7 +38,7 @@ def t_vuf(ltype, ctime, ju, lat=None):
     if ltype == 'full':
         const = t_get18consts(ctime)
         # Phase relative to Greenwich (in units of cycles).
-        v = rem(np.dot(const.doodson, astro) + const.semi, 1)
+        v = np.fmod(np.dot(const.doodson, astro) + const.semi, 1)
         v = v[(ju - 1)]
         u = np.zeros(shape=(v.shape, v.shape), dtype='float64')
         f = np.ones(shape=(v.shape, v.shape), dtype='float64')
