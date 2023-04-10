@@ -9,7 +9,7 @@ It is now mostly functional.
 Any help with finishing the conversion is welcome.
 
 Credit for T\_Tide goes to Rich Pawlowicz, the original creator of T\_Tide. 
-It is available at http://www2.ocgy.ubc.ca/~rich/.
+It is available at https://www.eoas.ubc.ca/~rich/.
 
 A description of the theoretical basis of the analysis and some
 implementation details of the Matlab version can be found in:
