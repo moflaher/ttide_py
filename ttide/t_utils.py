@@ -122,8 +122,8 @@ def constituents(minres, constit, shallow, infname, infref, centraltime):
     if infname.size != 0:
         fi = np.zeros(shape=(infname.shape[0], 1), dtype='float64')
         namei = np.zeros(shape=(infname.shape[0], 4), dtype='float64')
-        jinf = np.zeros(shape=(infname.shape[0], 1), dtype='float64') + np.NaN
-        jref = np.zeros(shape=(infname.shape[0], 1), dtype='float64') + np.NaN
+        jinf = np.zeros(shape=(infname.shape[0], 1), dtype='float64') + np.nan
+        jref = np.zeros(shape=(infname.shape[0], 1), dtype='float64') + np.nan
         for k in range(1, (infname.shape[0] + 1)):
             j1 = strmatch(infname[(k - 1), :], const.name)
             if (0 in j1.shape):
@@ -141,7 +141,7 @@ def constituents(minres, constit, shallow, infname, infref, centraltime):
                     jref[(k - 1)] = j1
                     print('   Inference of ' + namei[(k - 1), :] +
                           ' using ' + nameu[(j1 - 1), :] + '\\n')
-        jinf[(isnan(jref) - 1)] = np.NaN
+        jinf[(isnan(jref) - 1)] = np.nan
     return nameu, fu, ju, namei, fi, jinf, jref
 
 
