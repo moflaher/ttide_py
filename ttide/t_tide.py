@@ -98,8 +98,8 @@ def t_tide(xin, dt=1, stime=None, lat=None,
                 series will remain and mean/trend are included).
 
     lsq : string
-        'direct'  - use A\ x fit
-        'normal'  - use (A'A)\(A'x) (may be necessary for very large
+        'direct'  - use A\\ x fit
+        'normal'  - use (A'A)\\(A'x) (may be necessary for very large
                   input vectors since A'A is much smaller than A)
           'best'  - automatically choose based on length of series
                   (default).
