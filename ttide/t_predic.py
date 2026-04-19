@@ -96,7 +96,11 @@ def t_predic(t_time, names, freq, tidecon,
         ju = np.zeros((len(freq),), dtype='int32')
         # Check to make sure names and frequencies match expected values.
         for k in range(0, (names.shape[0])):
-            ju[k] = np.argwhere(const['name'] == names[(k)])
+            matches = np.flatnonzero(const['name'] == names[(k)])
+            if matches.size == 0:
+                raise ValueError("Constituent name '%s' not found in constants" %
+                                 (names[(k)],))
+            ju[k] = matches[0]
         # if any(freq~=const.freq(ju)),
         # error('Frequencies do not match names in input');
         # end;
