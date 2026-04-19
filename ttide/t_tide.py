@@ -427,14 +427,14 @@ def t_tide(xin, dt=1, stime=None, lat=None,
     # would be to change the basis functions.
     ####################################################################
     ii = np.flatnonzero(np.isfinite(jref))
-    if ii:
+    if ii.size > 0:
         print('   Do inference corrections\\n')
         snarg = nobsu * pi * dt * (fi[(ii - 1)] - fu[(jref[(ii - 1)] - 1)])
         scarg = np.sin(snarg) / snarg
         if infamprat.shape[1] == 1:
             # For real time series
-            pearg = np.dot(2 * pi,ii
-                           (vu[(mu + ii - 1)] -
+            pearg = np.dot(2 * pi, ii * (
+                           vu[(mu + ii - 1)] -
                             vu[(jref[(ii - 1)] - 1)] +
                             infph[(ii - 1)])) / 360
             pcfac = infamprat[(ii - 1)] * f[(mu + ii - 1)] / \
