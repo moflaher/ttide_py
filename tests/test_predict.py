@@ -1,7 +1,8 @@
 import numpy as np
 from ttide.t_tide import t_tide
-from ttide.tests import base as bmod
+import base as bmod
 import copy
+import pytest
 
 cases = copy.deepcopy(bmod.cases)
 
@@ -14,18 +15,19 @@ def compare_vec2file(x0, fname):
         x1 = x1.view(complex)
     assert (np.abs(x0 - x1) < 1e-2).all(), ("Test failed on file '%s'" % fname)
 
+@pytest.mark.parametrize(
+    "kwargs,fname",
+    cases,
+    ids=[fname for _, fname in cases],
+)
+def test_predict_cases(kwargs, fname):
+    kwargs = copy.deepcopy(kwargs)
+    kwargs['out_style'] = None
 
-def gen_predict_tests(make_data=False):
+    out = t_tide(**kwargs)
+    xout = out.t_predic(t)
 
-    for kwargs, fname in cases:
-        kwargs['out_style'] = None
-        out = t_tide(**kwargs)
-        xout = out.t_predic(t)
-        if make_data:
-            np.savetxt(bmod.testdir + 'data/predict/' + fname, xout.view(float), fmt='%0.5f')
-            yield None
-        else:
-            yield compare_vec2file, xout, fname
+    compare_vec2file(xout, fname)
 
 # if __name__ == '__main__':
 
