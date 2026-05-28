@@ -98,8 +98,8 @@ def t_tide(xin, dt=1, stime=None, lat=None,
                 series will remain and mean/trend are included).
 
     lsq : string
-        'direct'  - use A\ x fit
-        'normal'  - use (A'A)\(A'x) (may be necessary for very large
+        'direct'  - use A\\ x fit
+        'normal'  - use (A'A)\\(A'x) (may be necessary for very large
                   input vectors since A'A is much smaller than A)
           'best'  - automatically choose based on length of series
                   (default).
@@ -433,8 +433,8 @@ def t_tide(xin, dt=1, stime=None, lat=None,
         scarg = np.sin(snarg) / snarg
         if infamprat.shape[1] == 1:
             # For real time series
-            pearg = np.dot(2 * pi,ii
-                           (vu[(mu + ii - 1)] -
+            pearg = np.dot(2 * pi, ii * (
+                           vu[(mu + ii - 1)] -
                             vu[(jref[(ii - 1)] - 1)] +
                             infph[(ii - 1)])) / 360
             pcfac = infamprat[(ii - 1)] * f[(mu + ii - 1)] / \

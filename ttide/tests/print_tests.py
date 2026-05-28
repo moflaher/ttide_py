@@ -1,6 +1,6 @@
 from ttide.t_tide import t_tide
 import ttide.tests.base as bmod
-from cStringIO import StringIO
+from io import StringIO
 import sys
 import numpy as np
 
